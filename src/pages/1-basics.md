@@ -217,7 +217,7 @@ class MessageTable(tag: Tag) extends Table[Message](tag, "message") {
 }
 ```
 
-`MessageTable` は3つの `column` を定義しています。`id`, `sender`, そして `content` です。これらのカラムの名前と型、そしてデータベースレベルでの制約を定義すします。例えば、 `id` は `Long` 値のカラムで、オートインクリメントの主キーでもあります。
+`MessageTable` は3つの `column` を定義しています。`id`, `sender`, そして `content` です。これらのカラムの名前と型、そしてデータベースレベルでの制約を定義します。例えば、 `id` は `Long` 値のカラムで、オートインクリメントの主キーでもあります。
 
 `*`メソッドは、テーブルのカラムとケースクラスのインスタンスを対応させるための _default projection_ を提供します。
 Slick の `mapTo` マクロは、 `Message` の 3 つのカラムと 3 つのフィールドの間に双方向のマッピングを作成します。
@@ -254,7 +254,7 @@ val halSays = messages.filter(_.sender === "HAL")
 - データ型とデータベース間のマッピングを表す `Table` オブジェクトを定義する。
 - データベースに対してクエリを実行する前に、 `TableQueries` とコンビネータを定義して、有用なクエリを生成する。
 
-Lifted Embding は Slick を使う標準的な方法です。もう一つの方法は_Plain SQL querying_と呼ばれ、[7章](#PlainSQL)で説明します。
+Lifted Embding は Slick を使う標準的な方法です。もう一つの方法は _Plain SQL querying_ と呼ばれ、[7章](#PlainSQL)で説明します。
 
 </div>
 
@@ -444,9 +444,7 @@ exec(messages.result)
 </div>
 
 テーブル内のメッセージの一部を取得したい場合、このクエリを修正したものを実行します。
-のサブセットを取得したい場合は、クエリを修正して実行します。
 例えば、 `filter` を `messages` に対して実行すると、次のようなクエリが作成されます。
-を使用して、修正したクエリを作成します。
 
 ```scala mdoc
 messages.filter(_.sender === "HAL").result.statements.mkString
@@ -537,7 +535,7 @@ val sameActions: DBIO[Seq[Message]] = (
 
 - `Query` は単一のクエリの SQL を構築するために使用されます。`map` と `filter` の呼び出しは SQL の句を変更するが、作成されるクエリは 1 つだけです。
 
-- `DBIOAction` は一連の SQL クエリを作成するために使用されます。`map` と `filter` を呼び出すと、クエリが連結され、その結果がデータベースから取得されたときに変換されます。DBIOAction` は、トランザクションを定義するためにも使用されます。
+- `DBIOAction` は一連の SQL クエリを作成するために使用されます。`map` と `filter` を呼び出すと、クエリが連結され、その結果がデータベースから取得されたときに変換されます。`DBIOAction` は、トランザクションを定義するためにも使用されます。
 
 - `Future` は、`DBIOAction` を実行した非同期の結果を変換するために使用されます。`Future` に対する変換は、データベースとの通信が終了した後に行われます。
 
