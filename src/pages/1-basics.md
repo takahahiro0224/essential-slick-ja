@@ -2,36 +2,37 @@
 
 ## Orientation
 
-Slick is a Scala library for accessing relational databases using an interface similar to the Scala collections library. You can treat queries like collections, transforming and combining them with methods like `map`, `flatMap`, and `filter` before sending them to the database to fetch results. This is how we'll be working with Slick for the majority of this text.
+Slick は Scala の collections ライブラリに似たインターフェースでリレーショナルデータベースにアクセスするための Scala ライブラリです。クエリをコレクションのように扱って、 `map`、`flatMap`、`filter` などのメソッドで変換・結合してからデータベースに送信して結果を取得することができます。このテキストの大部分では、この方法でSlickを使用します。
 
-Standard Slick queries are written in plain Scala. These are _type safe_ expressions that benefit from compile time error checking. They also _compose_, allowing us to build complex queries from simple fragments before running them against the database. If writing queries in Scala isn't your style, you'll be pleased to know that Slick also allows you to write plain SQL queries.
+標準的なSlickのクエリはプレーンなScalaで書かれています。これらはコンパイル時のエラーチェックの恩恵を受ける _type safe_ 式です。また、データベースに対して実行する前に、単純な断片から複雑なクエリを構築することができるように、_compose_ されています。Scalaでクエリを書くのが苦手な方は、SlickでSQLクエリも書けることをご存知でしょうか。
 
-In addition to querying, Slick helps you with all the usual trappings of relational database, including connecting to a database, creating a schema, setting up transactions, and so on. You can even drop down below Slick to deal with JDBC (Java Database Connectivity) directly, if that's something you're familiar with and find you need.
+クエリに加えて、Slickはデータベースへの接続、スキーマの作成、トランザクションの設定など、リレーショナル・データベースでよく行われるすべての作業を支援します。また、JDBC(Java Database Connectivity)については、Slickの下にドロップダウンして直接扱うことも可能です（もし、それが馴染みのあるもので、必要だと思うのであれば）。
 
-This book provides a compact, no-nonsense guide to everything you need to know to use Slick in a commercial setting:
+本書は、Slickを商用で使用するために必要なすべての知識をコンパクトにまとめた、無駄のないガイドです。
 
-- Chapter 1 provides an abbreviated overview of the library as a whole, demonstrating the fundamentals of data modelling, connecting to the database, and running queries.
-- Chapter 2 covers basic select queries, introducing Slick's query language and delving into some of the details of type inference and type checking.
-- Chapter 3 covers queries for inserting, updating, and deleting data.
-- Chapter 4 discusses data modelling, including defining custom column and table types.
-- Chapter 5 looks at actions and how you combine multiple actions together.
-- Chapter 6 explores advanced select queries, including joins and aggregates.
-- Chapter 7 provides a brief overview of _Plain SQL_ queries---a useful tool when you need fine control over the SQL sent to your database.
+- 第1章では、ライブラリ全体の概要を説明し、データモデリング、データベースへの接続、クエリの実行の基本を実演しています。
+- 第2章では、基本的なselectクエリを取り上げ、Slickのクエリ言語を紹介し、型推論と型チェックの詳細について掘り下げています。
+- 第3章では、データの挿入、更新、削除のためのクエリについて説明します。
+- 第4章では、カスタムカラムやテーブル型の定義など、データモデリングについて説明します。
+- 第5章では、アクションと、複数のアクションを組み合わせる方法について説明します。
+- 第6章では、結合や集約を含む高度な select クエリについて説明します。
+- 第7章では、_Plain SQL_ クエリの簡単な概要を説明します。
 
 <div class="callout callout-info">
+
 **Slick isn't an ORM**
 
-If you're familiar with other database libraries such as [Hibernate][link-hibernate] or [Active Record][link-active-record], you might expect Slick to be an _Object-Relational Mapping (ORM)_ tool. It is not, and it's best not to think of Slick in this way.
+[Hibernate][link-hibernate] や [Active Record][link-active-record] などの他のデータベースライブラリに慣れている方は、Slick を _Object-Relational Mapping (ORM)_ ツールであると期待するかもしれません。しかし、Slickをこのように考えない方が良いでしょう。
 
-ORMs attempt to map object oriented data models onto relational database backends. By contrast, Slick provides a more database-like set of tools such as queries, rows and columns. We're not going to argue the pros and cons of ORMs here, but if this is an area that interests you, take a look at the [Coming from ORM to Slick][link-ref-orm] article in the Slick manual.
+ORMはオブジェクト指向のデータモデルをリレーショナルデータベースのバックエンドにマッピングしようとするものです。それに対して、Slickはクエリや行、列といった、よりデータベースに近いツールのセットを提供します。ORMの長所と短所をここで論じるつもりはありませんが、もしこの分野に興味があるなら、Slickのマニュアルにある[Coming from ORM to Slick][link-ref-orm] という記事を見てみてください。
 
-If you aren't familiar with ORMs, congratulations. You already have one less thing to worry about!
+もしあなたがORMに精通していないのであれば、おめでとうございます。心配事が一つ減りましたね!
 
 </div>
 
 ## Running the Examples and Exercises
 
-The aim of this first chapter is to provide a high-level overview of the core concepts involved in Slick, and get you up and running with a simple end-to-end example. You can grab this example now by cloning the Git repo of exercises for this book:
+この第1章の目的は、Slickの中核となるコンセプトの高レベルな概要を提供し、簡単なエンドツーエンドの例であなたを立ち上げることです。この例は、本書の練習問題のGitリポジトリをクローンすることで今すぐ入手できます。
 
 ```bash
 bash$ git clone git@github.com:underscoreio/essential-slick-code.git
@@ -50,11 +51,11 @@ chapter-06
 chapter-07
 ```
 
-Each chapter of the book is associated with a separate sbt project that provides a combination of examples and exercises. We've bundled everything you need to run sbt in the directory for each chapter.
+本書の各章は、例題と演習を組み合わせた別々のsbtプロジェクトと関連付けられています。各章のディレクトリにsbtを実行するのに必要なものをすべてバンドルしています。
 
-We'll be using a running example of a chat application similar to _Slack_, _Gitter_, or _IRC_. The app will grow and evolve as we proceed through the book. By the end it will have users, messages, and rooms, all modelled using tables, relationships, and queries.
+ここでは、_Slack_、_Gitter_、_IRC_ に似たチャットアプリケーションを実行例として使用する予定です。このアプリは、この本を読み進めるにつれて成長し、進化していきます。最終的には、テーブル、リレーションシップ、クエリを使用してモデル化された、ユーザー、メッセージ、ルームを持つことになります。
 
-For now, we will start with a simple conversation between two famous celebrities. Change to the `chapter-01` directory now, use the `sbt` command to start sbt, and compile and run the example to see what happens:
+とりあえず、2人の有名人の簡単な会話から始めてみましょう。`chapter-01` ディレクトリに移動して、`sbt` コマンドで sbt を起動し、サンプルをコンパイルして実行し、何が起きるかを見てみましょう。
 
 ```bash
 bash$ cd chapter-01
@@ -81,29 +82,30 @@ Message("HAL","Affirmative, Dave. I read you.",2)
 Message("HAL","I'm sorry, Dave. I'm afraid I can't do that.",4)
 ```
 
-If you get output similar to the above, congratulations! You're all set up and ready to run with the examples and exercises throughout the rest of this book. If you encounter any errors, let us know on our [Gitter channel][link-underscore-gitter] and we'll do what we can to help out.
+上記のような出力が得られたら、おめでとうございます。これでセットアップは完了です。この本の残りの部分を通して、例題や演習を実行する準備ができています。もし何かエラーが発生したら、私たちの [Gitter channel][link-underscore-gitter] にお知らせください。
 
 <div class="callout callout-info">
+
 **New to sbt?**
 
-The first time you run sbt, it will download a lot of library dependencies from the Internet and cache them on your hard drive. This means two things:
+sbtを初めて実行すると、インターネットから多くのライブラリの依存関係をダウンロードし、ハードディスクにキャッシュします。これは2つのことを意味します。
 
-- you need a working Internet connection to get started; and
-- the first `compile` command you issue could take a while to complete.
+- 開始するにはインターネット接続が必要であること。 
+- 最初に実行する `compile` コマンドは完了するまでに時間がかかるかもしれません。 
 
-If you haven't used sbt before, you may find the [sbt Getting Started Guide][link-sbt-tutorial] useful.
+もし、sbtを使ったことがなければ、[sbt Getting Started Guide][link-sbt-tutorial] が役に立つかもしれません。
 
 </div>
 
 ## Working Interactively in the sbt Console
 
-Slick queries run asynchronously as `Future` values.
-These are fiddly to work with in the Scala REPL, but we do want you to be able to explore Slick via the REPL.
-So to get you up to speed quickly,
-the example projects define an `exec` method and import the base requirements to run examples from the console.
+Slickのクエリは `Future` 値として非同期で実行されます。
+これらはScala REPLで扱うには面倒ですが、REPLからSlickを探せるようにしたいのです。
+そこで、手っ取り早くスピードアップするために
+サンプルプロジェクトは `exec` メソッドを定義し、コンソールからサンプルを実行するための基本要件をインポートしています。
 
-You can see this by starting `sbt` and then running the `console` command.
-Which will give output similar to:
+これは `sbt` を起動して、 `console` コマンドを実行することで確認することができます。
+その結果、次のような出力が得られます。
 
 ```scala
 > console
@@ -123,9 +125,9 @@ res0: Option[Int] = Some(4)
 scala>
 ```
 
-Our `exec` helper runs a query and waits for the output.
-There is a complete explanation of `exec` and these imports later in the chapter.
-For now, here's a small example which fetches all the `message` rows:
+私たちの `exec` ヘルパーはクエリを実行し、その出力を待ちます。
+この章の後のほうで、 `exec` とこれらのインポートについて完全な説明があります。
+とりあえず、すべての `message` の行を取得する小さな例を示します。
 
 ```scala
 exec(messages.result)
@@ -136,26 +138,26 @@ exec(messages.result)
 //       Message(HAL,I'm sorry, Dave. I'm afraid I can't do that.,4))
 ```
 
-But we're getting ahead of ourselves.
-We'll work through building up queries and running them, and using `exec`, as we work through this chapter.
-If the above works for you, great---you have a development environment set up and ready to go.
+この章では、クエリの構築と実行、そして `exec` の使用について説明します。
+もし上記がうまくいったら、素晴らしい。これで開発環境は整いました。
 
 ## Example: A Sequel Odyssey
 
-The test application we saw above creates an in-memory database using [H2][link-h2-home], creates a single table, populates it with test data, and then runs some example queries. The rest of this section will walk you through the code and provide an overview of things to come. We'll reproduce the essential parts of the code in the text, but you can follow along in the codebase for the exercises as well.
+上で見たテストアプリケーションは、[H2][link-h2-home] を使ってインメモリデータベースを作成し、一つのテーブルを作成してテストデータを投入し、いくつかのサンプルクエリを実行しました。このセクションの残りの部分では、コードを順を追って説明し、これから起こることの概要を説明します。本文中ではコードの重要な部分を再現しますが、演習のコードベースでも同様に追うことができます。
 
 <div class="callout callout-warning">
+
 **Choice of Database**
 
-All of the examples in this book use the [H2][link-h2-home] database. H2 is written in Java and runs in-process beside our application code. We've picked H2 because it allows us to forego any system administration and skip to writing Scala.
+本書のすべての例では、[H2][link-h2-home] データベースを使用しています。H2 は Java で書かれており、アプリケーションコードの横でインプロセスで実行されます。私たちが H2 を選んだ理由は、システム管理を一切行わず、Scala を書くことに専念できるためです。
 
-You might prefer to use _MySQL_, _PostgreSQL_, or some other database---and you can. In [Appendix A](#altdbs) we point you at the changes you'll need to make to work with other databases. However, we recommend sticking with H2 for at least this first chapter so you can build confidence using Slick without running into database-specific complications.
+_MySQL_ や _PostgreSQL_ 、あるいは他のデータベースを使いたいかもしれません。Appendix A](#altdbs) では、他のデータベースで動作させるために必要な変更について説明しています。しかし、少なくともこの最初の章ではH2にこだわることをお勧めします。そうすれば、データベース固有の問題にぶつかることなく、Slickの使用に自信を持つことができます。
 
 </div>
 
 ### Library Dependencies
 
-Before diving into Scala code, let's look at the sbt configuration. You'll find this in `build.sbt` in the example:
+Scalaのコードに飛び込む前に、sbtの設定を見てみましょう。これはサンプルの `build.sbt` にあります。
 
 ```scala
 name := "essential-slick-chapter-01"
@@ -171,29 +173,29 @@ libraryDependencies ++= Seq(
 )
 ```
 
-This file declares the minimum library dependencies for a Slick project:
+このファイルは、Slickプロジェクトに必要な最低限のライブラリ依存関係を宣言しています。
 
-- Slick itself;
+- Slick
 
-- the H2 database; and
+- H2データベース
 
-- a logging library.
+- ロギング・ライブラリ
 
-If we were using a separate database like MySQL or PostgreSQL, we would substitute the H2 dependency for the JDBC driver for that database.
+もしMySQLやPostgreSQLのような別のデータベースを使う場合は、H2への依存をそのデータベースのJDBCドライバに置き換えるでしょう。
 
 ### Importing Library Code
 
-Database management systems are not created equal. Different systems support different data types, different dialects of SQL, and different querying capabilities. To model these capabilities in a way that can be checked at compile time, Slick provides most of its API via a database-specific _profile_. For example, we access most of the Slick API for H2 via the following `import`:
+データベース管理システムは、同じように作られているわけではありません。異なるシステムは異なるデータ型、異なるSQLの方言、異なるクエリ機能をサポートします。これらの機能をコンパイル時に確認できるようにモデル化するために、Slick はデータベース固有の _profile_ を介して API の大部分を提供します。例えば、H2 用の Slick API の大部分には、以下の `import` を介してアクセスします。
 
 ```scala mdoc:silent
 import slick.jdbc.H2Profile.api._
 ```
 
-Slick makes heavy use of implicit conversions and extension methods, so we generally need to include this import anywhere where we're working with queries or the database. [Chapter 5](#Modelling) looks how you can keep a specific database profile out of your code until necessary.
+Slickは暗黙の変換と拡張メソッドを多用するので、クエリやデータベースを扱う場所では一般的にこのインポートを含める必要があります。[第5章](#Modelling)では、特定のデータベースプロファイルを必要なときまでコードから除外する方法について説明します。
 
 ### Defining our Schema
 
-Our first job is to tell Slick what tables we have in our database and how to map them onto Scala values and types. The most common representation of data in Scala is a case class, so we start by defining a `Message` class representing a row in our single example table:
+私たちの最初の仕事は、データベースにどんなテーブルがあって、それをScalaの値や型にどうマッピングするかをSlickに伝えることです。Scalaで最も一般的なデータの表現はケースクラスです。そこで、まずは例のテーブルの一行を表す `Message` クラスを定義します。
 
 ```scala mdoc
 case class Message(
@@ -202,7 +204,7 @@ case class Message(
   id:      Long = 0L)
 ```
 
-Next we define a `Table` object, which corresponds to our database table and tells Slick how to map back and forth between database data and instances of our case class:
+次に `Table` オブジェクトを定義します。これはデータベースのテーブルに対応し、データベースのデータとケースクラスのインスタンスとの間でどのように行き来するかを Slick に指示します。
 
 ```scala mdoc
 class MessageTable(tag: Tag) extends Table[Message](tag, "message") {
@@ -215,56 +217,57 @@ class MessageTable(tag: Tag) extends Table[Message](tag, "message") {
 }
 ```
 
-`MessageTable` defines three `column`s: `id`, `sender`, and `content`. It defines the names and types of these columns, and any constraints on them at the database level. For example, `id` is a column of `Long` values, which is also an auto-incrementing primary key.
+`MessageTable` は3つの `column` を定義しています。`id`, `sender`, そして `content` です。これらのカラムの名前と型、そしてデータベースレベルでの制約を定義すします。例えば、 `id` は `Long` 値のカラムで、オートインクリメントの主キーでもあります。
 
-The `*` method provides a _default projection_ that maps between columns in the table and instances of our case class.
-Slick's `mapTo` macro creates a two-way mapping between the three columns and the three fields in `Message`.
+`*`メソッドは、テーブルのカラムとケースクラスのインスタンスを対応させるための _default projection_ を提供します。
+Slick の `mapTo` マクロは、 `Message` の 3 つのカラムと 3 つのフィールドの間に双方向のマッピングを作成します。
 
-We'll cover projections and default projections in detail in [Chapter 5](#Modelling).
-For now, all we need to know is that this line allows us to query the database and get back `Messages` instead of tuples of `(String, String, Long)`.
+プロジェクションやデフォルトプロジェクションについては、[5章](#Modelling)で詳しく説明します。
+今のところ、知っておくべきことは、この行によってデータベースに問い合わせをして、 `(String, String, Long)` のタプルの代わりに `Messages` を取得できるようになるということです。
 
-The `tag` on the first line is an implementation detail that allows Slick to manage multiple uses of the table in a single query.
-Think of it like a table alias in SQL. We don't need to provide tags in our user code---Slick takes care of them automatically.
+1行目の `tag` は実装の詳細で、Slickが1つのクエリで複数のテーブルを使用できるようにするためのものです。
+SQLのテーブルエイリアスのようなものだと考えてください。ユーザーコードでタグを指定する必要はありません。Slickが自動的にタグを指定します。
 
 ### Example Queries
 
-Slick allows us to define and compose queries in advance of running them against the database. We start by defining a `TableQuery` object that represents a simple `SELECT *` style query on our message table:
+Slick では、データベースに対してクエリを実行する前に、クエリを定義したり構成したりすることができます。まずは `TableQuery` オブジェクトを定義します。これはメッセージテーブルに対する単純な `SELECT *` 形式のクエリを表します。
 
 ```scala mdoc
 val messages = TableQuery[MessageTable]
 ```
 
-Note that we're not _running_ this query at the moment---we're simply defining it as a means to build other queries. For example, we can create a `SELECT * WHERE` style query using a combinator called `filter`:
+このクエリはすぐに実行されるわけではないことに注意してください（単に他のクエリを作るための手段として定義しているだけです）。例えば、 `filter` というコンビネータを使って、 `SELECT * WHERE` スタイルのクエリを作ることができます。
 
 ```scala mdoc
 val halSays = messages.filter(_.sender === "HAL")
 ```
 
-Again, we haven't run this query yet---we've defined it as a building block for yet more queries. This demonstrates an important part of Slick's query language---it is made from _composable_ elements that permit a lot of valuable code re-use.
+繰り返しますが、このクエリはまだ実行されていません。このクエリは、さらに多くのクエリのための構成要素として定義されています。これはSlickのクエリ言語の重要な部分を示しています。それは、貴重なコードの再利用を可能にする _composable_ 要素から作られています。
 
 <div class="callout callout-info">
+
 **Lifted Embedding**
 
-If you're a fan of terminology, know that what we have discussed so far is called the _lifted embedding_ approach in Slick:
+もしあなたが専門用語が好きなら、これまで説明してきたことをSlickでは _lifted embedding_ アプローチと呼んでいることを知っておいてください。
 
-- define data types to store row data (case classes, tuples, or other types);
-- define `Table` objects representing mappings between our data types and the database;
-- define `TableQueries` and combinators to build useful queries before we run them against the database.
+- 行データを格納するためのデータ型を定義する（ケースクラス、タプル、その他の型）。
+- データ型とデータベース間のマッピングを表す `Table` オブジェクトを定義する。
+- データベースに対してクエリを実行する前に、 `TableQueries` とコンビネータを定義して、有用なクエリを生成する。
 
-Lifted embedding is the standard way to work with Slick. We will discuss the other approach, called _Plain SQL querying_, in [Chapter 7](#PlainSQL).
+Lifted Embding は Slick を使う標準的な方法です。もう一つの方法は_Plain SQL querying_と呼ばれ、[7章](#PlainSQL)で説明します。
 
- </div>
+</div>
 
 ### Configuring the Database
 
-We've written all of the code so far without connecting to the database. Now it's time to open a connection and run some SQL. We start by defining a `Database` object which acts as a factory for managing connections and transactions:
+ここまでのコードはすべて、データベースに接続することなく書かれています。さて、いよいよ接続を開いて SQL を実行するときが来ました。まず、接続とトランザクションを管理するためのファクトリーとして機能する `Database` オブジェクトを定義することから始めます。
 
 ```scala mdoc
 val db = Database.forConfig("chapter01")
 ```
 
-The parameter to `Database.forConfig` determines which configuration to use from the `application.conf` file.
-This file is found in `src/main/resources`. It looks like this:
+`Database.forConfig` のパラメータは、`application.conf` ファイルからどの設定を使用するかを決定します。
+このファイルは `src/main/resources` にあります。このファイルは以下のようなものです。
 
 ```scala
 chapter01 {
@@ -275,74 +278,75 @@ chapter01 {
 }
 ```
 
-This syntax comes from the [Typesafe Config][link-config] library, which is also used by Akka and the Play framework.
+この構文は、Akka や Play フレームワークでも使用されている [Typesafe Config][link-config] ライブラリに由来しています。
 
-The parameters we're providing are intended to configure the underlying JDBC layer.
-The `driver` parameter is the fully qualified class name of the JDBC driver for our chosen DBMS.
+今回提供するパラメータは、基盤となる JDBC レイヤーを設定するためのものです。
+`driver` パラメータは、選択した DBMS 用の JDBC ドライバの完全修飾クラス名です。
 
-The `url` parameter is the standard [JDBC connection URL][link-jdbc-connection-url],
-and in this case we're creating an in-memory database called `"chapter01"`.
+`url`パラメータは、標準的な[JDBC接続URL][link-jdbc-connection-url]です。
+この例では、`"chapter01"` という名前のインメモリデータベースを作成します。
 
-By default the H2 in-memory database is deleted when the last connection is closed.
-As we will be running multiple connections in our examples,
-we enable `keepAliveConnection` to keep the data around until our program completes.
+デフォルトでは、H2インメモリデータベースは最後の接続が閉じられると削除されます。
+今回の例では、複数の接続を実行する予定なので
+プログラムが完了するまでデータを保持するために `keepAliveConnection` を有効にします。
 
-Slick manages database connections and transactions using auto-commit.
-We'll look at transactions in [Chapter 4](#combining).
+Slick はデータベース接続とトランザクションを自動コミットで管理します。
+トランザクションについては[4章](#combining)で見ていきます。
 
 <div class="callout callout-info">
+
 **JDBC**
 
-If you don't have a background working with Java, you may not have heard of Java Database Connectivity (JDBC). It's a specification for accessing databases in a vendor
-neutral way. That is, it aims to be independent of the specific database you are connecting to.
+Javaを使った作業をしたことがない人は、Java Database Connectivity（JDBC）という言葉を聞いたことがないかもしれません。これは、ベンダーに依存しない方法でデータベースにアクセスするための仕様であり、
+中立的な方法でデータベースにアクセスするための仕様です。つまり、接続する特定のデータベースに依存しないことを目的としています。
 
-The specification is mirrored by a library implemented for each database you want to connect to. This library is called the _JDBC driver_.
+この仕様は、接続するデータベースごとに実装されたライブラリによって反映されます。このライブラリは、_JDBC driver_ と呼ばれます。
 
-JDBC works with _connection strings_, which are URLs like the one above that tell the driver where your database is and how to connect to it (e.g. by providing login credentials).
+JDBCは _connection strings_ で動作します。これは上記のようなURLで、データベースがどこにあり、どのように接続するか（例えば、ログイン認証情報を提供することによって）をドライバに伝えるものです。
 
 </div>
 
 ### Creating the Schema
 
-Now that we have a database configured as `db`, we can use it.
+これで `db` としてデータベースが設定されたので、それを使ってみましょう。
 
-Let's start with a `CREATE` statement for `MessageTable`, which we build using methods of our `TableQuery` object, `messages`. The Slick method `schema` gets the schema description. We can see what that would be via the `createStatements` method:
+まずは `MessageTable` の `CREATE` 文から始めましょう。これは、 `TableQuery` オブジェクトである `messages` のメソッドを使って作成します。Slick のメソッド `schema` はスキーマの記述を取得します。`createStatements` メソッドによって、スキーマの記述を確認することができます。
 
 ```scala mdoc
 messages.schema.createStatements.mkString
 ```
+まだデータベースには送信していません。ステートメントを出力して、それが私たちの考えるものであることを確認したところです。
 
-But we've not sent this to the database yet. We've just printed the statement, to check it is what we think it should be.
-
-In Slick, what we run against the database is an _action_. This is how we create an action for the `messages` schema:
+Slickでは、データベースに対して実行するのは _action_ です。これは `messages` スキーマに対するアクションを作成する方法です。
 
 ```scala mdoc
 val action: DBIO[Unit] = messages.schema.create
 ```
 
-The result of this `messages.schema.create` expression is a `DBIO[Unit]`. This is an object representing a DB action that, when run, completes with a result of type `Unit`. Anything we run against a database is a `DBIO[T]` (or a `DBIOAction`, more generally). This includes queries, updates, schema alterations, and so on.
+この `messages.schema.create` 式の結果は `DBIO[Unit]` です。これは DB のアクションを表すオブジェクトで、実行すると `Unit` 型の結果で完了します。データベースに対して実行するものはすべて `DBIO[T]` (または、より一般的には `DBIOAction`) です。これには、クエリ、アップデート、スキーマの変更などが含まれます。
 
 <div class="callout callout-info">
-**DBIO and DBIOAction**
 
-In this book we will talk about actions as having the type `DBIO[T]`.
+**DBIO and DBIOAction** 
 
-This is a simplification. The more general type is `DBIOAction`, and specifically for this example, it is a `DBIOAction[Unit, NoStream, Effect.Schema]`. The details of all of this we will get to later in the book.
+本書では、アクションは `DBIO[T]` 型を持つものとして話を進めます。
 
-But `DBIO[T]` is a type alias supplied by Slick, and is perfectly fine to use.
+これは単純化したものです。より一般的な型は `DBIOAction` で、特にこの例では `DBIOAction[Unit, NoStream, Effect.Schema]` となります。これらすべての詳細については、この本の後半で説明します。
+
+しかし、`DBIO[T]`はSlickが提供する型の別名であり、使用しても全く問題ありません。
 
 </div>
 
-Let's run this action:
+アクションを実行しましょう。
 
 ```scala mdoc
 import scala.concurrent.Future
 val future: Future[Unit] = db.run(action)
 ```
 
-The result of `run` is a `Future[T]`, where `T` is the type of result returned by the database. Creating a schema is a side-effecting operation so the result type is `Future[Unit]`. This matches the type `DBIO[Unit]` of the action we started with.
+`run` の結果は `Future[T]` で、`T` はデータベースから返される結果の型です。スキーマの作成は副作用のある操作なので、結果の型は `Future[Unit]` となります。これは、先ほどのアクションの型 `DBIO[Unit]` と一致します。
 
-`Future`s are asynchronous. That's to say, they are placeholders for values that will eventually appear. We say that a future _completes_ at some point. In production code, futures allow us to chain together computations without blocking to wait for a result. However, in simple examples like this we can block until our action completes:
+`Future` は非同期です。つまり、いずれ出現する値のプレースホルダーです。Futureはある時点で「完了する」ものとも言い換えられます。プロダクションコードでは、Futureを使うことで、結果を待つためにブロッキングすることなく、計算を連鎖させることができます。しかし、このような簡単な例では、アクションが完了するまでブロックすることができます。
 
 ```scala mdoc
 import scala.concurrent.Await
@@ -352,7 +356,7 @@ val result = Await.result(future, 2.seconds)
 
 ### Inserting Data
 
-Once our table is set up, we need to insert some test data. We'll define a helper method to create a few test `Messages` for demonstration purposes:
+テーブルをセットアップしたら、テストデータを挿入する必要があります。ここでは、デモ用にいくつかのテスト用 `Messages` を作成するヘルパーメソッドを定義します。
 
 ```scala mdoc
 def freshTestData = Seq(
@@ -363,32 +367,33 @@ def freshTestData = Seq(
 )
 ```
 
-The insert of this test data is an action:
+このテストデータの挿入がアクションとなります。
 
 ```scala mdoc
 val insert: DBIO[Option[Int]] = messages ++= freshTestData
 ```
+`message` の `++=` メソッドは、一連の `Message` オブジェクトを受け取り、それらをbulk `INSERT` クエリに変換します (`freshTestData` は通常の Scala `Seq[Message]` です)。
+そして、 `db.run` によって `insert` を実行し、Futureが完了するとテーブルにデータが格納されます。
 
-The `++=` method of `message` accepts a sequence of `Message` objects and translates them to a bulk `INSERT` query (`freshTestData` is a regular Scala `Seq[Message]`).
-We run the `insert` via `db.run`, and when the future completes our table is populated with data:
 
 ```scala mdoc
 val insertAction: Future[Option[Int]] = db.run(insert)
 ```
 
-The result of an insert operation is the number of rows inserted.
-The `freshTestData` contains four messages, so in this case the result is `Some(4)` when the future completes:
+insert操作の結果は、挿入された行の数です。
+`freshTestData` には 4 つのメッセージが含まれているので、この場合、future が完了すると結果は `Some(4)` になります。
+
 
 ```scala mdoc
 val rowCount = Await.result(insertAction, 2.seconds)
 ```
 
-The result is optional because the underlying Java APIs do not guarantee a count of rows for batch inserts---some databases simply return `None`.
-We discuss single and batch inserts and updates further in [Chapter 3](#Modifying).
+この結果はOptionalです。なぜなら、基盤となるJava APIはバッチ挿入の行数を保証していないからです（データベースによっては、単に `None` を返すものもあります）。
+単一またはバッチの挿入と更新については、[3章](#Modifying)でさらに詳しく説明します。
 
 ### Selecting Data
 
-Now our database has a few rows in it, we can start selecting data. We do this by taking a query, such as `messages` or `halSays`, and turning it into an action via the `result` method:
+これでデータベースに数行が登録されたので、データの選択を開始することができます。これは、 `messages` や `halSays` などのクエリを取得し、 `result` メソッドを使用してアクションに変換することで行います。
 
 ```scala mdoc
 val messagesAction: DBIO[Seq[Message]] = messages.result
@@ -402,7 +407,7 @@ val messagesResults = Await.result(messagesFuture, 2.seconds)
 assert(messagesResults.length == 4, "Expected 4 results")
 ```
 
-We can see the SQL issued to H2 using the `statements` method on the action:
+アクションの `statements` メソッドを使用して、H2 に発行された SQL を見ることができます。
 
 ```scala mdoc
 val sql = messages.result.statements.mkString
@@ -413,60 +418,60 @@ assert(sql == """select "sender", "content", "id" from "message"""", s"Expected:
 ```
 
 <div class="callout callout-info">
+
 **The `exec` Helper Method**
 
-In our applications we should avoid blocking on `Future`s whenever possible.
-However, in the examples in this book we'll be making heavy use of `Await.result`.
-We will introduce a helper method called `exec` to make the examples easier to read:
+アプリケーションでは、可能な限り `Future` でのブロッキングを避けるべきです。
+しかし、この本の例では `Await.result` を多用することになるでしょう。
+ここでは、例を読みやすくするために `exec` というヘルパーメソッドを導入します。
 
 ```scala mdoc
 def exec[T](action: DBIO[T]): T =
   Await.result(db.run(action), 2.seconds)
 ```
 
-All `exec` does is run the supplied action and wait for the result.
-For example, to run a select query we can write:
+`exec` が行うのは、与えられたアクションを実行し、その結果を待つだけです。
+例えば、selectクエリを実行するには、次のように書きます。
 
 ```scala
 exec(messages.result)
 ```
 
-Use of `Await.result` is strongly discouraged in production code.
-Many web frameworks provide direct means of working with `Future`s without blocking.
-In these cases, the best approach is simply to transform the `Future` query result
-to a `Future` of an HTTP response and send that to the client.
+`Await.result` を使用することは、プロダクションコードでは強く推奨されません。
+多くの Web フレームワークでは、ブロックせずに `Future` を操作するための直接的な手段が提供されています。
+このような場合、最良の方法は、クエリの結果を `Future` に変換し、HTTP レスポンスの `Future` に変換してクライアントに送信することです。
 
 </div>
 
-If we want to retrieve a subset of the messages in our table,
-we can run a modified version of our query.
-For example, calling `filter` on `messages` creates a modified query with
-a `WHERE` expression that retrieves the expected rows:
+テーブル内のメッセージの一部を取得したい場合、このクエリを修正したものを実行します。
+のサブセットを取得したい場合は、クエリを修正して実行します。
+例えば、 `filter` を `messages` に対して実行すると、次のようなクエリが作成されます。
+を使用して、修正したクエリを作成します。
 
 ```scala mdoc
 messages.filter(_.sender === "HAL").result.statements.mkString
 ```
 
-To run this query, we convert it to an action using `result`,
-run it against the database with `db.run`, and await the final result with `exec`:
+このクエリを実行するには、`result` を使ってクエリをアクションに変換します。
+`db.run` でデータベースに対して実行し、 `exec` で最終的な結果を待ちます。
 
 ```scala mdoc
 exec(messages.filter(_.sender === "HAL").result)
 ```
 
-We actually generated this query earlier and stored it in the variable `halSays`.
-We can get exactly the same results from the database by running this variable instead:
+先ほど、このクエリを実際に生成し、変数 `halSays` に格納しました。
+代わりにこの変数を実行することで、データベースからまったく同じ結果を得ることができます。
 
 ```scala mdoc
 exec(halSays.result)
 ```
 
-Notice that we created our original `halSays` before connecting to the database.
-This demonstrates perfectly the notion of composing a query from small parts and running it later on.
+データベースに接続する前に、オリジナルの `halSays` を作成したことに注意してください。
+これは、小さな部品からクエリを構成して、後でそれを実行するという概念を完全に示しています。
 
-We can even stack modifiers to create queries with multiple additional clauses.
-For example, we can `map` over the query to retrieve a subset of the columns.
-This modifies the `SELECT` clause in the SQL and the return type of the `result`:
+修飾子を重ねて、複数の追加句を持つクエリを作成することもできます。
+例えば、カラムのサブセットを取得するために `map` をクエリに追加することができます。
+これは、SQL の `SELECT` 句と `result` の戻り値の型を変更します。
 
 ```scala mdoc
 halSays.map(_.id).result.statements.mkString
@@ -476,8 +481,9 @@ exec(halSays.map(_.id).result)
 
 ### Combining Queries with For Comprehensions
 
-`Query` is a _monad_. It implements the methods `map`, `flatMap`, `filter`, and `withFilter`, making it compatible with Scala for comprehensions.
-For example, you will often see Slick queries written in this style:
+
+`Query` は _monad_ です。`map`, `flatMap`, `filter`, `withFilter` メソッドを実装しており、Scala と互換性のあるfor式を実現しています。
+例えば、このようなスタイルで書かれた Slick クエリをよく見かけます。
 
 ```scala mdoc
 val halSays2 = for {
@@ -485,20 +491,18 @@ val halSays2 = for {
 } yield message
 ```
 
-Remember that for comprehensions are aliases for chains of method calls.
-All we are doing here is building a query with a `WHERE` clause on it.
-We don't touch the database until we execute the query:
+for式はメソッド呼び出しの連鎖のエイリアスであることを忘れないでください。
+ここでやっていることは、`WHERE`句を含むクエリを作成することです。
+クエリを実行するまでは、データベースには触れません。
 
 ```scala mdoc
 exec(halSays2.result)
 ```
 
-### Actions Combine
+`Query` と同様に、 `DBIOAction` もmonadです。上で説明したのと同じメソッドを実装しており、for式と互換性があります。
 
-Like `Query`, `DBIOAction` is also a monad. It implements the same methods described above, and shares the same compatibility with for comprehensions.
-
-We can combine the actions to create the schema, insert the data, and query results into one action. We can do this before we have a database connection, and we run the action like any other.
-To do this, Slick provides a number of useful action combinators. We can use `andThen`, for example:
+スキーマの作成、データの挿入、そしてクエリの結果を一つのアクションにまとめることができます。データベース接続を行う前にこれを行うことができ、他のアクションと同じように実行します。
+これを行うために、Slickは便利なアクションコンビネータを多数提供しています。例えば、`andThen`を使うことができます。
 
 ```scala mdoc
 val actions: DBIO[Seq[Message]] = (
@@ -508,10 +512,10 @@ val actions: DBIO[Seq[Message]] = (
 )
 ```
 
-What `andThen` does is combine two actions so that the result of the first action is thrown away.
-The end result of the above `actions` is the last action in the `andThen` chain.
+`andThen` が行うのは、2つのアクションを組み合わせて、最初のアクションの結果を捨てさせることです。
+上記の `actions` の最終結果は `andThen` チェーンの最後のアクションになります。
 
-If you want to get funky, `>>` is another name for `andThen`:
+もし、あなたがファンキーなことをしたいのなら、 `>>` は `andThen` のエイリアスです。
 
 ```scala mdoc
 val sameActions: DBIO[Seq[Message]] = (
@@ -521,48 +525,49 @@ val sameActions: DBIO[Seq[Message]] = (
 )
 ```
 
-Combining actions is an important feature of Slick.
-For example, one reason for combining actions is to wrap them inside a transaction.
-In [Chapter 4](#combining) we'll see this, and also that actions can be composed with for comprehensions, just like queries.
+アクションを組み合わせることは、Slickの重要な機能です。
+例えば、アクションを組み合わせる理由の1つは、単一のトランザクションの中にそれらを包み込むことです。
+[第4章](#combining)では、このことを説明します。また、アクションはクエリと同じようにfor式で構成できることも説明します。
 
 <div class="callout callout-danger">
+
 *Queries, Actions, Futures... Oh My!*
 
-The difference between queries, actions, and futures is a big point of confusion for newcomers to Slick 3. The three types share many properties: they all have methods like `map`, `flatMap`, and `filter`, they are all compatible with for comprehensions, and they all flow seamlessly into one another through methods in the Slick API. However, their semantics are quite different:
+クエリ、アクション、Futureの違いは、Slick 3 を初めて使う人にとっては大きな混乱の元となります。この3つの型は多くの特性を共有しています。`map`、`flatMap`、`filter` などのメソッドを持ち、内包と互換性があり、Slick API のメソッドを通してシームレスに相互作用しています。しかし、そのセマンティクスは全く異なっています。
 
-- `Query` is used to build SQL for a single query. Calls to `map` and `filter` modify clauses to the SQL, but only one query is created.
+- `Query` は単一のクエリの SQL を構築するために使用されます。`map` と `filter` の呼び出しは SQL の句を変更するが、作成されるクエリは 1 つだけです。
 
-- `DBIOAction` is used to build sequences of SQL queries. Calls to `map` and `filter` chain queries together and transform their results once they are retrieved in the database. `DBIOAction` is also used to delineate transactions.
+- `DBIOAction` は一連の SQL クエリを作成するために使用されます。`map` と `filter` を呼び出すと、クエリが連結され、その結果がデータベースから取得されたときに変換されます。DBIOAction` は、トランザクションを定義するためにも使用されます。
 
-- `Future` is used to transform the asynchronous result of running a `DBIOAction`. Transformations on `Future`s happen after we have finished speaking to the database.
+- `Future` は、`DBIOAction` を実行した非同期の結果を変換するために使用されます。`Future` に対する変換は、データベースとの通信が終了した後に行われます。
 
-In many cases (for example select queries) we create a `Query` first and convert it to a `DBIOAction` using the `result` method. In other cases (for example insert queries), the Slick API gives us a `DBIOAction` immediately, bypassing `Query`. In all cases, we _run_ a `DBIOAction` using `db.run(...)`, turning it into a `Future` of the result.
+多くの場合（例えば select クエリ）、最初に `Query` を作成し、`result` メソッドを使って `DBIOAction` に変換します。他の場合 (例えばinsertクエリ) は、Slick API が `Query` をバイパスして、すぐに `DBIOAction` を生成します。いずれの場合も、 `db.run(...)` を使って `DBIOAction` を実行し、その結果を `Future` に変換します。
 
-We recommend taking the time to thoroughly understand `Query`, `DBIOAction`, and `Future`. Learn how they are used, how they are similar, how they differ, what their type parameters represent, and how they flow into one another. This is perhaps the single biggest step you can take towards demystifying Slick 3.
+時間をかけて `Query`, `DBIOAction`, `Future` を徹底的に理解することをお勧めします。それらがどのように使われ、どのように似ていて、どのように違うのか、それらの型パラメータが何を表しているのか、そしてそれらがどのようにお互いに流れ込んでいくのかを学びましょう。これはおそらく、Slick 3 を理解するための最大のステップになるでしょう。
 
 </div>
 
 ## Take Home Points
 
-In this chapter we've seen a broad overview of the main aspects of Slick, including defining a schema, connecting to the database, and issuing queries to retrieve data.
+この章では、スキーマの定義、データベースへの接続、データを取得するためのクエリの発行など、Slickの主要な側面について大まかに見てきました。
 
-We typically model data from the database as case classes and tuples that map to rows from a table. We define the mappings between these types and the database using `Table` classes such as `MessageTable`.
+データベースからのデータは通常、テーブルの行に対応するケースクラスとタプルとしてモデル化します。これらの型とデータベースとの間のマッピングは、`MessageTable` のような `Table` クラスを用いて定義します。
 
-We define queries by creating `TableQuery` objects such as `messages` and transforming them with combinators such as `map` and `filter`.
-These transformations look like transformations on collections, but they are used to build SQL code rather than manipulate the results returned.
+クエリの定義には、`messages` などの `TableQuery` オブジェクトを作成し、`map` や `filter` などのコンビネータで変換します。
+これらの変換は、コレクションに対する変換のように見えますが、返される結果を操作するのではなく、SQL コードをビルドするために使用されます。
 
-We execute a query by creating an action object via its `result` method. Actions are used to build sequences of related queries and wrap them in transactions.
+クエリを実行するには、`result` メソッドでアクションオブジェクトを作成します。アクションは関連するクエリのシーケンスを構築し、それをトランザクションでラップするために使用されます。
 
-Finally, we run the action against the database by passing it to the `run` method of the database object. We are given back a `Future` of the result. When the future completes, the result is available.
+最後に、データベースオブジェクトの `run` メソッドにアクションを渡すことで、データベースに対してアクションを実行します。その結果、`Future` が返されます。Futureが完了すると、結果が利用可能になります。
 
-The query language is the one of the richest and most significant parts of Slick. We will spend the entire next chapter discussing the various queries and transformations available.
+クエリ言語はSlickの中で最も豊富で重要な部分の一つです。次の章では、様々なクエリや変換について説明します。
 
 ## Exercise: Bring Your Own Data
 
-Let's get some experience with Slick by running queries against the example database.
-Start sbt using the `sbt` command and type `console` to enter the interactive Scala console.
-We've configured sbt to run the example application before giving you control,
-so you should start off with the test database set up and ready to go:
+サンプルのデータベースに対してクエリを実行することで、Slick を少し体験してみましょう。
+`sbt` コマンドで sbt を起動し、 `console` と入力して Scala の対話型コンソールに入ります。
+コントロールする前に、サンプルアプリケーションを実行するように sbt を設定しました。
+そのため、テスト用のデータベースをセットアップして、すぐに使える状態から始める必要があります。
 
 ```bash
 bash$ sbt
@@ -575,38 +580,38 @@ bash$ sbt
 scala>
 ```
 
-Start by inserting an extra line of dialog into the database.
-This line hit the cutting room floor late in the development of the film 2001,
-but we're happy to reinstate it here:
+まず、データベースに余分な台詞を挿入することから始めましょう。
+このセリフは、映画『2001年』の開発後半にカットされたものです。
+このセリフは、映画「2001年」の開発中にカットされましたが、ここで復活させることができます。
 
 ```scala mdoc
 Message("Dave","What if I say 'Pretty please'?")
 ```
 
-You'll need to insert the row using the `+=` method on `messages`.
-Alternatively you could put the message in a `Seq` and use `++=`.
-We've included some common pitfalls in the solution in case you get stuck.
+`messages`の `+=` メソッドを使用して、行を挿入する必要があります。
+あるいは、`Seq` にメッセージを入れて、`++=` を使ってもよいでしょう。
+もしものときのために、よくある落とし穴をいくつか紹介しておきます。
 
 <div class="solution">
-Here's the solution:
+こちらが解答になります。
 
 ```scala mdoc
 exec(messages += Message("Dave","What if I say 'Pretty please'?"))
 ```
 
-The return value indicates that `1` row was inserted.
-Because we're using an auto-incrementing primary key, Slick ignores the `id` field for our `Message` and asks the database to allocate an `id` for the new row.
-It is possible to get the insert query to return the new `id` instead of the row count, as we shall see next chapter.
+戻り値は `1` 行が挿入されたことを示しています。
+自動インクリメントの主キーを使用しているので、Slickは `Message` の `id` フィールドを無視し、新しい行に `id` を割り当てるようにデータベースに要求します。
+次の章で説明するように、挿入クエリが行数の代わりに新しい `id` を返すようにすることは可能です。
 
-Here are some things that might go wrong:
+ここで、うまくいかないかもしれないことをいくつか挙げてみましょう。
 
-If you don't pass the action created by `+=` to `db` to be run, you'll get back the `Action` object instead.
+もし、 `+=` で作成したアクションを `db` に渡して実行させなければ、代わりに `Action` オブジェクトが返されることになります。
 
 ```scala mdoc
 messages += Message("Dave","What if I say 'Pretty please'?")
 ```
 
-If you don't wait for the future to complete, you'll see just the future itself:
+Futureが完了するのを待たずに、Futureそのものだけを見ることになるのです
 
 ```scala mdoc
 val f = db.run(messages += Message("Dave","What if I say 'Pretty please'?"))
@@ -634,50 +639,51 @@ val f = db.run(messages += Message("Dave","What if I say 'Pretty please'?"))
 
 </div>
 
-Now retrieve the new dialog by selecting all messages sent by Dave.
-You'll need to build the appropriate query using `messages.filter`, and create the action to be run by using its `result` method.
-Don't forget to run the query by using the `exec` helper method we provided.
+ここで、Dave が送信したすべてのメッセージを選択して、新しいダイアログを取得します。
+適切なクエリを `messages.filter` で作成し、その `result` メソッドで実行するアクションを作成する必要があります。
+私たちが提供した `exec` ヘルパーメソッドを使用して、クエリを実行することを忘れないでください。
 
-Again, we've included some common pitfalls in the solution.
+繰り返しになりますが、よくある落とし穴もソリューションに含まれています。
 
 <div class="solution">
-Here's the code:
+こちらがコードです。
 
 ```scala mdoc
 exec(messages.filter(_.sender === "Dave").result)
 ```
 
-If that's hard to read, we can print each message in turn.
-As the `Future` will evaluate to a collection of `Message`, we can `foreach` over that with a function of `Message => Unit`, such as `println`:
+もし実行結果が読みにくければ、各メッセージを順番に表示することができます。
+`Future` は `Message` のコレクションとして評価されるので、 `Message => Unit` の関数、例えば `println` を使って `foreach` することができます。
 
 ```scala mdoc
 val sentByDave: Seq[Message] = exec(messages.filter(_.sender === "Dave").result)
 sentByDave.foreach(println)
 ```
 
-Here are some things that might go wrong:
+以下の場合、うまくいかないかもしれません。
 
-Note that the parameter to `filter` is built using a triple-equals operator, `===`, not a regular `==`.
-If you use `==` you'll get an interesting compile error:
+`filter` のパラメータは、通常の `==` ではなく、 `===` という三重項演算子を使って作られていることに注意してください。
+もし、 `==` を使用すると、面白いコンパイルエラーが発生します。
+
 
 ```scala mdoc:fail
 exec(messages.filter(_.sender == "Dave").result)
 ```
 
-The trick here is to notice that we're not actually trying to compare `_.sender` and `"Dave"`.
-A regular equality expression evaluates to a `Boolean`, whereas `===` builds an SQL expression of type `Rep[Boolean]`
-(Slick uses the `Rep` type to represent expressions over `Column`s as well as `Column`s themselves).
-The error message is baffling when you first see it but makes sense once you understand what's going on.
+ここでのトリックを理解するには、実際には `_.sender` と `"Dave"` を比較しようとしているのではないことに注目してください。
+一般の等式は `Boolean` として評価されますが、 `===` は `Rep[Boolean]` 型の SQL 式を構築します。
+(Slick は `Rep` 型を使用して、`Column` 自身だけでなく、`Column` 上の式を表現します)。
+このエラーメッセージを最初に見たときは戸惑いますが、何が起こっているのかを理解すれば納得がいくでしょう。
 
-Finally, if you forget to call `result`,
-you'll end up with a compilation error as `exec` and the call it is wrapping `db.run` both expect actions:
+最後に、もし `result` を呼び出すのを忘れると、コンパイルエラーが発生します。
+というのも、 `exec` とそれをラップしている `db.run` は両方ともアクションを期待しているからです。
 
 ```scala mdoc:fail
 exec(messages.filter(_.sender === "Dave"))
 ```
 
-`Query` types tend to be verbose, which can be distracting from the actual cause of the problem
-(which is that we're not expecting a `Query` object at all).
-We will discuss `Query` types in more detail next chapter.
+`Query` 型は冗長になりがちで、実際の問題の原因から目をそらすことになります。
+(つまり、 `Query` オブジェクトをまったく期待していないということです)。
+次の章では、 `Query` 型について詳しく説明します。
 
 </div>
