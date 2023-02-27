@@ -161,7 +161,7 @@ For more information please visit
 <li><a href="#count-the-messages"><span class="toc-section-number">2.11.1</span> Count the Messages</a></li>
 <li><a href="#selecting-a-message"><span class="toc-section-number">2.11.2</span> Selecting a Message</a></li>
 <li><a href="#one-liners"><span class="toc-section-number">2.11.3</span> One Liners</a></li>
-<li><a href="#checking-the-sql"><span class="toc-section-number">2.11.4</span>  Checking the SQL</a></li>
+<li><a href="#checking-the-sql"><span class="toc-section-number">2.11.4</span> Checking the SQL</a></li>
 <li><a href="#is-hal-real"><span class="toc-section-number">2.11.5</span> Is HAL Real?</a></li>
 <li><a href="#selecting-columns"><span class="toc-section-number">2.11.6</span> Selecting Columns</a></li>
 <li><a href="#first-result"><span class="toc-section-number">2.11.7</span> First Result</a></li>
@@ -491,7 +491,7 @@ scala&gt;</code></pre></div>
 <div class="callout callout-warning">
 <p><strong>Choice of Database</strong></p>
 <p>本書のすべての例では、<a href="https://www.h2database.com">H2</a> データベースを使用しています。H2 は Java で書かれており、アプリケーションコードの横でインプロセスで実行されます。私たちが H2 を選んだ理由は、システム管理を一切行わず、Scala を書くことに専念できるためです。</p>
-<p><em>MySQL</em> や <em>PostgreSQL</em> 、あるいは他のデータベースを使いたいかもしれません。Appendix A](#altdbs) では、他のデータベースで動作させるために必要な変更について説明しています。しかし、少なくともこの最初の章ではH2にこだわることをお勧めします。そうすれば、データベース固有の問題にぶつかることなく、Slickの使用に自信を持つことができます。</p>
+<p><em>MySQL</em> や <em>PostgreSQL</em> 、あるいは他のデータベースを使いたいかもしれません。<a href="#altdbs">Appendix A</a> では、他のデータベースで動作させるために必要な変更について説明しています。しかし、少なくともこの最初の章ではH2にこだわることをお勧めします。そうすれば、データベース固有の問題にぶつかることなく、Slickの使用に自信を持つことができます。</p>
 </div>
 <h3 id="library-dependencies"><span class="header-section-number">1.4.1</span> Library Dependencies</h3>
 <p>Scalaのコードに飛び込む前に、sbtの設定を見てみましょう。これはサンプルの <code>build.sbt</code> にあります。</p>
@@ -542,7 +542,7 @@ libraryDependencies ++= Seq(
 <span class="co">// messages: TableQuery[MessageTable] = Rep(TableExpansion)</span></code></pre></div>
 <p>このクエリはすぐに実行されるわけではないことに注意してください（単に他のクエリを作るための手段として定義しているだけです）。例えば、 <code>filter</code> というコンビネータを使って、 <code>SELECT * WHERE</code> スタイルのクエリを作ることができます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> halSays = messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>)
-<span class="co">// halSays: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @996236080)</span></code></pre></div>
+<span class="co">// halSays: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1265977126)</span></code></pre></div>
 <p>繰り返しますが、このクエリはまだ実行されていません。このクエリは、さらに多くのクエリのための構成要素として定義されています。これはSlickのクエリ言語の重要な部分を示しています。それは、貴重なコードの再利用を可能にする <em>composable</em> 要素から作られています。</p>
 <div class="callout callout-info">
 <p><strong>Lifted Embedding</strong></p>
@@ -557,7 +557,7 @@ libraryDependencies ++= Seq(
 <h3 id="configuring-the-database"><span class="header-section-number">1.4.5</span> Configuring the Database</h3>
 <p>ここまでのコードはすべて、データベースに接続することなく書かれています。さて、いよいよ接続を開いて SQL を実行するときが来ました。まず、接続とトランザクションを管理するためのファクトリーとして機能する <code>Database</code> オブジェクトを定義することから始めます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> db = Database.<span class="fu">forConfig</span>(<span class="st">&quot;chapter01&quot;</span>)
-<span class="co">// db: slick.jdbc.H2Profile.backend.Database = slick.jdbc.JdbcBackend$DatabaseDef@2290cdc8</span></code></pre></div>
+<span class="co">// db: slick.jdbc.H2Profile.backend.Database = slick.jdbc.JdbcBackend$DatabaseDef@1ca6d995</span></code></pre></div>
 <p><code>Database.forConfig</code> のパラメータは、<code>application.conf</code> ファイルからどの設定を使用するかを決定します。 このファイルは <code>src/main/resources</code> にあります。このファイルは以下のようなものです。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">chapter01 {
   driver = <span class="st">&quot;org.h2.Driver&quot;</span>
@@ -584,7 +584,7 @@ libraryDependencies ++= Seq(
 <p>まだデータベースには送信していません。ステートメントを出力して、それが私たちの考えるものであることを確認したところです。</p>
 <p>Slickでは、データベースに対して実行するのは <em>action</em> です。これは <code>messages</code> スキーマに対するアクションを作成する方法です。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> action: DBIO[Unit] = messages.<span class="fu">schema</span>.<span class="fu">create</span>
-<span class="co">// action: DBIO[Unit] = slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@34591192</span></code></pre></div>
+<span class="co">// action: DBIO[Unit] = slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@5fc6f0e9</span></code></pre></div>
 <p>この <code>messages.schema.create</code> 式の結果は <code>DBIO[Unit]</code> です。これは DB のアクションを表すオブジェクトで、実行すると <code>Unit</code> 型の結果で完了します。データベースに対して実行するものはすべて <code>DBIO[T]</code> (または、より一般的には <code>DBIOAction</code>) です。これには、クエリ、アップデート、スキーマの変更などが含まれます。</p>
 <div class="callout callout-info">
 <p><strong>DBIO and DBIOAction</strong></p>
@@ -611,7 +611,7 @@ libraryDependencies ++= Seq(
 )</code></pre></div>
 <p>このテストデータの挿入がアクションとなります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> insert: DBIO[Option[Int]] = messages ++= freshTestData
-<span class="co">// insert: DBIO[Option[Int]] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$MultiInsertAction@df66f8b</span></code></pre></div>
+<span class="co">// insert: DBIO[Option[Int]] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$MultiInsertAction@2f6a4aa0</span></code></pre></div>
 <p><code>message</code> の <code>++=</code> メソッドは、一連の <code>Message</code> オブジェクトを受け取り、それらをbulk <code>INSERT</code> クエリに変換します (<code>freshTestData</code> は通常の Scala <code>Seq[Message]</code> です)。 そして、 <code>db.run</code> によって <code>insert</code> を実行し、Futureが完了するとテーブルにデータが格納されます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> insertAction: Future[Option[Int]] = db.<span class="fu">run</span>(insert)
 <span class="co">// insertAction: Future[Option[Int]] = Future(Success(Some(4)))</span></code></pre></div>
@@ -622,7 +622,7 @@ libraryDependencies ++= Seq(
 <h3 id="selecting-data"><span class="header-section-number">1.4.8</span> Selecting Data</h3>
 <p>これでデータベースに数行が登録されたので、データの選択を開始することができます。これは、 <code>messages</code> や <code>halSays</code> などのクエリを取得し、 <code>result</code> メソッドを使用してアクションに変換することで行います。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> messagesAction: DBIO[Seq[Message]] = messages.<span class="fu">result</span>
-<span class="co">// messagesAction: DBIO[Seq[Message]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@5216e9b0</span>
+<span class="co">// messagesAction: DBIO[Seq[Message]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@4682c8ae</span>
 
 <span class="kw">val</span> messagesFuture: Future[Seq[Message]] = db.<span class="fu">run</span>(messagesAction)
 <span class="co">// messagesFuture: Future[Seq[Message]] = Future(Success(Vector(Message(Dave,Hello, HAL. Do you read me, HAL?,1), Message(HAL,Affirmative, Dave. I read you.,2), Message(Dave,Open the pod bay doors, HAL.,3), Message(HAL,I'm sorry, Dave. I'm afraid I can't do that.,4))))</span>
@@ -687,7 +687,7 @@ libraryDependencies ++= Seq(
   (messages ++= freshTestData) andThen
   halSays.<span class="fu">result</span>
 )
-<span class="co">// actions: DBIO[Seq[Message]] = slick.dbio.SynchronousDatabaseAction$FusedAndThenAction@5414ce10</span></code></pre></div>
+<span class="co">// actions: DBIO[Seq[Message]] = slick.dbio.SynchronousDatabaseAction$FusedAndThenAction@3cd6ecb8</span></code></pre></div>
 <p><code>andThen</code> が行うのは、2つのアクションを組み合わせて、最初のアクションの結果を捨てさせることです。 上記の <code>actions</code> の最終結果は <code>andThen</code> チェーンの最後のアクションになります。</p>
 <p>もし、あなたがファンキーなことをしたいのなら、 <code>&gt;&gt;</code> は <code>andThen</code> のエイリアスです。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> sameActions: DBIO[Seq[Message]] = (
@@ -695,7 +695,7 @@ libraryDependencies ++= Seq(
   (messages ++= freshTestData) &gt;&gt;
   halSays.<span class="fu">result</span>
 )
-<span class="co">// sameActions: DBIO[Seq[Message]] = slick.dbio.SynchronousDatabaseAction$FusedAndThenAction@5173e5b6</span></code></pre></div>
+<span class="co">// sameActions: DBIO[Seq[Message]] = slick.dbio.SynchronousDatabaseAction$FusedAndThenAction@15f6a11d</span></code></pre></div>
 <p>アクションを組み合わせることは、Slickの重要な機能です。 例えば、アクションを組み合わせる理由の1つは、単一のトランザクションの中にそれらを包み込むことです。 <a href="#combining">第4章</a>では、このことを説明します。また、アクションはクエリと同じようにfor式で構成できることも説明します。</p>
 <div class="callout callout-danger">
 <p><em>Queries, Actions, Futures… Oh My!</em></p>
@@ -737,7 +737,7 @@ libraryDependencies ++= Seq(
 <p>ここで、うまくいかないかもしれないことをいくつか挙げてみましょう。</p>
 <p>もし、 <code>+=</code> で作成したアクションを <code>db</code> に渡して実行させなければ、代わりに <code>Action</code> オブジェクトが返されることになります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages += <span class="fu">Message</span>(<span class="st">&quot;Dave&quot;</span>,<span class="st">&quot;What if I say 'Pretty please'?&quot;</span>)
-<span class="co">// res11: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@77e72ee</span></code></pre></div>
+<span class="co">// res11: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@5b19b5d2</span></code></pre></div>
 <p>Futureが完了するのを待たずに、Futureそのものだけを見ることになるのです</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> f = db.<span class="fu">run</span>(messages += <span class="fu">Message</span>(<span class="st">&quot;Dave&quot;</span>,<span class="st">&quot;What if I say 'Pretty please'?&quot;</span>))
 <span class="co">// f: Future[Int] = Future(Success(1))</span></code></pre></div>
@@ -764,7 +764,7 @@ sentByDave.<span class="fu">foreach</span>(println)
 <span class="co">// Message(Dave,Open the pod bay doors, HAL.,3)</span>
 <span class="co">// Message(Dave,What if I say 'Pretty please'?,5)</span></code></pre></div>
 <p>以下の場合、うまくいかないかもしれません。</p>
-<p><code>filter</code> のパラメータは、通常の <code>==</code> ではなく、 <code>===</code> という三重項演算子を使って作られていることに注意してください。 もし、 <code>==</code> を使用すると、面白いコンパイルエラーが発生します。</p>
+<p><code>filter</code> のパラメータは、通常の <code>==</code> ではなく、 <code>===</code> という三重等号算子を使って作られていることに注意してください。 もし、 <code>==</code> を使用すると、面白いコンパイルエラーが発生します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> == <span class="st">&quot;Dave&quot;</span>).<span class="fu">result</span>)
 <span class="co">// error: inferred type arguments [Boolean] do not conform to method filter's type parameter bounds [T &lt;: slick.lifted.Rep[_]]</span>
 <span class="co">// exec(messages.filter(_.sender == &quot;Dave&quot;).result)</span>
@@ -790,11 +790,12 @@ sentByDave.<span class="fu">foreach</span>(println)
 <p><code>Query</code> 型は冗長になりがちで、実際の問題の原因から目をそらすことになります。 (つまり、 <code>Query</code> オブジェクトをまったく期待していないということです)。 次の章では、 <code>Query</code> 型について詳しく説明します。</p>
 </div>
 <h1 id="selecting"><span class="header-section-number">2</span> Selecting Data</h1>
-<p>The last chapter provided a shallow end-to-end overview of Slick. We saw how to model data, create queries, convert them to actions, and run those actions against a database. In the next two chapters we will look in more detail at the various types of query we can perform in Slick.</p>
-<p>This chapter covers <em>selecting</em> data using Slick’s rich type-safe Scala reflection of SQL. <a href="#Modifying">Chapter 3</a> covers <em>modifying</em> data by inserting, updating, and deleting records.</p>
-<p>Select queries are our main means of retrieving data. In this chapter we’ll limit ourselves to simple select queries that operate on a single table. In <a href="#joins">Chapter 6</a> we’ll look at more complex queries involving joins, aggregates, and grouping clauses.</p>
+<p>前章では、Slickのエンドツーエンドの概要を浅く説明しました。データをモデル化し、クエリを作成し、それをアクションに変換し、データベースに対してそれらのアクションを実行する方法について見てきました。次の2つの章では、Slickで実行できる様々なタイプのクエリについて、より詳しく見ていきます。</p>
+<p>この章では、Slickの豊富なSQLの型安全なScalaリフレクションを使って、データの <em>選択（Select）</em> をカバーします。<a href="#Modifying">第3章</a>では、レコードの挿入、更新、削除によるデータの <em>変更</em> について説明します。</p>
+<p>selectクエリは、データを取得するための主な手段です。 この章では、単一のテーブルに対して操作する単純なselectクエリに限定して説明します。 <a href="#joins">第6章</a>では、結合、集約、およびグループ化句を含む、より複雑なクエリについて見ていきます。</p>
 <h2 id="select-all-the-rows"><span class="header-section-number">2.1</span> Select All The Rows!</h2>
-<p>The simplest select query is the <code>TableQuery</code> generated from a <code>Table</code>. In the following example, <code>messages</code> is a <code>TableQuery</code> for <code>MessageTable</code>:</p>
+<p>最も単純な select クエリは、 <code>Table</code> から生成される <code>TableQuery</code> です。</p>
+<p>以下の例では、 <code>messages</code> が <code>MessageTable</code> に対する <code>TableQuery</code> です。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> slick.<span class="fu">jdbc</span>.<span class="fu">H2Profile</span>.<span class="fu">api</span>._
 
 <span class="kw">case</span> <span class="kw">class</span> <span class="fu">Message</span>(
@@ -812,42 +813,42 @@ sentByDave.<span class="fu">foreach</span>(println)
 }
 
 <span class="kw">lazy</span> <span class="kw">val</span> messages = TableQuery[MessageTable]</code></pre></div>
-<p>The type of <code>messages</code> is <code>TableQuery[MessageTable]</code>, which is a subtype of a more general <code>Query</code> type that Slick uses to represent select, update, and delete queries. We’ll discuss these types in the next section.</p>
-<p>We can see the SQL of the select query by calling <code>result.statements</code>:</p>
+<p>メッセージの型は <code>TableQuery[MessageTable]</code> で、これはより一般的な <code>Query</code> 型のサブタイプであり、Slick は select, update, delete クエリを表現するためにこれを使用します。これらの型については、次のセクションで説明します。</p>
+<p>select クエリの SQL は、 <code>result.statements</code> を呼び出すことで見ることができます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res0: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot;&quot;</span></code></pre></div>
-<p>Our <code>TableQuery</code> is the equivalent of the SQL <code>select * from message</code>.</p>
+<p>この <code>TableQuery</code> は、SQL の <code>select * from message</code> に相当するものです。</p>
 <div class="callout callout-warning">
 <p><strong>Query Extension Methods</strong></p>
-<p>Like many of the methods discussed below, the <code>result</code> method is actually an extension method applied to <code>Query</code> via an implicit conversion. You’ll need to have everything from <code>H2Profile.api</code> in scope for this to work:</p>
+<p>以下で説明する多くのメソッドと同様に、 <code>result</code> メソッドは実際には暗黙の変換によって <code>Query</code> に適用される拡張メソッドです。 これを動作させるには、 <code>H2Profile.api</code> に含まれるすべてのメソッドがスコープ内になければなりません。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> slick.<span class="fu">jdbc</span>.<span class="fu">H2Profile</span>.<span class="fu">api</span>._</code></pre></div>
 </div>
 <h2 id="filtering-results-the-filter-method"><span class="header-section-number">2.2</span> Filtering Results: The <em>filter</em> Method</h2>
-<p>We can create a query for a subset of rows using the <code>filter</code> method:</p>
+<p><code>filter</code>メソッドを使って、行の部分集合に対するクエリを作成することができます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>)
-<span class="co">// res1: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @2065829416)</span></code></pre></div>
-<p>The parameter to <code>filter</code> is a function from an instance of <code>MessageTable</code> to a value of type <code>Rep[Boolean]</code> representing a <code>WHERE</code> clause for our query:</p>
+<span class="co">// res1: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1905710516)</span></code></pre></div>
+<p><code>filter</code> のパラメータは、 <code>MessageTable</code> のインスタンスから、クエリの <code>WHERE</code> 節を表す <code>Rep[Boolean]</code> 型の値への関数である。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res2: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;sender\&quot; = 'HAL'&quot;</span></code></pre></div>
-<p>Slick uses the <code>Rep</code> type to represent expressions over columns as well as individual columns. A <code>Rep[Boolean]</code> can either be a <code>Boolean</code>-valued column in a table, or a <code>Boolean</code> expression involving multiple columns. Slick can automatically promote a value of type <code>A</code> to a constant <code>Rep[A]</code>, and provides a suite of methods for building expressions as we shall see below.</p>
+<p>Slick は <code>Rep</code> 型を使用して、個々のカラムだけでなく、カラムに対する式を表現することができます。 <code>Rep[Boolean]</code> は、テーブルの <code>Boolean</code> 値のカラムを表したり、 複数のカラムを含む <code>Boolean</code> 式を表すこともできます。 Slick は <code>A</code> 型の値を自動的に定数 <code>Rep[A]</code> に昇格させることができる。 また、以下に述べるように、式を構築するための一連のメソッドを提供します。</p>
 <h2 id="queryTypes"><span class="header-section-number">2.3</span> The Query and TableQuery Types</h2>
-<p>The types in our <code>filter</code> expression deserve some deeper explanation. Slick represents all queries using a trait <code>Query[M, U, C]</code> that has three type parameters:</p>
+<p>この <code>filter</code> 式の型については、もう少し詳しい説明が必要でしょう。 Slickは全てのクエリを <code>Query[M, U, C]</code> という3つの型パラメータで表現しています。</p>
 <ul>
-<li><p><code>M</code> is called the <em>mixed</em> type. This is the function parameter type we see when calling methods like <code>map</code> and <code>filter</code>.</p></li>
-<li><p><code>U</code> is called the <em>unpacked</em> type. This is the type we collect in our results.</p></li>
-<li><p><code>C</code> is called the <em>collection</em> type. This is the type of collection we accumulate results into.</p></li>
+<li><p><code>M</code> は <em>mixed</em> 型と呼ばれます。これは、 <code>map</code> や <code>filter</code> といったメソッドを呼び出す際に見られる、関数パラメータの型です。</p></li>
+<li><p><code>U</code> は <em>unpacked</em> 型と呼ばれます。これは、結果に収集される型です</p></li>
+<li><p><code>C</code> は <em>collection</em> 型と呼ばれます。これは、結果をコレクションに蓄積していく型です。</p></li>
 </ul>
-<p>In the examples above, <code>messages</code> is of a subtype of <code>Query</code> called <code>TableQuery</code>. Here’s a simplified version of the definition in the Slick codebase:</p>
+<p>上記の例では、 <code>messages</code> は <code>Query</code> のサブタイプである <code>TableQuery</code> と呼ばれるものです。 以下は、Slick コードベースにおける定義の簡略版です。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">trait</span> TableQuery[T &lt;: Table[_]] <span class="kw">extends</span> Query[T, T#TableElementType, Seq] {
   <span class="co">// ...</span>
 }</code></pre></div>
-<p>A <code>TableQuery</code> is actually a <code>Query</code> that uses a <code>Table</code> (e.g. <code>MessageTable</code>) as its mixed type and the table’s element type (the type parameter in the constructor, e.g. <code>Message</code>) as its unpacked type. In other words, the function we provide to <code>messages.filter</code> is actually passed a parameter of type <code>MessageTable</code>:</p>
+<p><code>TableQuery</code> は、実際には <code>Table</code> (例: <code>MessageTable</code>) をmixed型として、テーブルの要素の型 (コンストラクタの type パラメータ、例: <code>Message</code>) をunpacked型として使用する <code>Query</code> です。 言い換えると、 <code>messages.filter</code> に渡す関数は、実際には <code>MessageTable</code> 型のパラメータを渡されます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span> { messageTable: MessageTable =&gt;
   messageTable.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>
 }
-<span class="co">// res3: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @861293326)</span></code></pre></div>
-<p>This makes sense: <code>messageTable.sender</code> is one of the columns we defined in <code>MessageTable</code> above, and <code>messageTable.sender === &quot;HAL&quot;</code> creates a Scala value representing the SQL expression <code>message.sender = 'HAL'</code>.</p>
-<p>This is the process that allows Slick to type-check our queries. <code>Query</code>s have access to the type of the <code>Table</code> used to create them, allowing us to directly reference the columns on the <code>Table</code> when we’re using combinators like <code>map</code> and <code>filter</code>. Every column knows its own data type, so Slick can ensure we only compare columns of compatible types. If we try to compare <code>sender</code> to an <code>Int</code>, for example, we get a type error:</p>
+<span class="co">// res3: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1404604687)</span></code></pre></div>
+<p>これは理にかなっています。 <code>messageTable.sender</code> は、上記の <code>MessageTable</code> で定義したカラムの 1 つです。 そして <code>messageTable.sender === &quot;HAL&quot;</code> は、 SQL 式 <code>message.sender = 'HAL'</code> を表す Scala 値を作成します。</p>
+<p>これはSlickがクエリの型チェックをするための処理です。 <code>Query</code>は、作成に使用した <code>Table</code> の型にアクセスすることができます。 これにより、 <code>map</code> や <code>filter</code> などのコンビネータを使用する際に、 <code>Table</code> のカラムを直接参照することができるようになります。 全てのカラムは自身のデータ型を把握しているので、Slick は互換性のあるデータ型のカラムのみを比較することを保証します。 例えば、 <code>sender</code> と <code>Int</code> を比較しようとすると、型エラーが発生します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="dv">123</span>)
 <span class="co">// error: Cannot perform option-mapped operation</span>
 <span class="co">//       with type: (String, Int) =&gt; R</span>
@@ -861,31 +862,32 @@ sentByDave.<span class="fu">foreach</span>(println)
 <span class="co">// exec(messages.schema.create andThen (messages ++= freshTestData))</span>
 <span class="co">//      ^</span></code></pre></div>
 <div class="callout callout-info">
-<p><a name="constantQueries"></a> <strong>Constant Queries </strong></p>
-<p>So far we’ve built up queries from a <code>TableQuery</code>, and this is the common case we use in most of this book. However you should know that you can also construct constant queries, such as <code>select 1</code>, that are not related to any table.</p>
-<p>We can use the <code>Query</code> companion object for this. So…</p>
+<p><a name="constantQueries"></a></p>
+<p><strong>Constant Queries</strong></p>
+<p>これまで、私たちは <code>TableQuery</code> からクエリを構築してきました。 この本の大部分では、このようなケースが一般的です。 しかし、<code>select 1</code> のような、テーブルとは関係のない定型のクエリも作成できることを知っておく必要があります。</p>
+<p>これには <code>Query</code> コンパニオンオブジェクトを使用します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">Query(<span class="dv">1</span>)</code></pre></div>
-<p>will produce this query:</p>
+<p>上記はこのようなクエリを生成します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">Query(<span class="dv">1</span>).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res6: String = &quot;select 1&quot;</span></code></pre></div>
-<p>The <code>apply</code> method of the <code>Query</code> object allows us to lift a scalar value to a <code>Query</code>.</p>
-<p>A constant query such as <code>select 1</code> can be used to confirm we have database connectivity. This could be a useful thing to do as an application is starting up, or a heartbeat system check that will consume minimal resources.</p>
-<p>We’ll see another example of using a <code>from</code>-less query in <a href="#moreControlOverInserts">Chapter 3</a>.</p>
 </div>
+<p><code>Query</code> オブジェクトの <code>apply</code> メソッドを使うと、スカラー値を <code>Query</code> に渡すことができます。</p>
+<p><code>select 1</code> のような定型のクエリを使用して、データベースへの接続を確認することができます。 これは、アプリケーションを起動するときに便利な機能です。また、最小限のリソースしか消費しないハートビートなシステムチェックにもなります。</p>
+<p><a href="#moreControlOverInserts">第3章</a>では、<code>from</code>なしのクエリを使用する別の例を見ていきましょう。</p>
 <h2 id="transforming-results"><span class="header-section-number">2.4</span> Transforming Results</h2>
 <div class="callout callout-info">
 <p><strong><code>exec</code></strong></p>
-<p>Just as we did in Chapter 1, we’re using a helper method to run queries in the REPL:</p>
+<p>第1章で行ったように、REPLでクエリを実行するためにヘルパーメソッドを使用しています。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> scala.<span class="fu">concurrent</span>.{Await,Future}
 <span class="kw">import</span> scala.<span class="fu">concurrent</span>.<span class="fu">duration</span>._
 
 <span class="kw">val</span> db = Database.<span class="fu">forConfig</span>(<span class="st">&quot;chapter02&quot;</span>)
-<span class="co">// db: slick.jdbc.H2Profile.backend.Database = slick.jdbc.JdbcBackend$DatabaseDef@10e04ab0</span>
+<span class="co">// db: slick.jdbc.H2Profile.backend.Database = slick.jdbc.JdbcBackend$DatabaseDef@51492c45</span>
 
 <span class="kw">def</span> exec[T](action: DBIO[T]): T =
   Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <span class="fl">4.</span>seconds)</code></pre></div>
-<p>This is included in the example source code for this chapter, in the <code>main.scala</code> file. You can run these examples in the REPL to follow along with the text.</p>
-<p>We have also set up the schema and sample data:</p>
+<p>これは、この章のサンプルのソースコードの <code>main.scala</code> ファイルに含まれています。 REPL でこれらの例を実行すれば、テキストを追うことができます。</p>
+<p>また、スキーマとサンプルデータも設定しました。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">def</span> freshTestData = Seq(
   <span class="fu">Message</span>(<span class="st">&quot;Dave&quot;</span>, <span class="st">&quot;Hello, HAL. Do you read me, HAL?&quot;</span>),
   <span class="fu">Message</span>(<span class="st">&quot;HAL&quot;</span>,  <span class="st">&quot;Affirmative, Dave. I read you.&quot;</span>),
@@ -897,10 +899,10 @@ sentByDave.<span class="fu">foreach</span>(println)
 <span class="co">// res7: Option[Int] = Some(4)</span></code></pre></div>
 </div>
 <h3 id="the-map-method"><span class="header-section-number">2.4.1</span> The <em>map</em> Method</h3>
-<p>Sometimes we don’t want to select all of the columns in a <code>Table</code>. We can use the <code>map</code> method on a <code>Query</code> to select specific columns for inclusion in the results. This changes both the mixed type and the unpacked type of the query:</p>
+<p>時には、<code>Table</code> のすべてのカラムを選択したくないこともあります。 <code>Query</code> の <code>map</code> メソッドを使用すると、特定のカラムを選択して結果に含めることができます。 これは、クエリのmixed型とunpacked型の両方を変更します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">map</span>(_.<span class="fu">content</span>)
 <span class="co">// res8: Query[Rep[String], String, Seq] = Rep(Bind)</span></code></pre></div>
-<p>Because the unpacked type (second type parameter) has changed to <code>String</code>, we now have a query that selects <code>String</code>s when run. If we run the query we see that only the <code>content</code> of each message is retrieved:</p>
+<p>unpacked型（2番目の型パラメータ）が <code>String</code> に変更されたからです。 これで、実行時に <code>String</code> を選択するクエリができました。 このクエリを実行すると、各メッセージの <code>content</code> だけが取得されることがわかります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> query = messages.<span class="fu">map</span>(_.<span class="fu">content</span>)
 <span class="co">// query: Query[Rep[String], String, Seq] = Rep(Bind)</span>
 
@@ -911,25 +913,25 @@ sentByDave.<span class="fu">foreach</span>(println)
 <span class="co">//   &quot;Open the pod bay doors, HAL.&quot;,</span>
 <span class="co">//   &quot;I'm sorry, Dave. I'm afraid I can't do that.&quot;</span>
 <span class="co">// )</span></code></pre></div>
-<p>Also notice that the generated SQL has changed. Slick isn’t cheating: it is actually telling the database to restrict the results to that column in the SQL:</p>
+<p>また、生成されたSQLが変更されていることに注目してください。 Slickは不正をしているわけではありません。実際にデータベースに、SQLの中でそのカラムに結果を限定するように指示しているのです。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">map</span>(_.<span class="fu">content</span>).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res10: String = &quot;select \&quot;content\&quot; from \&quot;message\&quot;&quot;</span></code></pre></div>
-<p>Finally, notice that the mixed type (first type parameter) of our new query has changed to <code>Rep[String]</code>. This means we are only passed the <code>content</code> column when we <code>filter</code> or <code>map</code> over this query:</p>
+<p>最後に、新しいクエリのmixed型 (最初の型パラメータ) が <code>Rep[String]</code> に変更されたことに注目してください。 これは、このクエリに対して <code>filter</code> や <code>map</code> を実行したときに、 <code>content</code> カラムだけが渡されることを意味します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> pods = messages.
   <span class="fu">map</span>(_.<span class="fu">content</span>).
   filter{content:Rep[String] =&gt; content like <span class="st">&quot;%pod%&quot;</span>}
-<span class="co">// pods: Query[Rep[String], String, Seq] = Rep(Filter @541344784)</span>
+<span class="co">// pods: Query[Rep[String], String, Seq] = Rep(Filter @2061840063)</span>
 
 <span class="fu">exec</span>(pods.<span class="fu">result</span>)
 <span class="co">// res11: Seq[String] = Vector(&quot;Open the pod bay doors, HAL.&quot;)</span></code></pre></div>
-<p>This change of mixed type can complicate query composition with <code>map</code>. We recommend calling <code>map</code> only as the final step in a sequence of transformations on a query, after all other operations have been applied.</p>
-<p>It is worth noting that we can <code>map</code> to anything that Slick can pass to the database as part of a <code>select</code> clause. This includes individual <code>Rep</code>s and <code>Table</code>s, as well as <code>Tuple</code>s of the above. For example, we can use <code>map</code> to select the <code>id</code> and <code>content</code> columns of messages:</p>
+<p>この混合型の変更は、 <code>map</code> によるクエリの合成を複雑にする可能性があります。 他の全ての操作を適用した後に、クエリに対する一連の変換の最終ステップとしてのみ、 <code>map</code> を呼び出すことを推奨します。</p>
+<p>注目すべきは、Slick が <code>select</code> 句の一部としてデータベースに渡すことができるものであれば、何でも <code>map</code> することができるということです。 これには、個々の <code>Rep</code> や <code>Table</code> が含まれます。 また、これらのタプルも含まれます。 例えば、 <code>map</code> を使って、メッセージの <code>id</code> と <code>content</code> カラムを選択することができます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">map</span>(t =&gt; (t.<span class="fu">id</span>, t.<span class="fu">content</span>))
 <span class="co">// res12: Query[(Rep[Long], Rep[String]), (Long, String), Seq] = Rep(Bind)</span></code></pre></div>
-<p>The mixed and unpacked types change accordingly, and the SQL is modified as we might expect:</p>
+<p>それに応じて，mixed型とunpacked型が変更され、SQLは予想通りに修正されます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">map</span>(t =&gt; (t.<span class="fu">id</span>, t.<span class="fu">content</span>)).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res13: String = &quot;select \&quot;id\&quot;, \&quot;content\&quot; from \&quot;message\&quot;&quot;</span></code></pre></div>
-<p>We can even map sets of columns to Scala data structures using <code>mapTo</code>:</p>
+<p>また、<code>mapTo</code>を使えば、カラムのセットをScalaのデータ構造にマッピングすることもできます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">case</span> <span class="kw">class</span> <span class="fu">TextOnly</span>(id: Long, content: String)
 
 <span class="kw">val</span> contentQuery = messages.
@@ -943,17 +945,17 @@ sentByDave.<span class="fu">foreach</span>(println)
 <span class="co">//   TextOnly(3L, &quot;Open the pod bay doors, HAL.&quot;),</span>
 <span class="co">//   TextOnly(4L, &quot;I'm sorry, Dave. I'm afraid I can't do that.&quot;)</span>
 <span class="co">// )</span></code></pre></div>
-<p>We can also select column expressions as well as single columns:</p>
+<p>また、単一の列だけでなく、列の式もselectすることができます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">map</span>(t =&gt; t.<span class="fu">id</span> * 1000L).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res15: String = &quot;select \&quot;id\&quot; * 1000 from \&quot;message\&quot;&quot;</span></code></pre></div>
-<p>This all means that <code>map</code> is a powerful combinator for controlling the <code>SELECT</code> part of your query.</p>
+<p>つまり、 <code>map</code> はクエリの <code>SELECT</code> 部分を制御するための強力なコンビネータなのです。</p>
 <div class="callout callout-info">
 <p><strong>Query’s <em>flatMap</em> Method</strong></p>
-<p><code>Query</code> also has a <code>flatMap</code> method with similar monadic semantics to that of <code>Option</code> or <code>Future</code>. <code>flatMap</code> is mostly used for joins, so we’ll cover it in <a href="#joins">Chapter 6</a>.</p>
+<p><code>Query</code> には <code>Option</code> や <code>Future</code> と同様のモナドセマンティクスを持つ <code>flatMap</code> メソッドも用意されています。 <code>flatMap</code> は主にジョインに使用されるので、<a href="#joins">6章</a> で説明します。</p>
 </div>
 <h3 id="exists"><span class="header-section-number">2.4.2</span> <em>exists</em></h3>
-<p>Sometimes we are less interested in the contents of a queries result than if results exist at all. For this we have <code>exists</code>, which will return <code>true</code> if the result set is not empty and false otherwise.</p>
-<p>Let’s look at a quick example to show how we can use an existing query with the <code>exists</code> keyword:</p>
+<p>時には、クエリの結果の内容よりも、結果が存在するかどうかに興味があることがあります。 このような場合のために <code>exists</code> が用意されており、結果セットが空でなければ <code>true</code> を返し、そうでなければ false を返します。</p>
+<p>既存のクエリを <code>exists</code> キーワードでどのように使用できるのか、簡単な例を見てみましょう。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> containsBay = <span class="kw">for</span> {
   m &lt;- messages
   <span class="kw">if</span> m.<span class="fu">content</span> like <span class="st">&quot;%bay%&quot;</span>
@@ -962,71 +964,71 @@ sentByDave.<span class="fu">foreach</span>(println)
 
 <span class="kw">val</span> bayMentioned: DBIO[Boolean] =
   containsBay.<span class="fu">exists</span>.<span class="fu">result</span>
-<span class="co">// bayMentioned: DBIO[Boolean] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$3@327d790b</span></code></pre></div>
-<p>The <code>containsBay</code> query returns all messages that mention “bay”. We can then use this query in the <code>bayMentioned</code> expression to determine what to execute.</p>
-<p>The above will generate SQL which looks similar to this:</p>
+<span class="co">// bayMentioned: DBIO[Boolean] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$3@79d6be7a</span></code></pre></div>
+<p><code>containsBay</code> クエリは “bay” に言及しているすべてのメッセージを返します。 そして、このクエリを <code>bayMentioned</code> 式の中で使って、何を実行するかを決定します。</p>
+<p>上記は、以下のような SQL を生成します。</p>
 <div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">select</span> <span class="kw">exists</span>(
   <span class="kw">select</span> <span class="ot">&quot;sender&quot;</span>, <span class="ot">&quot;content&quot;</span>, <span class="ot">&quot;id&quot;</span>
   <span class="kw">from</span> <span class="ot">&quot;message&quot;</span>
   <span class="kw">where</span> <span class="ot">&quot;content&quot;</span> <span class="kw">like</span> <span class="st">'%bay%'</span>
 )</code></pre></div>
-<p>We will see a more useful example in <a href="#moreControlOverInserts">Chapter 3</a>.</p>
+<p><a href="#moreControlOverInserts">第3章</a>でより便利な例を見ることができます。</p>
 <h2 id="converting-queries-to-actions"><span class="header-section-number">2.5</span> Converting Queries to Actions</h2>
-<p>Before running a query, we need to convert it to an <em>action</em>. We typically do this by calling the <code>result</code> method on the query. Actions represent sequences of queries. We start with actions representing single queries and compose them to form multi-action sequences.</p>
-<p>Actions have the type signature <code>DBIOAction[R, S, E]</code>. The three type parameters are:</p>
+<p>クエリを実行する前に、クエリを <em>action</em> に変換する必要があります。 これは通常、クエリに対して <code>result</code> メソッドを呼び出すことで行います。 アクションはクエリのシーケンスを表します。まず、単一のクエリを表すアクションから始めて 、それらを組み合わせて複数のアクションを形成します。</p>
+<p>アクションは <code>DBIOAction[R, S, E]</code> という型シグネチャを持ちます。3つの型パラメータは以下の通りです。</p>
 <ul>
-<li><p><code>R</code> is the type of data we expect to get back from the database (<code>Message</code>, <code>Person</code>, etc);</p></li>
-<li><p><code>S</code> indicates whether the results are streamed (<code>Streaming[T]</code>) or not (<code>NoStream</code>); and</p></li>
-<li><p><code>E</code> is the effect type and will be inferred.</p></li>
+<li><p><code>R</code> はデータベースから返されるデータの種類 (<code>Message</code>、<code>Person</code> など)。</p></li>
+<li><p><code>S</code> は結果がストリームされるか (<code>Streaming[T]</code>) またはされないか (<code>NoStream</code>)</p></li>
+<li><p><code>E</code> はエフェクトの種類で、推論されます。</p></li>
 </ul>
-<p>In many cases we can simplify the representation of an action to just <code>DBIO[T]</code>, which is an alias for <code>DBIOAction[T, NoStream, Effect.All]</code>.</p>
+<p>多くの場合、アクションの表現を単純化して、<code>DBIO[T]</code>とすることができます。これは、<code>DBIOAction[T, NoStream, Effect.All]</code> のエイリアスです。</p>
 <div class="callout callout-info">
 <p><strong>Effects</strong></p>
-<p>Effects are not part of Essential Slick, and we’ll be working in terms of <code>DBIO[T]</code> for most of this text.</p>
-<p>However, broadly speaking, an <code>Effect</code> is a way to annotate an action. For example, you can write a method that will only accept queries marked as <code>Read</code> or <code>Write</code>, or a combination such as <code>Read with Transactional</code>.</p>
-<p>The effects defined in Slick under the <code>Effect</code> object are:</p>
+<p>エフェクトはEssential Slickの範囲ではないので、このテキストの大部分では <code>DBIO[T]</code> の観点から作業することになります。</p>
+<p>しかし、大まかに言えば、<code>Effect</code>はアクションにアノテーションを付ける方法です。 例えば、 <code>Read</code> や <code>Write</code> とマークされたクエリのみを受け付けるメソッドを書いたり、 <code>Read with Transactional</code> のような組み合わせを書いたりすることができます。</p>
+<p>Slick の <code>Effect</code> オブジェクトで定義されているエフェクトは、以下のとおりです。</p>
 <ul>
-<li><code>Read</code> for queries that read from the database.</li>
-<li><code>Write</code> for queries that have a write effect on the database.</li>
-<li><code>Schema</code> for schema effects.</li>
-<li><code>Transactional</code> for transaction effects.</li>
-<li><code>All</code> for all of the above.</li>
+<li>データベースから読み込むクエリには <code>Read</code> を指定します。</li>
+<li>データベースへの書き込みを行うクエリには <code>Write</code> を指定します。</li>
+<li><code>Schema</code> はスキーマに対するエフェクトを表します。</li>
+<li>トランザクションエフェクトには <code>Transactional</code> を指定します。</li>
+<li><code>All</code> は上記のすべてに対応します。</li>
 </ul>
-<p>Slick will infer the effect for your queries. For example, <code>messages.result</code> will be:</p>
+<p>Slick はクエリのエフェクトを推論します。例えば、<code>messages.result</code>は次のようになります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">DBIOAction[Seq[String], NoStream, Effect.<span class="fu">Read</span>]</code></pre></div>
-<p>In the next chapter we will look at inserts and updates. The inferred effect for an update in this case is: <code>DBIOAction[Int, NoStream, Effect.Write]</code>.</p>
-<p>You can also add your own <code>Effect</code> types by extending the existing types.</p>
+<p>次の章では、挿入と更新について見ていきます。この場合、更新のために推論されるエフェクトは <code>DBIOAction[Int, NoStream, Effect.Write]</code> となります。</p>
+<p>また、既存の型を拡張して、独自の <code>Effect</code> 型を追加することもできます。</p>
 </div>
 <h2 id="executing-actions"><span class="header-section-number">2.6</span> Executing Actions</h2>
-<p>To execute an action, we pass it to one of two methods on our <code>db</code> object:</p>
+<p>アクションを実行するには、<code>db</code> オブジェクトの 2 つのメソッドのうちの 1 つにアクションを渡します。</p>
 <ul>
-<li><p><code>db.run(...)</code> runs the action and returns all the results in a single collection. These are known as a <em>materialized</em> result.</p></li>
-<li><p><code>db.stream(...)</code> runs the action and returns its results in a <code>Stream</code>, allowing us to process large datasets incrementally without consuming large amounts of memory.</p></li>
+<li><p><code>db.run(...)</code> はアクションを実行し、すべての結果をひとつのコレクションにまとめて返します。 これらは <em>materialized</em> result として知られています。</p></li>
+<li><p><code>db.stream(...)</code> はアクションを実行し、その結果を <code>Stream</code> に格納して返します。 これにより、大量のメモリを消費することなく、大きなデータセットを逐次的に処理することができます。</p></li>
 </ul>
-<p>In this book we will deal exclusively with materialized queries. <code>db.run</code> returns a <code>Future</code> of the final result of our action. We need to have an <code>ExecutionContext</code> in scope when we make the call:</p>
+<p>この本では、materializedクエリのみを扱うことにします。 <code>db.run</code> はアクションの最終的な結果を <code>Future</code> として返します。 呼び出す際には、<code>ExecutionContext</code> がスコープ内になければなりません。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">import</span> scala.<span class="fu">concurrent</span>.<span class="fu">ExecutionContext</span>.<span class="fu">Implicits</span>.<span class="fu">global</span>
 
 <span class="kw">val</span> futureMessages = db.<span class="fu">run</span>(messages.<span class="fu">result</span>)
 <span class="co">// futureMessages: Future[Seq[MessageTable#TableElementType]] = Future(Success(Vector(Message(Dave,Hello, HAL. Do you read me, HAL?,1), Message(HAL,Affirmative, Dave. I read you.,2), Message(Dave,Open the pod bay doors, HAL.,3), Message(HAL,I'm sorry, Dave. I'm afraid I can't do that.,4))))</span></code></pre></div>
 <div class="callout callout-info">
 <p><strong>Streaming</strong></p>
-<p>In this book we will deal exclusively with materialized queries. Let’s take a quick look at streams now, so we are aware of the alternative.</p>
-<p>Calling <code>db.stream</code> returns a <a href="https://scala-slick.org/doc/3.3.3/api/index.html#slick.basic.DatabasePublisher"><code>DatabasePublisher</code></a> object instead of a <code>Future</code>. This exposes three methods to interact with the stream:</p>
+<p>この本では、materializedクエリのみを扱います。 代替手段を知っておくために、ストリームを簡単に見てみましょう。</p>
+<p><code>db.stream</code> を呼び出すと、 <code>Future</code> の代わりに <a href="https://scala-slick.org/doc/3.3.3/api/index.html#slick.basic.DatabasePublisher"><code>DatabasePublisher</code></a> オブジェクトが返されます。 これは、ストリームを操作するための3つのメソッドを公開しています。</p>
 <ul>
-<li><code>subscribe</code> which allows integration with Akka;</li>
-<li><code>mapResult</code> which creates a new <code>Publisher</code> that maps the supplied function on the result set from the original publisher; and</li>
-<li><code>foreach</code>, to perform a side-effect with the results.</li>
+<li><code>subscribe</code> は Akka との統合を可能にします。</li>
+<li><code>mapResult</code>: 指定された関数を元のPublisherから取得した結果にマッピングする <code>Publisher</code> を新規に作成します。</li>
+<li>結果に対してサイドエフェクトを実行するための <code>foreach</code> です。</li>
 </ul>
-<p>Streaming results can be used to feed <a href="https://www.reactive-streams.org/">reactive streams</a>, or <a href="https://akka.io/docs/">Akka streams or actors</a>. Alternatively, we can do something simple like use <code>foreach</code> to <code>println</code> our results:</p>
+<p>ストリーミングの結果は、<a href="https://www.reactive-streams.org/">reactive streams</a> のフィードとして使うことができます。 または <a href="https://akka.io/docs/">Akka streams or actors</a> に供給するために使用されます。あるいは <code>foreach</code>を使用して、結果を <code>println</code> するような単純なこともできます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">db.<span class="fu">stream</span>(messages.<span class="fu">result</span>).<span class="fu">foreach</span>(println)</code></pre></div>
-<p>…which will eventually print each row.</p>
-<p>If you want to explore this area, start with the <a href="https://scala-slick.org/doc/3.3.3/dbio.html#streaming">Slick documentation on streaming</a>.</p>
+<p>…これは最終的に各行を表示します。</p>
+<p>この分野を探求したいのであれば、<a href="https://scala-slick.org/doc/3.3.3/dbio.html#streaming">Slick documentation on streaming</a> から始めてみてください。</p>
 </div>
 <h2 id="column-expressions"><span class="header-section-number">2.7</span> Column Expressions</h2>
-<p>Methods like <code>filter</code> and <code>map</code> require us to build expressions based on columns in our tables. The <code>Rep</code> type is used to represent expressions as well as individual columns. Slick provides a variety of extension methods on <code>Rep</code> for building expressions.</p>
-<p>We will cover the most common methods below. You can find a complete list in <a href="https://github.com/slick/slick/blob/v3.3.3/slick/src/main/scala/slick/lifted/ExtensionMethods.scala">ExtensionMethods.scala</a> in the Slick codebase.</p>
+<p><code>filter</code> や <code>map</code> などのメソッドでは、テーブルのカラムをもとにした式を作成する必要があります。 <code>Rep</code> 型は、個々のカラムだけでなく、式を表現するためにも使用されます。 Slick では、式を構築するために <code>Rep</code> に様々な拡張メソッドを提供しています。</p>
+<p>ここでは、最も一般的なメソッドについて説明します。 完全なリストは Slick のコードベースの <a href="https://github.com/slick/slick/blob/v3.3.3/slick/src/main/scala/slick/lifted/ExtensionMethods.scala">ExtensionMethods.scala</a> にあります。</p>
 <h3 id="equality-and-inequality-methods"><span class="header-section-number">2.7.1</span> Equality and Inequality Methods</h3>
-<p>The <code>===</code> and <code>=!=</code> methods operate on any type of <code>Rep</code> and produce a <code>Rep[Boolean]</code>. Here are some examples:</p>
+<p>メソッド <code>===</code> と <code>=!=</code> は任意の型の <code>Rep</code> に対して操作し、 <code>Rep[Boolean]</code> を生成します。 以下はその例です。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;Dave&quot;</span>).<span class="fu">result</span>.<span class="fu">statements</span>
 <span class="co">// res16: Iterable[String] = List(</span>
 <span class="co">//   &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;sender\&quot; = 'Dave'&quot;</span>
@@ -1034,7 +1036,7 @@ sentByDave.<span class="fu">foreach</span>(println)
 
 messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> =!= <span class="st">&quot;Dave&quot;</span>).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res17: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where not (\&quot;sender\&quot; = 'Dave')&quot;</span></code></pre></div>
-<p>The <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, and <code>&gt;=</code> methods can operate on any type of <code>Rep</code> (not just numeric columns):</p>
+<p><code>&lt;</code>、<code>&gt;</code>、<code>&lt;=</code> および <code>&gt;=</code> メソッドは、任意の型の <code>Rep</code> に対して操作することができます (数値の列に限りません)。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> &lt; <span class="st">&quot;HAL&quot;</span>).<span class="fu">result</span>.<span class="fu">statements</span>
 <span class="co">// res18: Iterable[String] = List(</span>
 <span class="co">//   &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;sender\&quot; &lt; 'HAL'&quot;</span>
@@ -1046,7 +1048,7 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 <span class="co">// )</span></code></pre></div>
 <div class="table-responsive">
 <table>
-<caption>Rep comparison methods. Operand and result types should be interpreted as parameters to <code>Rep[_]</code>.</caption>
+<caption>Repの比較メソッド。 オペランドと結果の型は <code>Rep[_]</code> のパラメータとして解釈される必要があります。</caption>
 <colgroup>
 <col width="23%"></col>
 <col width="28%"></col>
@@ -1102,16 +1104,16 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 </table>
 </div>
 <h3 id="string-methods"><span class="header-section-number">2.7.2</span> String Methods</h3>
-<p>Slick provides the <code>++</code> method for string concatenation (SQL’s <code>||</code> operator):</p>
+<p>Slick は、文字列の連結のための <code>++</code> メソッド (SQL の <code>||</code> 演算子) を提供します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">map</span>(m =&gt; m.<span class="fu">sender</span> ++ <span class="st">&quot;&gt; &quot;</span> ++ m.<span class="fu">content</span>).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res20: String = &quot;select (\&quot;sender\&quot;||'&gt; ')||\&quot;content\&quot; from \&quot;message\&quot;&quot;</span></code></pre></div>
-<p>and the <code>like</code> method for SQL’s classic string pattern matching:</p>
+<p>SQL の古典的な文字列パターンマッチングのための <code>like</code> メソッドです。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">content</span> like <span class="st">&quot;%pod%&quot;</span>).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res21: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;content\&quot; like '%pod%'&quot;</span></code></pre></div>
-<p>Slick also provides methods such as <code>startsWith</code>, <code>length</code>, <code>toUpperCase</code>, <code>trim</code>, and so on. These are implemented differently in different DBMSs—the examples below are purely for illustration:</p>
+<p>また、Slick は <code>startsWith</code>, <code>length</code>, <code>toUpperCase</code>, <code>trim</code> などのメソッドも提供しています。 これらは DBMS によって実装が異なるので、以下の例は単に説明のためのものです。</p>
 <div class="table-responsive">
 <table style="width:96%;">
-<caption>String column methods. Operand (e.g., <code>col1</code>, <code>col2</code>) must be <code>String</code> or <code>Option[String]</code>. Operand and result types should be interpreted as parameters to <code>Rep[_]</code>.</caption>
+<caption>文字列カラムのメソッド。 オペランド (例: <code>col1</code>, <code>col2</code>) は <code>String</code> または <code>Option[String]</code> でなければなりません。 オペランドと結果の型は、 <code>Rep[_]</code> のパラメータとして解釈される必要があります。</caption>
 <colgroup>
 <col width="33%"></col>
 <col width="26%"></col>
@@ -1179,10 +1181,10 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 </table>
 </div>
 <h3 id="NumericColumnMethods"><span class="header-section-number">2.7.3</span> Numeric Methods</h3>
-<p>Slick provides a comprehensive set of methods that operate on <code>Rep</code>s with numeric values: <code>Int</code>s, <code>Long</code>s, <code>Double</code>s, <code>Float</code>s, <code>Short</code>s, <code>Byte</code>s, and <code>BigDecimal</code>s.</p>
+<p>Slick は、数値を持つ <code>Rep</code> を操作するための包括的なメソッド群を提供します。<code>Int</code>, <code>Long</code>, <code>Double</code>, <code>Float</code>, <code>Short</code>, <code>Byte</code>, そして <code>BigDecimal</code> といった数値を持つ <code>Rep</code> を操作するためのメソッドが用意されています。</p>
 <div class="table-responsive">
 <table>
-<caption>Numeric column methods. Operand and result types should be interpreted as parameters to <code>Rep[_]</code>.</caption>
+<caption>数値カラムのメソッド。 オペランドと結果の型は <code>Rep[_]</code> のパラメータとして解釈される必要があります。</caption>
 <colgroup>
 <col width="23%"></col>
 <col width="33%"></col>
@@ -1256,10 +1258,10 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 </table>
 </div>
 <h3 id="boolean-methods"><span class="header-section-number">2.7.4</span> Boolean Methods</h3>
-<p>Slick also provides a set of methods that operate on boolean <code>Rep</code>s:</p>
+<p>また、Slickはboolean値の <code>Rep</code> を操作するメソッド群も提供しています。</p>
 <div class="table-responsive">
 <table>
-<caption>Boolean column methods. Operand and result types should be interpreted as parameters to <code>Rep[_]</code>.</caption>
+<caption>Bool型カラムのメソッド。 オペランドと結果の型は <code>Rep[_]</code> のパラメータとして解釈される必要があります。</caption>
 <colgroup>
 <col width="23%"></col>
 <col width="33%"></col>
@@ -1297,11 +1299,11 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 </table>
 </div>
 <h3 id="date-and-time-methods"><span class="header-section-number">2.7.5</span> Date and Time Methods</h3>
-<p>Slick provides column mappings for: <code>Instant</code>, <code>LocalDate</code>, <code>LocalTime</code>, <code>LocalDateTime</code>, <code>OffsetTime</code>, <code>OffsetDateTime</code>, and <code>ZonedDateTime</code>. That means you can use all of those types as columns in your table definitions.</p>
-<p>How your columns are mapped will depend on the database you’re using, as different databases have different capabilities when it comes to time and date. The table below shows the SQL types used for three common databases:</p>
+<p>Slick は以下のカラムマッピングを提供します。Slick では、 <code>Instant</code>, <code>LocalDate</code>, <code>LocalTime</code>, <code>LocalDateTime</code>, <code>OffsetTime</code>, <code>OffsetDateTime</code>, そして <code>ZonedDateTime</code> のカラムマッピングを提供しています。 つまり、これらの型はすべて、テーブル定義のカラムとして使用することができるのです。</p>
+<p>カラムがどのようにマッピングされるかは、使用しているデータベースに依存します。 データベースによって、時刻と日付に関する機能は異なるからです。 下の表は、一般的な 3 つのデータベースで使用される SQL 型を示しています。</p>
 <div class="table-responsive">
 <table>
-<caption>Mapping from <code>java.time</code> types to SQL column types for three databases. There’s a full list as part of the The <a href="https://scala-slick.org/doc/3.3.3/upgrade.html">Slick 3.3 Upgrade Guide</a>.</caption>
+<caption>3つのデータベースの <code>java.time</code> 型から SQL カラム型へのマッピング。 <a href="https://scala-slick.org/doc/3.3.3/upgrade.html">Slick 3.3 Upgrade Guide</a> に完全なリストがあります。</caption>
 <colgroup>
 <col width="28%"></col>
 <col width="22%"></col>
@@ -1362,16 +1364,11 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 </tbody>
 </table>
 </div>
-<p>Unlike the <code>String</code> and <code>Boolean</code> types, there are no special methods for the <code>java.time</code> types. However, as all types have the equality methods, you can use <code>===</code>, <code>&gt;</code>, <code>&lt;=</code>, and so on with date and time types as you’d expect.</p>
+<p>文字列型やブール型とは異なり、 <code>java.time</code> 型には特別なメソッドはありません。 しかし、すべての型が等価メソッドを持っているので、 <code>===</code>, <code>&gt;</code>, <code>&lt;=</code> などを日付や時刻の型に対して期待通りに使用することができます。</p>
 <h3 id="type_equivalence"><span class="header-section-number">2.7.6</span> Option Methods and Type Equivalence</h3>
-<p>Slick models nullable columns in SQL as <code>Rep</code>s with <code>Option</code> types. We’ll discuss this in some depth in <a href="#Modelling">Chapter 5</a>. However, as a preview, know that if we have a nullable column in our database, we declare it as optional in our <code>Table</code>:</p>
-<div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">final</span> <span class="kw">class</span> <span class="fu">PersonTable</span>(tag: Tag) <span class="co">/* ... */</span> {
-  <span class="co">// ...</span>
-  <span class="kw">def</span> nickname = column[Option[String]](<span class="st">&quot;nickname&quot;</span>)
-  <span class="co">// ...</span>
-}</code></pre></div>
-<p>When it comes to querying on optional values, Slick is pretty smart about type equivalence.</p>
-<p>What do we mean by type equivalence? Slick type-checks our column expressions to make sure the operands are of compatible types. For example, we can compare <code>String</code>s for equality but we can’t compare a <code>String</code> and an <code>Int</code>:</p>
+<p>Slick は SQL で nullableなカラムを <code>Rep</code> と <code>Option</code> 型でモデル化します。 これについては <a href="#Modelling">5章</a> で詳しく説明します。 しかし、プレビューとして、データベースに nullableなカラムがある場合、それを <code>Table</code> でオプションとして宣言することを知っておいてください。 <sub>~</sub> scala final class PersonTable(tag: Tag) /* … */ { // … def nickname = column<a href="%22nickname%22">Option[String]</a> // … } <sub>~</sub></p>
+<p>オプショナルな値に対するクエリになると Slickは型の等価性に関してかなり賢いです。</p>
+<p>型の等価性とはどういう意味でしょうか？ Slickは、オペランドが互換性のある型であることを確認するために、列式の型チェックを行います。 例えば、 <code>String</code> と <code>Int</code> を等価に比較することはできますが、 <code>String</code> と <code>Int</code> を比較することはできません。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">id</span> === <span class="st">&quot;foo&quot;</span>)
 <span class="co">// error: Cannot perform option-mapped operation</span>
 <span class="co">//       with type: (Long, String) =&gt; R</span>
@@ -1384,7 +1381,7 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 <span class="co">//  match expected type slick.lifted.CanBeQueryCondition[Nothing]</span>
 <span class="co">// messages.filter(_.id === &quot;foo&quot;)</span>
 <span class="co">// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span></code></pre></div>
-<p>Interestingly, Slick is very finickity about numeric types. For example, comparing an <code>Int</code> to a <code>Long</code> is considered a type error:</p>
+<p>興味深いことに、Slick は数値型に対して非常に細かいです。 例えば、 <code>Int</code> と <code>Long</code> を比較すると、型エラーとみなされます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">id</span> === <span class="dv">123</span>)
 <span class="co">// error: Cannot perform option-mapped operation</span>
 <span class="co">//       with type: (Long, Int) =&gt; R</span>
@@ -1397,12 +1394,12 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 <span class="co">//  match expected type slick.lifted.CanBeQueryCondition[Nothing]</span>
 <span class="co">// messages.filter(_.id === &quot;foo&quot;)</span>
 <span class="co">// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span></code></pre></div>
-<p>On the flip side of the coin, Slick is clever about the equivalence of optional and non-optional columns. As long as the operands are some combination of the types <code>A</code> and <code>Option[A]</code> (for the same value of <code>A</code>), the query will normally compile:</p>
+<p>裏を返せば Slick はオプションと非オプションのカラムの等価性に関して賢いです。 オペランドが <code>A</code> と <code>Option[A]</code> 型の組み合わせである限り (<code>A</code> の値が同じであれば)、クエリは通常コンパイルされます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">id</span> === Option(123L)).<span class="fu">result</span>.<span class="fu">statements</span>
 <span class="co">// res24: Iterable[String] = List(</span>
 <span class="co">//   &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;id\&quot; = 123&quot;</span>
 <span class="co">// )</span></code></pre></div>
-<p>However, any optional arguments must be strictly of type <code>Option</code>, not <code>Some</code> or <code>None</code>:</p>
+<p>ただし、オプションの引数は <code>Some</code> や <code>None</code> ではなく、厳密に <code>Option</code> 型でなければなりません。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">id</span> === Some(123L)).<span class="fu">result</span>.<span class="fu">statements</span>
 <span class="co">// error: type mismatch;</span>
 <span class="co">//  found   : Some[Long]</span>
@@ -1415,14 +1412,14 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 <span class="co">//  match expected type slick.lifted.CanBeQueryCondition[Nothing]</span>
 <span class="co">// messages.filter(_.id === Some(123L)).result.statements</span>
 <span class="co">// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span></code></pre></div>
-<p>If you find yourself in this situation, remember you can always provide a type ascription to the value:</p>
+<p>このような状況に陥った場合、値に型付けをすることができることを忘れないでください。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">id</span> === (Some(123L): Option[Long]) )
-<span class="co">// res26: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @58542268)</span></code></pre></div>
+<span class="co">// res26: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @576748385)</span></code></pre></div>
 <h2 id="controlling-queries-sort-take-and-drop"><span class="header-section-number">2.8</span> Controlling Queries: Sort, Take, and Drop</h2>
-<p>There are a trio of functions used to control the order and number of results returned from a query. This is great for pagination of a result set, but the methods listed in the table below can be used independently.</p>
+<p>クエリから返される結果の順番と数を制御するために使用される三種類の関数があります。 これは結果セットのページネーションに最適ですが、以下の表にあるメソッドは単独で使用することもできます。</p>
 <div class="table-responsive">
 <table style="width:60%;">
-<caption>Methods for ordering, skipping, and limiting the results of a query.</caption>
+<caption>クエリの結果を順序付け、スキップ、制限するためのメソッド。</caption>
 <colgroup>
 <col width="23%"></col>
 <col width="36%"></col>
@@ -1449,116 +1446,117 @@ messages.<span class="fu">filter</span>(m =&gt; m.<span class="fu">sender</span>
 </tbody>
 </table>
 </div>
-<p>We’ll look at each in turn, starting with an example of <code>sortBy</code>. Say we want messages in order of the sender’s name:</p>
+<p>まず <code>sortBy</code> の例から順番に見ていきましょう。例えば、メッセージを送信者の名前の順に並べたいとします。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(messages.<span class="fu">sortBy</span>(_.<span class="fu">sender</span>).<span class="fu">result</span>).<span class="fu">foreach</span>(println)
 <span class="co">// Message(Dave,Hello, HAL. Do you read me, HAL?,1)</span>
 <span class="co">// Message(Dave,Open the pod bay doors, HAL.,3)</span>
 <span class="co">// Message(HAL,Affirmative, Dave. I read you.,2)</span>
 <span class="co">// Message(HAL,I'm sorry, Dave. I'm afraid I can't do that.,4)</span></code></pre></div>
-<p>Or the reverse order:</p>
+<p>逆順だとこのようになります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(messages.<span class="fu">sortBy</span>(_.<span class="fu">sender</span>.<span class="fu">desc</span>).<span class="fu">result</span>).<span class="fu">foreach</span>(println)
 <span class="co">// Message(HAL,Affirmative, Dave. I read you.,2)</span>
 <span class="co">// Message(HAL,I'm sorry, Dave. I'm afraid I can't do that.,4)</span>
 <span class="co">// Message(Dave,Hello, HAL. Do you read me, HAL?,1)</span>
 <span class="co">// Message(Dave,Open the pod bay doors, HAL.,3)</span></code></pre></div>
-<p>To sort by multiple columns, return a tuple of columns:</p>
+<p>複数の列でソートする場合は、列のタプルを返します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">sortBy</span>(m =&gt; (m.<span class="fu">sender</span>, m.<span class="fu">content</span>)).<span class="fu">result</span>.<span class="fu">statements</span>
 <span class="co">// res29: Iterable[String] = List(</span>
 <span class="co">//   &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; order by \&quot;sender\&quot;, \&quot;content\&quot;&quot;</span>
 <span class="co">// )</span></code></pre></div>
-<p>Now we know how to sort results, perhaps we want to show only the first five rows:</p>
+<p>さて、結果の並べ替えの方法がわかったところで、最初の5行だけを表示させたいとします。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">sortBy</span>(_.<span class="fu">sender</span>).<span class="fu">take</span>(<span class="dv">5</span>)
 <span class="co">// res30: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Take)</span></code></pre></div>
-<p>If we are presenting information in pages, we’d need a way to show the next page (rows 6 to 10):</p>
+<p>ページ単位で情報を提示するのであれば、次のページ（6～10行目）を表示する方法が必要になります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">sortBy</span>(_.<span class="fu">sender</span>).<span class="fu">drop</span>(<span class="dv">5</span>).<span class="fu">take</span>(<span class="dv">5</span>)
 <span class="co">// res31: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Take)</span></code></pre></div>
-<p>This is equivalent to:</p>
+<p>これは以下のSQLと等価です。</p>
 <div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">select</span> <span class="ot">&quot;sender&quot;</span>, <span class="ot">&quot;content&quot;</span>, <span class="ot">&quot;id&quot;</span>
 <span class="kw">from</span> <span class="ot">&quot;message&quot;</span>
 <span class="kw">order</span> <span class="kw">by</span> <span class="ot">&quot;sender&quot;</span>
 <span class="kw">limit</span> <span class="dv">5</span> offset <span class="dv">5</span></code></pre></div>
 <div class="callout callout-info">
 <p><strong>Sorting on Null columns</strong></p>
-<p>We had a brief introduction to nullable columns earlier in the chapter when we looked at <a href="#type_equivalence">Option Methods and Type Equivalence</a>. Slick offers three modifiers which can be used in conjunction with <code>desc</code> and <code>asc</code> when sorting on nullable columns: <code>nullFirst</code>, <code>nullsDefault</code> and <code>nullsLast</code>. These do what you expect, by including nulls at the beginning or end of the result set. The <code>nullsDefault</code> behaviour will use the SQL engines preference.</p>
-<p>We don’t have any nullable fields in our example yet. But here’s a look at what sorting a nullable column is like:</p>
+<p>この章の前のほうで、<a href="#type_equivalence">オプションメソッドと型の等価性</a> を見たときに、nullable なカラムについて簡単に紹介しました。 Slick では、 <code>desc</code> や <code>asc</code> と組み合わせて使用できる 3 つの修飾子を提供しています。<code>nullFirst</code>, <code>nullsDefault</code>, <code>nullsLast</code> です。 これらは、結果セットの最初または最後に null を含めることで、期待通りの結果を得ることができます。 <code>nullsDefault</code> の動作は、SQL エンジンの優先順位を使用します。</p>
+<p>今までの例では、まだ nullableなフィールドはありません。 しかし、ここでは、nullable なカラムのソートがどのようなものかを見てみましょう。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">users.<span class="fu">sortBy</span>(_.<span class="fu">name</span>.<span class="fu">nullsFirst</span>)</code></pre></div>
-<p>The generated SQL for the above query would be:</p>
+<p>上記のクエリに対して生成されるSQLは次のようになります。</p>
 <div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">select</span> <span class="ot">&quot;name&quot;</span>, <span class="ot">&quot;email&quot;</span>, <span class="ot">&quot;id&quot;</span>
 <span class="kw">from</span> <span class="ot">&quot;user&quot;</span>
 <span class="kw">order</span> <span class="kw">by</span> <span class="ot">&quot;name&quot;</span> <span class="kw">nulls</span> <span class="fu">first</span></code></pre></div>
-<p>We cover nullable columns in <a href="#Modelling">Chapter 5</a> and include an example of sorting on nullable columns in <a href="https://github.com/underscoreio/essential-slick-code/tree/3.3">example project</a> the code is in <em>nulls.scala</em> in the folder <em>chapter-05</em>.</p>
+<p><a href="#Modelling">5章</a>でnullableカラムを取り上げ、<a href="https://github.com/underscoreio/essential-slick-code/tree/3.3">example project</a> でnullableカラムでのソートの例を紹介しています。このコードは <em>chapter-05</em> フォルダの <em>nulls.scala</em> にあります。</p>
 </div>
 <h2 id="conditional-filtering"><span class="header-section-number">2.9</span> Conditional Filtering</h2>
-<p>So far we’ve seen query operations such as <code>map</code>, <code>filter</code>, and <code>take</code>, and in later chapters we’ll see joins and aggregations. Much of your work with Slick will likely be with just these few operations.</p>
-<p>There are two other methods, <code>filterOpt</code> and <code>filterIf</code>, that help with dynamic queries, where you may (or may not) want to filter rows based on some condition.</p>
-<p>For example, suppose we want to give our user the option to filter by crew member (message sender). That is, if you don’t specify a crew member, you’ll get everyone’s messages.</p>
-<p>Our first attempt at this might be:</p>
+<p>これまで、<code>map</code>、<code>filter</code>、<code>take</code> などのクエリオペレーションを見てきました。 そして、後の章では結合と集約を見ることになります。 Slick を使って行う作業の多くは、これらの数個の操作に限られることでしょう。</p>
+<p>他にも、 <code>filterOpt</code> と <code>filterIf</code> という2つのメソッドがあります。 これは、動的なクエリで、何らかの条件に基づいて行をフィルタリングしたい場合に役立ちます。</p>
+<p>例えば、クルーメンバー（メッセージの送信者）でフィルタリングするオプションをユーザーに提供したいとします。 つまり、クルーメンバーを指定しなければ、全員のメッセージを取得することになります。</p>
+<p>最初の試みは次のようになります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">def</span> <span class="fu">query1</span>(name: Option[String]) =
   messages.<span class="fu">filter</span>(msg =&gt; msg.<span class="fu">sender</span> === name)</code></pre></div>
-<p>That’s a valid query, but if you feed it <code>None</code>, you’ll get no results, rather than all results. We could add more checks to the query, such as also adding <code>|| name.isEmpty</code>. But what we want to do is only filter when we have a value. And that’s what <code>filterOpt</code> does:</p>
+<p>これは有効なクエリですが、<code>None</code> を与えると、すべての結果が得られるのではなく、結果が得られなくなります。 クエリにさらにチェックを追加して、例えば <code>|| name.isEmpty</code> も追加することができます。 しかし、私たちがしたいことは、値があるときだけフィルタリングすることです。そして、それを行うのが <code>filterOpt</code> です。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">def</span> <span class="fu">query2</span>(name: Option[String]) =
   messages.<span class="fu">filterOpt</span>(name)( (row, value) =&gt; row.<span class="fu">sender</span> === value )</code></pre></div>
-<p>You can read this query as: we’re going to optionally filter on <code>name</code>, and if <code>name</code> has a value, we can use the <code>value</code> to filter the <code>row</code>s in the query.</p>
-<p>The upshot of that is, when there’s no crew member provided, there’s no condition on the SQL:</p>
+<p>このクエリは次のように読むことができます: - オプションで <code>name</code> をフィルタリングします。 - そして、もし <code>name</code> に値があれば、その値を使ってクエリの <code>row</code> をフィルタリングすることができます。</p>
+<p>その結果、クルーメンバーが存在しないときは、SQLに条件がないことになります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">query2</span>(None).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res32: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot;&quot;</span></code></pre></div>
-<p>And when there is, the condition applies:</p>
+<p>そして、存在する場合は、その条件が適用されます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">query2</span>(Some(<span class="st">&quot;Dave&quot;</span>)).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res33: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;sender\&quot; = 'Dave'&quot;</span></code></pre></div>
 <div class="callout callout-info">
-<p>Once you’re in the swing of using <code>filterOpt</code>, you may prefer to use a short-hand version:</p>
+<p>一度 <code>filterOpt</code> を使うようになると、ショートハンド版を使うのが好ましいかもしれません。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">def</span> <span class="fu">queryShortHand</span>(name: Option[String]) =
   messages.<span class="fu">filterOpt</span>(name)(_.<span class="fu">sender</span> === _)</code></pre></div>
-<p>The behaviour of <code>query</code> is the same if you use this short version or the longer version we used in the main text.</p>
+<p><code>query</code> の挙動は、この短いバージョンでも、本文で使用した長いバージョンでも同じです。</p>
 </div>
-<p><code>filterIf</code> is a similar capability, but turns a where condition on or off. For example, we can give the user an option to exclude “old” messages:</p>
+<p><code>filterIf</code> は似たような機能ですが、where条件のオン・オフを切り替えます。 例えば、“古い”メッセージを除外するオプションをユーザに与えることができます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> hideOldMessages = <span class="kw">true</span>
 <span class="co">// hideOldMessages: Boolean = true</span>
 <span class="kw">val</span> queryIf = messages.<span class="fu">filterIf</span>(hideOldMessages)(_.<span class="fu">id</span> &gt; 100L)
-<span class="co">// queryIf: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @591562707)</span>
+<span class="co">// queryIf: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1050533895)</span>
 queryIf.<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res34: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;id\&quot; &gt; 100&quot;</span></code></pre></div>
-<p>Here we see a condition of <code>ID &gt; 100</code> added to the query because <code>hideOldMessages</code> is <code>true</code>. If it were false, the query would not contain the where clause.</p>
-<p>The great convenience of <code>filterIf</code> and <code>filterOpt</code> is that you can chain them one after another to build up concise dynamic queries:</p>
+<p>ここでは、<code>hideOldMessages</code>が<code>true</code>なので、<code>ID &gt; 100</code>という条件がクエリに追加されています。 もし false ならば、このクエリには where 節が含まれません。</p>
+<p><code>filterIf</code> と <code>filterOpt</code> の大きな利点は、それらを次々に連結して、簡潔な動的クエリを構築できることです。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> person = Some(<span class="st">&quot;Dave&quot;</span>)
 <span class="co">// person: Some[String] = Some(&quot;Dave&quot;)</span>
 
 <span class="kw">val</span> queryToRun = messages.
   <span class="fu">filterOpt</span>(person)(_.<span class="fu">sender</span> === _).
   <span class="fu">filterIf</span>(hideOldMessages)(_.<span class="fu">id</span> &gt; 100L)
-<span class="co">// queryToRun: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1070848673)</span>
+<span class="co">// queryToRun: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1384222010)</span>
 
 queryToRun.<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">mkString</span>
 <span class="co">// res35: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where (\&quot;sender\&quot; = 'Dave') and (\&quot;id\&quot; &gt; 100)&quot;</span></code></pre></div>
 <h2 id="take-home-points-1"><span class="header-section-number">2.10</span> Take Home Points</h2>
-<p>Starting with a <code>TableQuery</code> we can construct a wide range of queries with <code>filter</code> and <code>map</code>. As we compose these queries, the types of the <code>Query</code> follow along to give type-safety throughout our application.</p>
-<p>The expressions we use in queries are defined in extension methods, and include <code>===</code>, <code>=!=</code>, <code>like</code>, <code>&amp;&amp;</code> and so on, depending on the type of the <code>Rep</code>. Comparisons to <code>Option</code> types are made easy for us as Slick will compare <code>Rep[T]</code> and <code>Rep[Option[T]]</code> automatically.</p>
-<p>We’ve seen that <code>map</code> acts like a SQL <code>select</code>, and <code>filter</code> is like a <code>WHERE</code>. We’ll see the Slick representation of <code>GROUP</code> and <code>JOIN</code> in <a href="#joins">Chapter 6</a>.</p>
-<p>We introduced some new terminology:</p>
+<p><code>TableQuery</code> から始めると、 <code>filter</code> と <code>map</code> を使って様々なクエリを作成することができます。 これらのクエリを構成する際に、 <code>Query</code> の型が追従するので、アプリケーション全体で型安全性を確保することができます。</p>
+<p>クエリで使用する式は、拡張メソッドで定義されています。 クエリで使用する式は、 <code>Rep</code> の型に応じて、 <code>===</code>, <code>=!=</code>, <code>like</code>, <code>&amp;&amp;</code> などの拡張メソッドで定義されます。 <code>Option</code> 型との比較は、Slick が <code>Rep[T]</code> と <code>Rep[Option[T]]</code> を自動的に比較するので、簡単に行うことができます。</p>
+<p>これまで、 <code>map</code> が SQL の <code>select</code> のように振る舞い、 <code>filter</code> が <code>WHERE</code> のように振る舞うことを見てきました。 <a href="#joins">第6章</a>では、 <code>GROUP</code> と <code>JOIN</code> のSlickな表現について見ていきます。</p>
+<p>新しい用語もいくつか紹介しました。</p>
 <ul>
-<li><p><em>unpacked</em> type, which is the regular Scala types we work with, such as <code>String</code>; and</p></li>
-<li><p><em>mixed</em> type, which is Slick’s column representation, such as <code>Rep[String]</code>.</p></li>
+<li><p><em>unpacked</em> 型: <code>String</code> のような通常のScalaの型です。</p></li>
+<li><p><em>mixed</em> 型: <code>Rep[String]</code>のようなSlickの列表現です。</p></li>
 </ul>
-<p>We run queries by converting them to actions using the <code>result</code> method. We run the actions against a database using <code>db.run</code>.</p>
-<p>The database action type constructor <code>DBIOAction</code> takes three arguments that represent the result, streaming mode, and effect. <code>DBIO[R]</code> simplifies this to just the result type.</p>
-<p>What we’ve seen for composing queries will help us to modify data using <code>update</code> and <code>delete</code>. That’s the topic of the next chapter.</p>
+<p>クエリは <code>result</code> メソッドを用いてアクションに変換して実行します。 アクションをデータベースに対して実行するには、 <code>db.run</code> を使用します。</p>
+<p>データベースアクションのコンストラクタ <code>DBIOAction</code> は、結果、ストリーミングモード、エフェクトを表す 3 つの引数を取ります。 <code>DBIO[R]</code>はこれを結果型だけに単純化したものです。</p>
+<p>これまで見てきたクエリの作成方法は、 <code>update</code> や <code>delete</code> を使ってデータを変更する際に役立ちます。 これは次の章のトピックです。</p>
 <h2 id="exercises"><span class="header-section-number">2.11</span> Exercises</h2>
-<p>If you’ve not already done so, try out the above code. In the <a href="https://github.com/underscoreio/essential-slick-code/tree/3.3">example project</a> the code is in <em>main.scala</em> in the folder <em>chapter-02</em>.</p>
-<p>Once you’ve done that, work through the exercises below. An easy way to try things out is to use <em>triggered execution</em> with SBT:</p>
+<p>この章で出てきたコードを試していない方は試してみてください。 <a href="https://github.com/underscoreio/essential-slick-code/tree/3.3">サンプルプロジェクト</a>では、コードは <em>chapter-02</em> フォルダの <em>main.scala</em> にあります。</p>
+<p>それができたら、以下の練習問題に取り組んでみてください。 SBTで <em>triggered execution</em> を使うと、簡単に試すことができます。</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="bu">cd</span> example-02
 $ <span class="ex">sbt</span>
 <span class="op">&gt;</span> <span class="ex">~run</span></code></pre></div>
-<p>That <code>~run</code> will monitor the project for changes, and when a change is seen, the <em>main.scala</em> program will be compiled and run. This means you can edit <em>main.scala</em> and then look in your terminal window to see the output.</p>
+<p><code>~run</code> は、プロジェクトに変更がないかどうかを監視します。 変更が見られるとプログラムがコンパイルされて実行されます。 つまり、<em>main.scala</em> を編集して、ターミナルウィンドウでその出力を見ることができるのです。</p>
 <h3 id="count-the-messages"><span class="header-section-number">2.11.1</span> Count the Messages</h3>
-<p>How would you count the number of messages? Hint: in the Scala collections the method <code>length</code> gives you the size of the collection.</p>
+<p>メッセージの数はどうやって数えるのでしょうか？</p>
+<p>ヒント：Scala のコレクションでは、 <code>length</code> メソッドがコレクションのサイズを教えてくれます</p>
 <div class="solution">
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> results = <span class="fu">exec</span>(messages.<span class="fu">length</span>.<span class="fu">result</span>)
 <span class="co">// results: Int = 4</span></code></pre></div>
-<p>You could also use <code>size</code>, which is an alias for <code>length</code>.</p>
+<p><code>length</code>のエイリアスである <code>size</code> を使用することもできます。</p>
 </div>
 <h3 id="selecting-a-message"><span class="header-section-number">2.11.2</span> Selecting a Message</h3>
-<p>Using a for comprehension, select the message with the id of 1. What happens if you try to find a message with an id of 999?</p>
-<p>Hint: our IDs are <code>Long</code>s. Adding <code>L</code> after a number in Scala, such as <code>99L</code>, makes it a long.</p>
+<p>for式を使ってid=1を持つメッセージを選択しましょう。 またidが999のメッセージを探そうとするとどうなりますか？</p>
+<p>ヒント：私たちのidは <code>Long</code> です。 Scalaでは数字の後に<code>L</code>をつけると、例えば<code>99L</code>のように、longになります。</p>
 <div class="solution">
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> id1query = <span class="kw">for</span> {
   message &lt;- messages <span class="kw">if</span> message.<span class="fu">id</span> === 1L
@@ -1569,45 +1567,45 @@ $ <span class="ex">sbt</span>
 <span class="co">// id1result: Seq[Message] = Vector(</span>
 <span class="co">//   Message(&quot;Dave&quot;, &quot;Hello, HAL. Do you read me, HAL?&quot;, 1L)</span>
 <span class="co">// )</span></code></pre></div>
-<p>Asking for <code>999</code>, when there is no row with that ID, will give back an empty collection.</p>
+<p>存在しないidである <code>999</code> を要求すると、空のコレクションが返されます。</p>
 </div>
 <h3 id="one-liners"><span class="header-section-number">2.11.3</span> One Liners</h3>
-<p>Re-write the query from the last exercise to not use a for comprehension. Which style do you prefer? Why?</p>
+<p>前回の練習問題のクエリを、for式を使わないように書き直してみましょう。 あなたはどちらのスタイルが好きですか？それはなぜですか？</p>
 <div class="solution">
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> filterResults = <span class="fu">exec</span>(messages.<span class="fu">filter</span>(_.<span class="fu">id</span> === 1L).<span class="fu">result</span>)
 <span class="co">// filterResults: Seq[MessageTable#TableElementType] = Vector(</span>
 <span class="co">//   Message(&quot;Dave&quot;, &quot;Hello, HAL. Do you read me, HAL?&quot;, 1L)</span>
 <span class="co">// )</span></code></pre></div>
 </div>
-<h3 id="checking-the-sql"><span class="header-section-number">2.11.4</span>  Checking the SQL</h3>
-<p>Calling the <code>result.statements</code> methods on a query will give you the SQL to be executed. Apply that to the last exercise. What query is reported? What does this tell you about the way <code>filter</code> has been mapped to SQL?</p>
+<h3 id="checking-the-sql"><span class="header-section-number">2.11.4</span> Checking the SQL</h3>
+<p>クエリに対して <code>result.statements</code> メソッドを呼び出すと、実行する SQL が得られます。 それを前回の演習に当てはめてみましょう。 どのようなクエリが得られますか？ このことから、<code>filter</code> が SQL にマップされていることについて何がわかるでしょうか？</p>
 <div class="solution">
-<p>The code you need to run is:</p>
+<p>このようなコードを実行する必要があります。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> sql = messages.<span class="fu">filter</span>(_.<span class="fu">id</span> === 1L).<span class="fu">result</span>.<span class="fu">statements</span>
 <span class="co">// sql: Iterable[String] = List(</span>
 <span class="co">//   &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;id\&quot; = 1&quot;</span>
 <span class="co">// )</span>
 <span class="fu">println</span>(sql.<span class="fu">head</span>)
 <span class="co">// select &quot;sender&quot;, &quot;content&quot;, &quot;id&quot; from &quot;message&quot; where &quot;id&quot; = 1</span></code></pre></div>
-<p>From this we see how <code>filter</code> corresponds to a SQL <code>where</code> clause.</p>
+<p><code>filter</code> が SQL の <code>where</code> 節にどのように対応するかがわかりますね。</p>
 </div>
 <h3 id="is-hal-real"><span class="header-section-number">2.11.5</span> Is HAL Real?</h3>
-<p>Find if there are any messages by HAL in the database, but only return a boolean value from the database.</p>
+<p>データベースにHALからのメッセージがあるかどうか確認してみましょう。 ただし、データベースからブール値を返すだけです（存在するか確認するだけ）。</p>
 <div class="solution">
-<p>That’s right, we want to know if HAL <code>exists</code>:</p>
+<p>そうです、私たちはHALが「存在する」のかどうかを知りたいのです。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> queryHalExists = messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>).<span class="fu">exists</span>
 <span class="co">// queryHalExists: Rep[Boolean] = Rep(Apply Function exists)</span>
 
 <span class="fu">exec</span>(queryHalExists.<span class="fu">result</span>)
 <span class="co">// res39: Boolean = true</span></code></pre></div>
-<p>The query will return <code>true</code> as we do have records from HAL, and Slick will generate the following SQL:</p>
+<p>このクエリは、HALからのレコードがあるので、<code>true</code>を返します。 そして、Slickは以下のSQLを生成します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">queryHalExists.<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">head</span>
 <span class="co">// res41: String = &quot;select exists(select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;sender\&quot; = 'HAL')&quot;</span></code></pre></div>
 </div>
 <h3 id="selecting-columns"><span class="header-section-number">2.11.6</span> Selecting Columns</h3>
-<p>So far we have been returning <code>Message</code> classes, booleans, or counts. Now we want to select all the messages in the database, but return just their <code>content</code> columns.</p>
-<p>Hint: think of messages as a collection and what you would do to a collection to just get back a single field of a case class.</p>
-<p>Check what SQL would be executed for this query.</p>
+<p>これまでは、 <code>Message</code> クラス、ブール値、またはカウント値を返してきました。 今度は、データベース内のすべてのメッセージを選択し、その <code>content</code> カラムだけを返すようにしたいと思います。</p>
+<p>ヒント: メッセージをコレクションとして考え、コレクションに対して case クラスの単一のフィールドを返すために何をするのかを考えてみましょう。</p>
+<p>このクエリでどのような SQL が実行されるかを確認してみましょう。</p>
 <div class="solution">
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> contents = messages.<span class="fu">map</span>(_.<span class="fu">content</span>)
 <span class="co">// contents: Query[Rep[String], String, Seq] = Rep(Bind)</span>
@@ -1618,34 +1616,34 @@ $ <span class="ex">sbt</span>
 <span class="co">//   &quot;Open the pod bay doors, HAL.&quot;,</span>
 <span class="co">//   &quot;I'm sorry, Dave. I'm afraid I can't do that.&quot;</span>
 <span class="co">// )</span></code></pre></div>
-<p>You could have also said:</p>
+<p>以下のようにも書けます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> altQuery = <span class="kw">for</span> { message &lt;- messages } <span class="kw">yield</span> message.<span class="fu">content</span>
 <span class="co">// altQuery: Query[Rep[String], String, Seq] = Rep(Bind)</span></code></pre></div>
-<p>The query will return only the <code>content</code> column from the database:</p>
+<p>このクエリは、データベースから <code>content</code> カラムのみを返します。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">altQuery.<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">head</span>
 <span class="co">// res43: String = &quot;select \&quot;content\&quot; from \&quot;message\&quot;&quot;</span></code></pre></div>
 </div>
 <h3 id="first-result"><span class="header-section-number">2.11.7</span> First Result</h3>
-<p>The methods <code>head</code> and <code>headOption</code> are useful methods on a <code>result</code>. Find the first message that HAL sent.</p>
-<p>What happens if you use <code>head</code> to find a message from “Alice” (note that Alice has sent no messages).</p>
+<p>メソッド <code>head</code> と <code>headOption</code> は、 <code>result</code> に対する便利なメソッドです。 HAL が最初に送信したメッセージを探しましょう。</p>
+<p>もし <code>head</code> を使って “Alice” からのメッセージを見つけたらどうなるでしょうか (Alice は何もメッセージを送っていないことに注意してください)。</p>
 <div class="solution">
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> msg1 = messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>).<span class="fu">map</span>(_.<span class="fu">content</span>).<span class="fu">result</span>.<span class="fu">head</span>
-<span class="co">// msg1: slick.sql.SqlAction[String, NoStream, Effect.Read] = slick.jdbc.StreamingInvokerAction$HeadAction@778851ff</span></code></pre></div>
-<p>You should get an action that produces “Affirmative, Dave. I read you.”</p>
-<p>For Alice, <code>head</code> will throw a run-time exception as we are trying to return the head of an empty collection. Using <code>headOption</code> will prevent the exception.</p>
+<span class="co">// msg1: slick.sql.SqlAction[String, NoStream, Effect.Read] = slick.jdbc.StreamingInvokerAction$HeadAction@364023c2</span></code></pre></div>
+<p>“Affirmative, Dave. I read you.” を生成するアクションを得られたはずです。</p>
+<p>Alice の場合、空のコレクションの先頭を返そうとしているので、 <code>head</code> は実行時例外を発生させます。<code>headOption</code> を使用すると、例外を回避できます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;Alice&quot;</span>).<span class="fu">result</span>.<span class="fu">headOption</span>)
 <span class="co">// res44: Option[Message] = None</span></code></pre></div>
 </div>
 <h3 id="then-the-rest"><span class="header-section-number">2.11.8</span> Then the Rest</h3>
-<p>In the previous exercise you returned the first message HAL sent. This time find the next five messages HAL sent. What messages are returned?</p>
-<p>What if we’d asked for HAL’s tenth through to twentieth message?</p>
+<p>前回の練習では、HAL が最初に送ったメッセージを返しました。 今回は、HAL が次に送った 5 つのメッセージを探してください。 どんなメッセージが返ってくるでしょうか？</p>
+<p>もし、HALの10番目から20番目までのメッセージを求めたらどうでしょうか？</p>
 <div class="solution">
-<p>It’s <code>drop</code> and <code>take</code> to the rescue:</p>
+<p><code>drop</code> と <code>take</code> を利用します</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> msgs = messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>).<span class="fu">drop</span>(<span class="dv">1</span>).<span class="fu">take</span>(<span class="dv">5</span>).<span class="fu">result</span>
-<span class="co">// msgs: slick.jdbc.H2Profile.StreamingProfileAction[Seq[MessageTable#TableElementType], MessageTable#TableElementType, Effect.Read] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@1fefe39</span></code></pre></div>
-<p>HAL has only two messages in total. Therefore our result set should contain one messages</p>
+<span class="co">// msgs: slick.jdbc.H2Profile.StreamingProfileAction[Seq[MessageTable#TableElementType], MessageTable#TableElementType, Effect.Read] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@4d4b04b0</span></code></pre></div>
+<p>HALは全部で2つのメッセージしか持っていません。 したがって、私たちの結果セットには1つのメッセージが含まれるはずです。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">Message</span>(HAL,I'm sorry, Dave. I'm afraid I can't <span class="kw">do</span> that.,<span class="dv">4</span>)</code></pre></div>
-<p>And asking for any more messages will result in an empty collection.</p>
+<p>これ以上メッセージを求めると、空のコレクションになってしまいます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> allMsgs = <span class="fu">exec</span>(
             messages.
               <span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>).
@@ -1656,46 +1654,47 @@ $ <span class="ex">sbt</span>
 <span class="co">// allMsgs: Seq[MessageTable#TableElementType] = Vector()</span></code></pre></div>
 </div>
 <h3 id="the-start-of-something"><span class="header-section-number">2.11.9</span> The Start of Something</h3>
-<p>The method <code>startsWith</code> on a <code>String</code> tests to see if the string starts with a particular sequence of characters. Slick also implements this for string columns. Find the message that starts with “Open”. How is that query implemented in SQL?</p>
+<p><code>String</code> の <code>startsWith</code> メソッドは、その文字列が特定の文字列で始まるかどうかをテストします。 Slickでは、文字列のカラムに対してもこれを実装しています。</p>
+<p>“Open”で始まるメッセージを検索しましょう。 そのクエリはSQLでどのように実装されていますか？</p>
 <div class="solution">
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">content</span> startsWith <span class="st">&quot;Open&quot;</span>)
-<span class="co">// res47: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1756327442)</span></code></pre></div>
-<p>The query is implemented in terms of <code>LIKE</code>:</p>
+<span class="co">// res47: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1128612771)</span></code></pre></div>
+<p>このクエリは <code>LIKE</code> という句で実装されています。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">content</span> startsWith <span class="st">&quot;Open&quot;</span>).<span class="fu">result</span>.<span class="fu">statements</span>.<span class="fu">head</span>
 <span class="co">// res48: String = &quot;select \&quot;sender\&quot;, \&quot;content\&quot;, \&quot;id\&quot; from \&quot;message\&quot; where \&quot;content\&quot; like 'Open%' escape '^'&quot;</span></code></pre></div>
 </div>
 <h3 id="liking"><span class="header-section-number">2.11.10</span> Liking</h3>
-<p>Slick implements the method <code>like</code>. Find all the messages with “do” in their content.</p>
-<p>Can you make this case insensitive?</p>
+<p>Slick は <code>like</code> というメソッドを実装しています。 コンテンツに “do” を含むすべてのメッセージを検索してください。</p>
+<p>大文字と小文字を区別しないようにできるでしょうか？</p>
 <div class="solution">
-<p>If you have familiarity with SQL <code>like</code> expressions, it probably wasn’t too hard to find a case-sensitive version of this query:</p>
+<p>SQL の <code>like</code> 式に慣れていれば、このクエリの大文字小文字を区別するバージョンを見つけるのはそれほど難しくないでしょう。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">content</span> like <span class="st">&quot;%do%&quot;</span>)
-<span class="co">// res49: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1286600388)</span></code></pre></div>
-<p>To make it case sensitive you could use <code>toLowerCase</code> on the <code>content</code> field:</p>
+<span class="co">// res49: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1446949375)</span></code></pre></div>
+<p>大文字と小文字を区別しないようにするには、<code>content</code> フィールドで <code>toLowerCase</code> を使用するとよいでしょう。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">content</span>.<span class="fu">toLowerCase</span> like <span class="st">&quot;%do%&quot;</span>)
-<span class="co">// res50: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @2031964423)</span></code></pre></div>
-<p>We can do this because <code>content</code> is a <code>Rep[String]</code> and that <code>Rep</code> has implemented <code>toLowerCase</code>. That means, the <code>toLowerCase</code> will be translated into meaningful SQL.</p>
-<p>There will be three results: “<em>Do</em> you read me”, “Open the pod bay <em>do</em>ors”, and “I’m afraid I can’t <em>do</em> that”.</p>
+<span class="co">// res50: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1298997702)</span></code></pre></div>
+<p>これは、<code>content</code> が <code>Rep[String]</code> であり、その <code>Rep</code> が <code>toLowerCase</code> を実装しているからです。 つまり、 <code>toLowerCase</code> は意味のある SQL に変換されます。</p>
+<p>結果は3つあります。“<em>Do</em> you read me”, “Open the pod bay <em>do</em>ors”, そして “I’m afraid I can’t <em>do</em> that” の3つになります。</p>
 </div>
 <h3 id="client-side-or-server-side"><span class="header-section-number">2.11.11</span> Client-Side or Server-Side?</h3>
-<p>What does this do and why?</p>
+<p>これは何をするものですか？ そしてなぜですか？</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(messages.<span class="fu">map</span>(_.<span class="fu">content</span>.<span class="fu">toString</span> + <span class="st">&quot;!&quot;</span>).<span class="fu">result</span>)</code></pre></div>
 <div class="solution">
-<p>The query Slick generates looks something like this:</p>
+<p>Slickが生成するクエリは、次のようなものです。</p>
 <div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">select</span> <span class="st">'(message Ref @421681221).content!'</span> <span class="kw">from</span> <span class="ot">&quot;message&quot;</span></code></pre></div>
-<p>That is a select expression for a strange constant string.</p>
-<p>The <code>_.content.toString + &quot;!&quot;</code> expression converts <code>content</code> to a string and appends the exclamation point. What is <code>content</code>? It’s a <code>Rep[String]</code>, not a <code>String</code> of the content. The end result is that we’re seeing something of the internal workings of Slick.</p>
-<p>It is possible to do this mapping in the database with Slick. We need to remember to work in terms of <code>Rep[T]</code> classes:</p>
+<p>これは奇妙な定数文字列のselect式です。</p>
+<p><code>_.content.toString + &quot;!&quot;</code> 式は <code>content</code> を文字列に変換し、感嘆符を追加します。 <code>content</code> とは何でしょうか？それは <code>Rep[String]</code> であり、コンテンツの <code>String</code> ではありません。 結局のところ、Slickの内部動作のようなものが見えていることになります。</p>
+<p>このマッピングをデータベースで行うことはSlickでも可能です。 このとき、<code>Rep[T]</code> クラスという単位で作業することを忘れないようにしましょう。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">map</span>(m =&gt; m.<span class="fu">content</span> ++ <span class="fu">LiteralColumn</span>(<span class="st">&quot;!&quot;</span>))
 <span class="co">// res53: Query[Rep[String], String, Seq] = Rep(Bind)</span></code></pre></div>
-<p>Here <code>LiteralColumn[T]</code> is type of <code>Rep[T]</code> for holding a constant value to be inserted into the SQL. The <code>++</code> method is one of the extension methods defined for any <code>Rep[String]</code>.</p>
-<p>Using <code>++</code> will produce the desired query:</p>
+<p>ここで <code>LiteralColumn[T]</code> は <code>Rep[T]</code> の型であり、SQL に挿入する定数値を保持するためのものである。 <code>++</code>メソッドは、任意の <code>Rep[String]</code> に対して定義された拡張メソッドの 1 つである。</p>
+<p><code>++</code>を使うと、希望通りのクエリが作成されます。</p>
 <div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">select</span> <span class="ot">&quot;content&quot;</span>||<span class="st">'!'</span> <span class="kw">from</span> <span class="ot">&quot;message&quot;</span></code></pre></div>
-<p>You can also write:</p>
+<p>このようにも書けます。</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">map</span>(m =&gt; m.<span class="fu">content</span> ++ <span class="st">&quot;!&quot;</span>)
 <span class="co">// res54: Query[Rep[String], String, Seq] = Rep(Bind)</span></code></pre></div>
-<p>…as <code>&quot;!&quot;</code> will be lifted to a <code>Rep[String]</code>.</p>
-<p>This exercise highlights that inside of a <code>map</code> or <code>filter</code> you are working in terms of <code>Rep[T]</code>. You should become familiar with the operations available to you. The tables we’ve included in this chapter should help with that.</p>
+<p><code>&quot;!&quot;</code> は <code>Rep[String]</code> にリフティングされました。</p>
+<p>この演習では、 <code>map</code> や <code>filter</code> の内部では、 <code>Rep[T]</code> という単位で作業していることに注目してください。 利用できる操作に慣れる必要があります。 この章に含まれている表は、その助けとなるはずです。</p>
 </div>
 <h1 id="Modifying"><span class="header-section-number">3</span> Creating and Modifying Data</h1>
 <p>In the last chapter we saw how to retrieve data from the database using select queries. In this chapter we will look at modifying stored data using insert, update, and delete queries.</p>
@@ -1706,7 +1705,7 @@ $ <span class="ex">sbt</span>
 <p>To insert a single row into a table we use the <code>+=</code> method. Note that, unlike the select queries we’ve seen, this creates a <code>DBIOAction</code> immediately without an intermediate <code>Query</code>:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> insertAction =
   messages += <span class="fu">Message</span>(<span class="st">&quot;HAL&quot;</span>, <span class="st">&quot;No. Seriously, Dave, I can't let you in.&quot;</span>)
-<span class="co">// insertAction: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@69749e32</span>
+<span class="co">// insertAction: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@6cc56ce8</span>
 
 <span class="fu">exec</span>(insertAction)
 <span class="co">// res1: Int = 1</span></code></pre></div>
@@ -1759,7 +1758,7 @@ $ <span class="ex">sbt</span>
 <p>When the database allocates primary keys for us it’s often the case that we want to get the key back after an insert. Slick supports this via the <code>returning</code> method:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> insertDave: DBIO[Long] =
   messages returning messages.<span class="fu">map</span>(_.<span class="fu">id</span>) += <span class="fu">Message</span>(<span class="st">&quot;Dave&quot;</span>, <span class="st">&quot;Point taken.&quot;</span>)
-<span class="co">// insertDave: DBIO[Long] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@1eaf70a4</span>
+<span class="co">// insertDave: DBIO[Long] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@567042f7</span>
 
 <span class="kw">val</span> pk: Long = <span class="fu">exec</span>(insertDave)
 <span class="co">// pk: Long = 1001L</span></code></pre></div>
@@ -1807,11 +1806,11 @@ $ <span class="ex">sbt</span>
   messages returning messages.<span class="fu">map</span>(_.<span class="fu">id</span>) into { (message, id) =&gt;
     message.<span class="fu">copy</span>(id = id)
   }
-<span class="co">// messagesReturningRow: slick.jdbc.H2Profile.IntoInsertActionComposer[MessageTable#TableElementType, Message] = slick.jdbc.JdbcActionComponent$ReturningInsertActionComposerImpl@3bba6347</span>
+<span class="co">// messagesReturningRow: slick.jdbc.H2Profile.IntoInsertActionComposer[MessageTable#TableElementType, Message] = slick.jdbc.JdbcActionComponent$ReturningInsertActionComposerImpl@7fa7c926</span>
 
 <span class="kw">val</span> insertMessage: DBIO[Message] =
   messagesReturningRow += <span class="fu">Message</span>(<span class="st">&quot;Dave&quot;</span>, <span class="st">&quot;You're such a jerk.&quot;</span>)
-<span class="co">// insertMessage: DBIO[Message] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@43ea75e5</span>
+<span class="co">// insertMessage: DBIO[Message] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@f15a57d</span>
 
 <span class="fu">exec</span>(insertMessage)
 <span class="co">// res10: Message = Message(&quot;Dave&quot;, &quot;You're such a jerk.&quot;, 1003L)</span></code></pre></div>
@@ -1900,7 +1899,7 @@ $ <span class="ex">sbt</span>
 <p>That looks quite involved, but we can build it up gradually.</p>
 <p>The tricky part of this is the <code>select 'Stanley', 'Cut!'</code> part, as there is no <code>FROM</code> clause there. We saw an example of how to create that in <a href="#constantQueries">Chapter 2</a>, with <code>Query.apply</code>. For this situation it would be:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> data = Query((<span class="st">&quot;Stanley&quot;</span>, <span class="st">&quot;Cut!&quot;</span>))
-<span class="co">// data: Query[(ConstColumn[String], ConstColumn[String]), (String, String), Seq] = Rep(Pure $@2126652369)</span></code></pre></div>
+<span class="co">// data: Query[(ConstColumn[String], ConstColumn[String]), (String, String), Seq] = Rep(Pure $@2095697406)</span></code></pre></div>
 <p><code>data</code> is a constant query that returns a fixed value—a tuple of two columns. It’s the equivalent of running <code>SELECT 'Stanley', 'Cut!';</code> against the database, which is one part of the query we need.</p>
 <p>We also need to be able to test to see if the data already exists. That’s straightforward:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> exists =
@@ -1914,7 +1913,7 @@ $ <span class="ex">sbt</span>
   messages.
     <span class="fu">map</span>(m =&gt; m.<span class="fu">sender</span> -&gt; m.<span class="fu">content</span>).
     <span class="fu">forceInsertQuery</span>(selectExpression)
-<span class="co">// forceAction: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$InsertQueryAction@6e1734b1</span>
+<span class="co">// forceAction: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$InsertQueryAction@5e75a153</span>
 
 <span class="fu">exec</span>(forceAction)
 <span class="co">// res15: Int = 1</span>
@@ -1927,7 +1926,7 @@ $ <span class="ex">sbt</span>
 <p>Slick lets us delete rows using the same <code>Query</code> objects we saw in <a href="#selecting">Chapter 2</a>. That is, we specify which rows to delete using the <code>filter</code> method, and then call <code>delete</code>:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> removeHal: DBIO[Int] =
   messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>).<span class="fu">delete</span>
-<span class="co">// removeHal: DBIO[Int] = slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@1ec5c29b</span>
+<span class="co">// removeHal: DBIO[Int] = slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@3253b22c</span>
 
 <span class="fu">exec</span>(removeHal)
 <span class="co">// res17: Int = 9</span></code></pre></div>
@@ -1968,13 +1967,13 @@ $ <span class="ex">sbt</span>
 <span class="co">// res22: String = &quot;update \&quot;message\&quot; set \&quot;sender\&quot; = ? where \&quot;message\&quot;.\&quot;sender\&quot; = 'HAL'&quot;</span></code></pre></div>
 <p>Let’s break down the code in the Scala expression. By building our update query from the <code>messages</code> <code>TableQuery</code>, we specify that we want to update records in the <code>message</code> table in the database:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> messagesByHal = messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>)
-<span class="co">// messagesByHal: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @44716100)</span></code></pre></div>
+<span class="co">// messagesByHal: Query[MessageTable, MessageTable#TableElementType, Seq] = Rep(Filter @1601747196)</span></code></pre></div>
 <p>We only want to update the <code>sender</code> column, so we use <code>map</code> to reduce the query to just that column:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> halSenderCol = messagesByHal.<span class="fu">map</span>(_.<span class="fu">sender</span>)
 <span class="co">// halSenderCol: Query[Rep[String], String, Seq] = Rep(Bind)</span></code></pre></div>
 <p>Finally we call the <code>update</code> method, which takes a parameter of the <em>unpacked</em> type (in this case <code>String</code>):</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> action: DBIO[Int] = halSenderCol.<span class="fu">update</span>(<span class="st">&quot;HAL 9000&quot;</span>)
-<span class="co">// action: DBIO[Int] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@123d1d89</span></code></pre></div>
+<span class="co">// action: DBIO[Int] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@2fb9b9dd</span></code></pre></div>
 <p>Running that action would return the number of rows changed.</p>
 <h3 id="updating-multiple-fields"><span class="header-section-number">3.3.2</span> Updating Multiple Fields</h3>
 <p>We can update more than one field at the same time by mapping the query to a tuple of the columns we care about…</p>
@@ -1986,7 +1985,7 @@ $ <span class="ex">sbt</span>
 <p>…and then supplying the tuple values we want to used in the update:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> updateAction: DBIO[Int] =
   query.<span class="fu">update</span>((<span class="st">&quot;HAL 9000&quot;</span>, <span class="st">&quot;Sure, Dave. Come right in.&quot;</span>))
-<span class="co">// updateAction: DBIO[Int] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@4932c45d</span>
+<span class="co">// updateAction: DBIO[Int] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@1519af2</span>
 
 <span class="fu">exec</span>(updateAction)
 <span class="co">// res24: Int = 1</span>
@@ -2012,7 +2011,7 @@ messages.
   <span class="fu">filter</span>(_.<span class="fu">id</span> === 1016L).
   <span class="fu">map</span>(m =&gt; (m.<span class="fu">sender</span>, m.<span class="fu">content</span>).<span class="fu">mapTo</span>[NameText]).
   <span class="fu">update</span>(newValue)
-<span class="co">// res27: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@432c3ee6</span></code></pre></div>
+<span class="co">// res27: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@3d163353</span></code></pre></div>
 <h3 id="updating-with-a-computed-value"><span class="header-section-number">3.3.3</span> Updating with a Computed Value</h3>
 <p>Let’s now turn to more interesting updates. How about converting every message to be all capitals? Or adding an exclamation mark to the end of each message? Both of these queries involve expressing the desired result in terms of the current value in the database. In SQL we might write something like:</p>
 <div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">update</span> <span class="ot">&quot;message&quot;</span> <span class="kw">set</span> <span class="ot">&quot;content&quot;</span> = <span class="fu">CONCAT</span>(<span class="ot">&quot;content&quot;</span>, <span class="st">'!'</span>)</code></pre></div>
@@ -2071,7 +2070,7 @@ messages.
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> senderAndContent = messages.<span class="fu">map</span> { m =&gt; (m.<span class="fu">sender</span>, m.<span class="fu">content</span>) }
 <span class="co">// senderAndContent: Query[(Rep[String], Rep[String]), (String, String), Seq] = Rep(Bind)</span>
 <span class="kw">val</span> insertSenderContent = senderAndContent += ( (<span class="st">&quot;HAL&quot;</span>,<span class="st">&quot;Helllllo Dave&quot;</span>) )
-<span class="co">// insertSenderContent: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@6cf5f1eb</span>
+<span class="co">// insertSenderContent: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@5b619eba</span>
 <span class="fu">exec</span>(insertSenderContent)
 <span class="co">// res30: Int = 1</span></code></pre></div>
 <p>We have used <code>map</code> to create a query that works on the two columns we care about. To insert using that query, we supply the two field values.</p>
@@ -2096,7 +2095,7 @@ messages.
   messages returning messages.<span class="fu">map</span>(_.<span class="fu">id</span>) into { (message, id) =&gt;
     message.<span class="fu">copy</span>(id = id)
   }
-<span class="co">// messageRows: slick.jdbc.H2Profile.IntoInsertActionComposer[MessageTable#TableElementType, Message] = slick.jdbc.JdbcActionComponent$ReturningInsertActionComposerImpl@165e68a9</span>
+<span class="co">// messageRows: slick.jdbc.H2Profile.IntoInsertActionComposer[MessageTable#TableElementType, Message] = slick.jdbc.JdbcActionComponent$ReturningInsertActionComposerImpl@3974a35a</span>
 
 <span class="fu">exec</span>(messageRows ++= conversation).<span class="fu">foreach</span>(println)
 <span class="co">// Message(Bob,Hi Alice,1018)</span>
@@ -2115,7 +2114,7 @@ messages.
 <div class="solution">
 <p>The pattern is to define a query to select the data, and then use it with <code>delete</code>:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">messages.<span class="fu">filter</span>(_.<span class="fu">content</span> like <span class="st">&quot;%sorry%&quot;</span>).<span class="fu">delete</span>
-<span class="co">// res32: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@49914613</span></code></pre></div>
+<span class="co">// res32: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@347f388c</span></code></pre></div>
 </div>
 <h3 id="update-using-a-for-comprehension"><span class="header-section-number">3.5.4</span> Update Using a For Comprehension</h3>
 <p>Rewrite the update statement below to use a for comprehension.</p>
@@ -2123,7 +2122,7 @@ messages.
   <span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>).
   <span class="fu">map</span>(msg =&gt; (msg.<span class="fu">sender</span>, msg.<span class="fu">content</span>)).
   <span class="fu">update</span>((<span class="st">&quot;HAL 9000&quot;</span>, <span class="st">&quot;Rebooting, please wait...&quot;</span>))
-<span class="co">// rebootLoop: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@6b689ac9</span></code></pre></div>
+<span class="co">// rebootLoop: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@387f19fb</span></code></pre></div>
 <p>Which style do you prefer?</p>
 <div class="solution">
 <p>We’ve split this into a <code>query</code> and then an <code>update</code>:</p>
@@ -2133,7 +2132,7 @@ messages.
 <span class="co">// halMessages: Query[(Rep[String], Rep[String]), (String, String), Seq] = Rep(Bind)</span>
 
 <span class="kw">val</span> rebootLoopUpdate = halMessages.<span class="fu">update</span>((<span class="st">&quot;HAL 9000&quot;</span>, <span class="st">&quot;Rebooting, please wait...&quot;</span>))
-<span class="co">// rebootLoopUpdate: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@285144e6</span></code></pre></div>
+<span class="co">// rebootLoopUpdate: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$UpdateActionExtensionMethodsImpl$$anon$10@6f3cd400</span></code></pre></div>
 </div>
 <h3 id="selective-memory"><span class="header-section-number">3.5.5</span> Selective Memory</h3>
 <p>Delete <code>HAL</code>s first two messages. This is a more difficult exercise.</p>
@@ -2153,7 +2152,7 @@ messages.
       map    {_.<span class="fu">id</span>}.
       <span class="fu">take</span>(<span class="dv">2</span>)
   }.<span class="fu">delete</span>
-<span class="co">// selectiveMemory: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@4d2f7a65</span>
+<span class="co">// selectiveMemory: slick.jdbc.H2Profile.ProfileAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@734ec4ce</span>
 
 selectiveMemory.<span class="fu">statements</span>.<span class="fu">head</span>
 <span class="co">// res33: String = &quot;delete from \&quot;message\&quot; where \&quot;message\&quot;.\&quot;id\&quot; in (select \&quot;id\&quot; from \&quot;message\&quot; where \&quot;sender\&quot; = 'HAL' order by \&quot;id\&quot; limit 2)&quot;</span></code></pre></div>
@@ -2290,7 +2289,7 @@ selectiveMemory.<span class="fu">statements</span>.<span class="fu">head</span>
 <p>The simplest way to run one action after another is perhaps <code>andThen</code>. The combined actions are both run, but only the result of the second is returned:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> reset: DBIO[Int] =
   messages.<span class="fu">delete</span> andThen messages.<span class="fu">size</span>.<span class="fu">result</span>
-<span class="co">// reset: DBIO[Int] = slick.dbio.SynchronousDatabaseAction$FusedAndThenAction@1be832f1</span>
+<span class="co">// reset: DBIO[Int] = slick.dbio.SynchronousDatabaseAction$FusedAndThenAction@58be9e88</span>
 
 <span class="fu">exec</span>(reset)
 <span class="co">// res1: Int = 0</span></code></pre></div>
@@ -2316,14 +2315,14 @@ selectiveMemory.<span class="fu">statements</span>.<span class="fu">head</span>
 
 <span class="kw">val</span> text: DBIO[Option[String]] =
   messages.<span class="fu">map</span>(_.<span class="fu">content</span>).<span class="fu">result</span>.<span class="fu">headOption</span>
-<span class="co">// text: DBIO[Option[String]] = slick.jdbc.StreamingInvokerAction$HeadOptionAction@36e2dfa</span>
+<span class="co">// text: DBIO[Option[String]] = slick.jdbc.StreamingInvokerAction$HeadOptionAction@72b3d82e</span>
 
 <span class="kw">val</span> backwards: DBIO[Option[String]] =
   text.<span class="fu">map</span>(optionalContent =&gt; optionalContent.<span class="fu">map</span>(_.<span class="fu">reverse</span>))
 <span class="co">// backwards: DBIO[Option[String]] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.StreamingInvokerAction$HeadOptionAction@36e2dfa,</span>
-<span class="co">//   slick.dbio.DBIOAction$$Lambda$8006/307324857@2a7eeecf,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 79, tasks = 0, submissions = 0]</span>
+<span class="co">//   slick.jdbc.StreamingInvokerAction$HeadOptionAction@72b3d82e,</span>
+<span class="co">//   slick.dbio.DBIOAction$$Lambda$6064/1564765255@806d17e,</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 20, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(backwards)
@@ -2339,9 +2338,9 @@ selectiveMemory.<span class="fu">statements</span>.<span class="fu">head</span>
 <p>This example transformed an <code>Option[String]</code> to another <code>Option[String]</code>. As you may expect if <code>map</code> changes the type of a value, the type of <code>DBIO</code> changes too:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">text.<span class="fu">map</span>(os =&gt; os.<span class="fu">map</span>(_.<span class="fu">length</span>))
 <span class="co">// res4: DBIOAction[Option[Int], NoStream, Effect.All] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.StreamingInvokerAction$HeadOptionAction@36e2dfa,</span>
-<span class="co">//   slick.dbio.DBIOAction$$Lambda$8006/307324857@33e65b68,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 79, tasks = 0, submissions = 0]</span>
+<span class="co">//   slick.jdbc.StreamingInvokerAction$HeadOptionAction@72b3d82e,</span>
+<span class="co">//   slick.dbio.DBIOAction$$Lambda$6064/1564765255@7aea9a18,</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 20, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span></code></pre></div>
 <p>Note that the first type parameter on the <code>DBIOAction</code> is now <code>Option[Int]</code> (as <code>length</code> returns an <code>Int</code>), not <code>Option[String]</code>.</p>
 <div class="callout callout-info">
@@ -2381,9 +2380,9 @@ selectiveMemory.<span class="fu">statements</span>.<span class="fu">head</span>
 <span class="kw">val</span> resetMessagesAction: DBIO[Int] =
   delete.<span class="fu">flatMap</span>{ count =&gt; <span class="fu">insert</span>(count) }
 <span class="co">// resetMessagesAction: DBIO[Int] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@69c3885f,</span>
+<span class="co">//   slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@16745fc3,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 79, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 20, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(resetMessagesAction)
@@ -2476,11 +2475,11 @@ selectiveMemory.<span class="fu">statements</span>.<span class="fu">head</span>
 <span class="co">// summary: DBIO[Int] = FlatMapAction(</span>
 <span class="co">//   FlatMapAction(</span>
 <span class="co">//     SuccessAction(0),</span>
-<span class="co">//     slick.dbio.DBIOAction$$$Lambda$8331/1304036793@1b306960,</span>
-<span class="co">//     scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 79, tasks = 0, submissions = 0]</span>
+<span class="co">//     slick.dbio.DBIOAction$$$Lambda$6414/633935472@2847f152,</span>
+<span class="co">//     scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 20, tasks = 0, submissions = 0]</span>
 <span class="co">//   ),</span>
-<span class="co">//   slick.dbio.DBIOAction$$$Lambda$8331/1304036793@46e5f45f,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 79, tasks = 0, submissions = 0]</span>
+<span class="co">//   slick.dbio.DBIOAction$$$Lambda$6414/633935472@1ed92029,</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 20, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(summary)
@@ -2490,7 +2489,7 @@ selectiveMemory.<span class="fu">statements</span>.<span class="fu">head</span>
 <p>We’ve seen how <code>DBIO.seq</code> combines actions and ignores the results. We’ve also seen that <code>andThen</code> combines actions and keeps one result. If you want to keep both results, <code>zip</code> is the combinator for you:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> zip: DBIO[(Int, Seq[Message])] =
   messages.<span class="fu">size</span>.<span class="fu">result</span> zip messages.<span class="fu">filter</span>(_.<span class="fu">sender</span> === <span class="st">&quot;HAL&quot;</span>).<span class="fu">result</span>
-<span class="co">// zip: DBIO[(Int, Seq[Message])] = slick.dbio.SynchronousDatabaseAction$$anon$5@4759caf0</span>
+<span class="co">// zip: DBIO[(Int, Seq[Message])] = slick.dbio.SynchronousDatabaseAction$$anon$5@304d43b0</span>
 
 <span class="co">// Make sure we have some messages from HAL:</span>
 <span class="fu">exec</span>(messages ++= freshTestData)
@@ -2632,7 +2631,7 @@ exec {
   DBIO.<span class="fu">failed</span>(<span class="kw">new</span> Exception(<span class="st">&quot;agggh my ears&quot;</span>))                        &gt;&gt;
   (messages += <span class="fu">Message</span>(<span class="st">&quot;HAL&quot;</span>, <span class="st">&quot;Give me your answer do&quot;</span>))
   ).<span class="fu">transactionally</span>
-<span class="co">// willRollback: DBIOAction[Int, NoStream, Effect.Write with Effect.Write with Effect with Effect.Write with Effect.Transactional] = slick.dbio.SynchronousDatabaseAction$$anon$11@43607972</span>
+<span class="co">// willRollback: DBIOAction[Int, NoStream, Effect.Write with Effect.Write with Effect with Effect.Write with Effect.Transactional] = slick.dbio.SynchronousDatabaseAction$$anon$11@442696a4</span>
 
 <span class="fu">exec</span>(willRollback.<span class="fu">asTry</span>)
 <span class="co">// res17: util.Try[Int] = Failure(java.lang.Exception: agggh my ears)</span></code></pre></div>
@@ -2648,11 +2647,11 @@ exec {
 <p>In Chapter 1 we created a schema and populated the database as separate actions. Use your newly found knowledge to combine them.</p>
 <p>This exercise expects to start with an empty database. If you’re already in the REPL and the database exists, you’ll need to drop the table first:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> drop:     DBIO[Unit]        = messages.<span class="fu">schema</span>.<span class="fu">drop</span>
-<span class="co">// drop: DBIO[Unit] = slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$8@4ae725a4</span>
+<span class="co">// drop: DBIO[Unit] = slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$8@1eac0d53</span>
 <span class="kw">val</span> create:   DBIO[Unit]        = messages.<span class="fu">schema</span>.<span class="fu">create</span>
-<span class="co">// create: DBIO[Unit] = slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@11880b5f</span>
+<span class="co">// create: DBIO[Unit] = slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@686dccb</span>
 <span class="kw">val</span> populate: DBIO[Option[Int]] = messages ++= freshTestData
-<span class="co">// populate: DBIO[Option[Int]] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$MultiInsertAction@4aa69be1</span>
+<span class="co">// populate: DBIO[Option[Int]] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$MultiInsertAction@5cd165af</span>
 
 <span class="fu">exec</span>(drop)</code></pre></div>
 <div class="solution">
@@ -2661,7 +2660,7 @@ exec {
 <span class="co">// res20: Option[Int] = Some(4)</span></code></pre></div>
 <p>If we don’t care about any of the values we could also use <code>DBIO.seq</code>:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> allInOne = DBIO.<span class="fu">seq</span>(drop,create,populate)
-<span class="co">// allInOne: DBIOAction[Unit, NoStream, Effect.All] = slick.dbio.DBIOAction$$anon$4@acdc02e</span>
+<span class="co">// allInOne: DBIOAction[Unit, NoStream, Effect.All] = slick.dbio.DBIOAction$$anon$4@2c325b27</span>
 <span class="kw">val</span> result = <span class="fu">exec</span>(allInOne)</code></pre></div>
 </div>
 <h3 id="first"><span class="header-section-number">4.6.2</span> First!</h3>
@@ -2707,13 +2706,13 @@ exec {
 <p>You can see that <code>onlyOne</code> takes an action as an argument, and that the action could return a sequence of results. The return from the method is an action that will return a single value.</p>
 <p>In the example data there is only one message that contains the word “Sorry”, so we expect <code>onlyOne</code> to return that row:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> happy = messages.<span class="fu">filter</span>(_.<span class="fu">content</span> like <span class="st">&quot;%sorry%&quot;</span>).<span class="fu">result</span>
-<span class="co">// happy: slick.jdbc.H2Profile.StreamingProfileAction[Seq[MessageTable#TableElementType], MessageTable#TableElementType, Effect.Read] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@79740ed6</span></code></pre></div>
+<span class="co">// happy: slick.jdbc.H2Profile.StreamingProfileAction[Seq[MessageTable#TableElementType], MessageTable#TableElementType, Effect.Read] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@520a1d67</span></code></pre></div>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="co">// We expect... </span>
 <span class="co">// exec(onlyOne(happy))</span>
 <span class="co">// ...to return a message.</span></code></pre></div>
 <p>However, there are two messages containing the word “I”. In this case <code>onlyOne</code> should fail:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> boom  = messages.<span class="fu">filter</span>(_.<span class="fu">content</span> like <span class="st">&quot;%I%&quot;</span>).<span class="fu">result</span>
-<span class="co">// boom: slick.jdbc.H2Profile.StreamingProfileAction[Seq[MessageTable#TableElementType], MessageTable#TableElementType, Effect.Read] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@28772054</span></code></pre></div>
+<span class="co">// boom: slick.jdbc.H2Profile.StreamingProfileAction[Seq[MessageTable#TableElementType], MessageTable#TableElementType, Effect.Read] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@625af369</span></code></pre></div>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="co">// If we run this...</span>
 <span class="co">// exec(onlyOne(boom))</span>
 <span class="co">// we want a failure, such as:</span>
@@ -2869,9 +2868,9 @@ exec {
 
 <span class="kw">val</span> path: DBIO[Seq[String]] = <span class="fu">unfold</span>(<span class="st">&quot;Podbay&quot;</span>, nextRoom)
 <span class="co">// path: DBIO[Seq[String]] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.StreamingInvokerAction$HeadOptionAction@3258a968,</span>
+<span class="co">//   slick.jdbc.StreamingInvokerAction$HeadOptionAction@b24906a,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 79, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 20, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(path)
@@ -2951,7 +2950,7 @@ exec {
 <p>Here we factor out our <code>profile</code> dependency into its own <code>Profile</code> trait. Each module of database code specifies <code>Profile</code> as a self-type, meaning it can only be extended by a class that also extends <code>Profile</code>. This allows us to share the <code>profile</code> across our family of modules.</p>
 <p>To work with a different database, we inject a different profile when we instantiate the database code:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> anotherDatabaseLayer = <span class="kw">new</span> <span class="fu">DatabaseLayer</span>(slick.<span class="fu">jdbc</span>.<span class="fu">PostgresProfile</span>)
-<span class="co">// anotherDatabaseLayer: DatabaseLayer = repl.Session$App$DatabaseLayer@4ab3e0f4</span></code></pre></div>
+<span class="co">// anotherDatabaseLayer: DatabaseLayer = repl.Session$App$DatabaseLayer@244fa3fd</span></code></pre></div>
 <p>This basic pattern is a reasonable way of structuring your application.</p>
 <!--
 ### Namespacing Queries
@@ -3194,9 +3193,9 @@ user == dog
   rows &lt;- attributes.<span class="fu">filter</span>(_.<span class="fu">value1</span> === <span class="dv">1</span>).<span class="fu">result</span>
 } <span class="kw">yield</span> rows
 <span class="co">// program: DBIO[Seq[AttrHList]] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@4caf9463,</span>
+<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@f9d01a5,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 98, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 39, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 
@@ -3271,9 +3270,9 @@ user == dog
   rows &lt;- attributes.<span class="fu">filter</span>(_.<span class="fu">productId</span> === 100L).<span class="fu">result</span>
 } <span class="kw">yield</span> rows
 <span class="co">// program: DBIO[Seq[Attrs]] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@6d9afc59,</span>
+<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@2f1205f7,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 98, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 39, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(program)
@@ -3307,7 +3306,7 @@ user == dog
   (users += <span class="fu">User</span>(<span class="st">&quot;Dave&quot;</span>, Some(<span class="st">&quot;dave@example.org&quot;</span>))) &gt;&gt;
   (users += <span class="fu">User</span>(<span class="st">&quot;HAL&quot;</span>))
 )
-<span class="co">// program: DBIOAction[Int, NoStream, Effect.Schema with Effect.Write with Effect.Write] = slick.dbio.SynchronousDatabaseAction$FusedAndThenAction@28a7d2b5</span>
+<span class="co">// program: DBIOAction[Int, NoStream, Effect.Schema with Effect.Write with Effect.Write] = slick.dbio.SynchronousDatabaseAction$FusedAndThenAction@15467a61</span>
 
 <span class="fu">exec</span>(program)
 <span class="co">// res8: Int = 1</span></code></pre></div>
@@ -3452,9 +3451,9 @@ user == dog
   rowsAdded &lt;- occupants += <span class="fu">Occupant</span>(airLockId, elenaId)
 } <span class="kw">yield</span> rowsAdded
 <span class="co">// program: DBIO[Int] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@1247ac95,</span>
+<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@3c317f6b,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 98, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 39, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(program)
@@ -3599,12 +3598,12 @@ user == dog
 } <span class="kw">yield</span> rowsAdded
 <span class="co">// setup: DBIOAction[Option[Int], NoStream, Effect.All with Effect.All with Effect.Schema with Effect.Write] = FlatMapAction(</span>
 <span class="co">//   FlatMapAction(</span>
-<span class="co">//     slick.jdbc.StreamingInvokerAction$HeadOptionAction@22fb3e32,</span>
+<span class="co">//     slick.jdbc.StreamingInvokerAction$HeadOptionAction@5bc6d161,</span>
 <span class="co">//     &lt;function1&gt;,</span>
-<span class="co">//     scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 98, tasks = 0, submissions = 0]</span>
+<span class="co">//     scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 39, tasks = 0, submissions = 0]</span>
 <span class="co">//   ),</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 98, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 39, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(setup)
@@ -3732,9 +3731,9 @@ To pull data from across tables, use a query.
     DateTime.<span class="fu">now</span>)
 } <span class="kw">yield</span> msgId
 <span class="co">// program: DBIOAction[insertMessage.SingleInsertResult, NoStream, Effect.Schema with Effect.Schema with Effect.Write with Effect.Write] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@18b97600,</span>
+<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@64444a53,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 98, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 39, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="kw">val</span> msgId = <span class="fu">exec</span>(program)
@@ -3742,7 +3741,7 @@ To pull data from across tables, use a query.
 <p>Fetching the database row will automatically convert the <code>timestamp</code> field into the <code>DateTime</code> value we expect:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(messages.<span class="fu">filter</span>(_.<span class="fu">id</span> === msgId).<span class="fu">result</span>)
 <span class="co">// res18: Seq[MessageTable#TableElementType] = Vector(</span>
-<span class="co">//   Message(1L, &quot;Open the pod bay doors, HAL.&quot;, 2023-02-21T11:07:32.473Z, 1L)</span>
+<span class="co">//   Message(1L, &quot;Open the pod bay doors, HAL.&quot;, 2023-02-27T07:46:25.562Z, 1L)</span>
 <span class="co">// )</span></code></pre></div>
 <p>This model of working with semantic types is immediately appealing to Scala developers. We strongly encourage you to use <code>ColumnType</code> in your applications, to help reduce bugs and let Slick take care of the type conversions.</p>
 <h3 id="value-classes"><span class="header-section-number">5.4.1</span> Value Classes</h3>
@@ -3801,7 +3800,7 @@ To pull data from across tables, use a query.
 <p>Notice how we’re able to be explicit: the <code>User.id</code> and <code>Message.senderId</code> are <code>UserPK</code>s, and the <code>Message.id</code> is a <code>MessagePK</code>.</p>
 <p>We can lookup values if we have the right kind of key:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">users.<span class="fu">filter</span>(_.<span class="fu">id</span> === <span class="fu">UserPK</span>(0L))
-<span class="co">// res22: Query[UserTable, UserTable#TableElementType, Seq] = Rep(Filter @1353903395)</span></code></pre></div>
+<span class="co">// res22: Query[UserTable, UserTable#TableElementType, Seq] = Rep(Filter @38871082)</span></code></pre></div>
 <p>…but if we accidentally try to mix our primary keys, we’ll find we cannot:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">users.<span class="fu">filter</span>(_.<span class="fu">id</span> === <span class="fu">MessagePK</span>(0L))
 <span class="co">// error: Cannot perform option-mapped operation</span>
@@ -3833,7 +3832,7 @@ To pull data from across tables, use a query.
 
 <span class="kw">val</span> exampleQuery =
   users.<span class="fu">filter</span>(_.<span class="fu">id</span> === PK[UserTable](0L))
-<span class="co">// exampleQuery: Query[UserTable, UserTable#TableElementType, Seq] = Rep(Filter @639814692)</span></code></pre></div>
+<span class="co">// exampleQuery: Query[UserTable, UserTable#TableElementType, Seq] = Rep(Filter @1786887090)</span></code></pre></div>
 <p>With this approach we achieve type safety without the boiler plate of many primary key type definitions. Depending on the nature of your application, this may be convenient for you.</p>
 <p>The general point is that we can use the whole of the Scala type system to represent primary keys, foreign keys, rows, and columns from our database. This is enormously valuable and should not be overlooked.</p>
 <h3 id="modelling-sum-types"><span class="header-section-number">5.4.2</span> Modelling Sum Types</h3>
@@ -4007,7 +4006,7 @@ messages.<span class="fu">filter</span>(_.<span class="fu">isImportant</span>).<
 <div class="solution">
 <p>We get a runtime exception as we have violated referential integrity. There is no row in the <code>user</code> table with a primary id of <code>3000</code>.</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> action = messages += <span class="fu">Message</span>(<span class="fu">UserPK</span>(3000L), <span class="st">&quot;Hello HAL!&quot;</span>)
-<span class="co">// action: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@4407718a</span>
+<span class="co">// action: slick.sql.FixedSqlAction[Int, NoStream, Effect.Write] = slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@3ed03c00</span>
 <span class="fu">exec</span>(action.<span class="fu">asTry</span>)
 <span class="co">// res41: util.Try[Int] = Failure(</span>
 <span class="co">//   org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException: Referential integrity constraint violation: &quot;sender_fk2: PUBLIC.msg_table FOREIGN KEY(sender) REFERENCES PUBLIC.user(id) (3000)&quot;; SQL statement:</span>
@@ -4235,9 +4234,9 @@ messages.<span class="fu">filter</span>(_.<span class="fu">isImportant</span>).<
   rowsAdded &lt;- messages ++= <span class="fu">freshTestData</span>(daveId, halId)
 } <span class="kw">yield</span> rowsAdded
 <span class="co">// setup: DBIOAction[Option[Int], NoStream, Effect.Schema with Effect.Write with Effect.Write with Effect.Write] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@19f2f061,</span>
+<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@5939d0be,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 113, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 54, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(setup)
@@ -4305,7 +4304,7 @@ messages.<span class="fu">filter</span>(_.<span class="fu">isImportant</span>).<
 <span class="co">// applicative3: Query[(MessageTable, UserTable), (Message, User), Seq] = Rep(Join Inner)</span></code></pre></div>
 <p>Joins like this form queries that we convert to actions the usual way:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> action: DBIO[Seq[(Message, User)]] = applicative3.<span class="fu">result</span>
-<span class="co">// action: DBIO[Seq[(Message, User)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@2f59f37</span>
+<span class="co">// action: DBIO[Seq[(Message, User)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@c01de9b</span>
 
 <span class="fu">exec</span>(action)
 <span class="co">// res1: Seq[(Message, User)] = Vector(</span>
@@ -4382,9 +4381,9 @@ messages.<span class="fu">filter</span>(_.<span class="fu">isImportant</span>).<
   msgs &lt;- messages.<span class="fu">result</span>
 } <span class="kw">yield</span> (msgs)
 <span class="co">// setup: DBIOAction[Seq[MessageTable#TableElementType], NoStream, Effect.Schema with Effect.Write with Effect.Write with Effect.Write with Effect.Write with Effect.Write with Effect.Read] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@7bf647cb,</span>
+<span class="co">//   slick.jdbc.JdbcActionComponent$SchemaActionExtensionMethodsImpl$$anon$5@2873d6a8,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 113, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 54, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(setup).<span class="fu">foreach</span>(println)
@@ -4413,7 +4412,7 @@ messages.<span class="fu">filter</span>(_.<span class="fu">isImportant</span>).<
 <p>We can turn this query into an action as it stands:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> usersAndRoomQuery: DBIO[Seq[((Message, User), Room)]] =
   usersAndRooms.<span class="fu">result</span>
-<span class="co">// usersAndRoomQuery: DBIO[Seq[((Message, User), Room)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@5470a7e4</span></code></pre></div>
+<span class="co">// usersAndRoomQuery: DBIO[Seq[((Message, User), Room)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@a1e6c4c</span></code></pre></div>
 <p>…but our results will contain nested tuples. That’s OK, if that’s what you want. But typically we want to <code>map</code> over the query to flatten the results and select the columns we want.</p>
 <p>Rather than returning the table classes, we can pick out just the information we want. Perhaps the message, the name of the sender, and the title of the room:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> usersAndRoomTitles =
@@ -4424,7 +4423,7 @@ messages.<span class="fu">filter</span>(_.<span class="fu">isImportant</span>).<
 <span class="co">// usersAndRoomTitles: Query[(Rep[String], Rep[String], Rep[String]), (String, String, String), Seq] = Rep(Bind)</span>
 
 <span class="kw">val</span> action: DBIO[Seq[(String, String, String)]] = usersAndRoomTitles.<span class="fu">result</span>
-<span class="co">// action: DBIO[Seq[(String, String, String)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@17fb576c</span>
+<span class="co">// action: DBIO[Seq[(String, String, String)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@22597f61</span>
 
 <span class="fu">exec</span>(action).<span class="fu">foreach</span>(println)
 <span class="co">// (Hello, HAL. Do you read me, HAL?,Dave,Air Lock)</span>
@@ -4441,7 +4440,7 @@ messages.<span class="fu">filter</span>(_.<span class="fu">isImportant</span>).<
 <span class="kw">val</span> airLockMsgs =
   usersAndRooms.
   filter { <span class="kw">case</span> (_, room) =&gt; room.<span class="fu">title</span> === <span class="st">&quot;Air Lock&quot;</span> }
-<span class="co">// airLockMsgs: Query[((MessageTable, UserTable), RoomTable), ((MessageTable#TableElementType, UserTable#TableElementType), RoomTable#TableElementType), Seq] = Rep(Filter @2035972446)</span></code></pre></div>
+<span class="co">// airLockMsgs: Query[((MessageTable, UserTable), RoomTable), ((MessageTable#TableElementType, UserTable#TableElementType), RoomTable#TableElementType), Seq] = Rep(Filter @1719802520)</span></code></pre></div>
 <p>As with other queries, the filter becomes a <code>WHERE</code> clause in SQL. Something like this:</p>
 <div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">SELECT</span>
   <span class="ot">&quot;message&quot;</span>.<span class="ot">&quot;content&quot;</span>, <span class="ot">&quot;user&quot;</span>.<span class="ot">&quot;name&quot;</span>, <span class="ot">&quot;room&quot;</span>.<span class="ot">&quot;title&quot;</span>
@@ -4570,7 +4569,7 @@ xs zip xs.<span class="fu">drop</span>(<span class="dv">1</span>)
 
 <span class="kw">val</span> withIndexAction: DBIO[Seq[(String, Long)]] =
   withIndexQuery.<span class="fu">result</span>
-<span class="co">// withIndexAction: DBIO[Seq[(String, Long)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@54f8d327</span></code></pre></div>
+<span class="co">// withIndexAction: DBIO[Seq[(String, Long)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@69350b9b</span></code></pre></div>
 <p>For H2 the SQL <code>ROWNUM()</code> function is used to generate a number. The data from this query will be:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(withIndexAction).<span class="fu">foreach</span>(println)
 <span class="co">// (Hello, HAL. Do you read me, HAL?,0)</span>
@@ -4643,15 +4642,15 @@ slick.<span class="fu">jdbc</span>.<span class="fu">SQLiteProfile</span>.<span c
 </div>
 <p>Using them causes no great surprises, as shown in the following examples:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> numRows: DBIO[Int] = messages.<span class="fu">length</span>.<span class="fu">result</span>
-<span class="co">// numRows: DBIO[Int] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$3@5eadc3d7</span>
+<span class="co">// numRows: DBIO[Int] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$3@517b47f6</span>
 
 <span class="kw">val</span> numDifferentSenders: DBIO[Int] =
   messages.<span class="fu">map</span>(_.<span class="fu">senderId</span>).<span class="fu">distinct</span>.<span class="fu">length</span>.<span class="fu">result</span>
-<span class="co">// numDifferentSenders: DBIO[Int] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$3@72d71330</span>
+<span class="co">// numDifferentSenders: DBIO[Int] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$3@5e331aea</span>
 
 <span class="kw">val</span> firstSent: DBIO[Option[Long]] =
   messages.<span class="fu">map</span>(_.<span class="fu">id</span>).<span class="fu">min</span>.<span class="fu">result</span>
-<span class="co">// firstSent: DBIO[Option[Long]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$3@24d00627</span></code></pre></div>
+<span class="co">// firstSent: DBIO[Option[Long]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$3@23702436</span></code></pre></div>
 <p>While <code>length</code> returns an <code>Int</code>, the other functions return an <code>Option</code>. This is because there may be no rows returned by the query, meaning there is no minimum, no maximum and so on.</p>
 <h3 id="grouping"><span class="header-section-number">6.8.2</span> Grouping</h3>
 <p>Aggregate functions are often used with column grouping. For example, how many messages has each user sent? That’s a grouping (by user) of an aggregate (count).</p>
@@ -4661,7 +4660,7 @@ slick.<span class="fu">jdbc</span>.<span class="fu">SQLiteProfile</span>.<span c
   messages.<span class="fu">groupBy</span>(_.<span class="fu">senderId</span>).
   map { <span class="kw">case</span> (senderId, msgs) =&gt; senderId -&gt; msgs.<span class="fu">length</span> }.
   result
-<span class="co">// msgPerUser: DBIO[Seq[(Long, Int)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@36a39871</span></code></pre></div>
+<span class="co">// msgPerUser: DBIO[Seq[(Long, Int)]] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@62588a10</span></code></pre></div>
 <p>A <code>groupBy</code> must be followed by a <code>map</code>. The input to the <code>map</code> will be the grouping key (<code>senderId</code>) and a query for the group.</p>
 <p>When we run the query, it’ll work, but it will be in terms of a user’s primary key:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(msgPerUser)
@@ -4673,7 +4672,7 @@ slick.<span class="fu">jdbc</span>.<span class="fu">SQLiteProfile</span>.<span c
    groupBy { <span class="kw">case</span> (msg, user)   =&gt; user.<span class="fu">name</span> }.
    map     { <span class="kw">case</span> (name, group) =&gt; name -&gt; group.<span class="fu">length</span> }.
    result
-<span class="co">// msgsPerUser: slick.jdbc.H2Profile.StreamingProfileAction[Seq[(String, Int)], (String, Int), Effect.Read] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@6a04609</span></code></pre></div>
+<span class="co">// msgsPerUser: slick.jdbc.H2Profile.StreamingProfileAction[Seq[(String, Int)], (String, Int), Effect.Read] = slick.jdbc.JdbcActionComponent$QueryActionExtensionMethodsImpl$$anon$2@6917255a</span></code></pre></div>
 <p>The results would be:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(msgsPerUser).<span class="fu">foreach</span>(println)
 <span class="co">// (Dave,2)</span>
@@ -4764,9 +4763,9 @@ slick.<span class="fu">jdbc</span>.<span class="fu">SQLiteProfile</span>.<span c
   )
 } <span class="kw">yield</span> rowsAdded
 <span class="co">// addFrank: DBIOAction[Option[Int], NoStream, Effect.Write with Effect.Write with Effect.Write] = FlatMapAction(</span>
-<span class="co">//   slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@463fb6cc,</span>
+<span class="co">//   slick.jdbc.JdbcActionComponent$InsertActionComposerImpl$SingleInsertAction@7b8588fc,</span>
 <span class="co">//   &lt;function1&gt;,</span>
-<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@3d8c5df4[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 113, tasks = 0, submissions = 0]</span>
+<span class="co">//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@568c149f[Running, parallelism = 8, size = 1, active = 0, running = 0, steals = 54, tasks = 0, submissions = 0]</span>
 <span class="co">// )</span>
 
 <span class="fu">exec</span>(addFrank)
@@ -4865,7 +4864,7 @@ slick.<span class="fu">jdbc</span>.<span class="fu">SQLiteProfile</span>.<span c
    groupBy { <span class="kw">case</span> (msg, user)  =&gt; user.<span class="fu">name</span> }.
    map     { <span class="kw">case</span> (name, group) =&gt; name -&gt; group.<span class="fu">length</span> }.
    filter  { <span class="kw">case</span> (name, count) =&gt; count &gt; <span class="dv">2</span> }
-<span class="co">// modifiedMsgsPerUser: Query[(Rep[String], Rep[Int]), (String, Int), Seq] = Rep(Filter @2071678631)</span></code></pre></div>
+<span class="co">// modifiedMsgsPerUser: Query[(Rep[String], Rep[Int]), (String, Int), Seq] = Rep(Filter @1014734784)</span></code></pre></div>
 <p>At this point in the book, only Frank has more than two messages:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(modifiedMsgsPerUser.<span class="fu">result</span>)
 <span class="co">// res25: Seq[(String, Int)] = Vector((&quot;Frank&quot;, 3))</span>
@@ -4955,14 +4954,14 @@ slick.<span class="fu">jdbc</span>.<span class="fu">SQLiteProfile</span>.<span c
   rooms.<span class="fu">schema</span>.<span class="fu">create</span>,
   rooms ++= Seq(<span class="fu">Room</span>(<span class="st">&quot;Air Lock&quot;</span>), <span class="fu">Room</span>(<span class="st">&quot;Pod&quot;</span>), <span class="fu">Room</span>(<span class="st">&quot;Brain Room&quot;</span>))
 )
-<span class="co">// roomSetup: DBIOAction[Unit, NoStream, Effect.Write with Effect.Schema] = slick.dbio.DBIOAction$$anon$4@307d7e8a</span>
+<span class="co">// roomSetup: DBIOAction[Unit, NoStream, Effect.Write with Effect.Schema] = slick.dbio.DBIOAction$$anon$4@2f33a4a2</span>
 
 <span class="kw">val</span> setupResult = <span class="fu">exec</span>(roomSetup)</code></pre></div>
 </div>
 <h2 id="selects"><span class="header-section-number">7.1</span> Selects</h2>
 <p>Let’s start with a simple example of returning a list of room IDs.</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> action = sql<span class="st">&quot;&quot;&quot; select &quot;</span>id<span class="st">&quot; from &quot;</span>room<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[Long]
-<span class="co">// action: slick.sql.SqlStreamingAction[Vector[Long], Long, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@31aa12ea</span>
+<span class="co">// action: slick.sql.SqlStreamingAction[Vector[Long], Long, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@45a0a3af</span>
 
 Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <span class="fl">2.</span>seconds)
 <span class="co">// res0: Vector[Long] = Vector(1L, 2L, 3L)</span></code></pre></div>
@@ -4970,7 +4969,7 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
 <p>The big difference is with the construction of the query. We supply both the SQL we want to run and specify the expected result type using <code>as[T]</code>. And the result we get back is an action to run, rather than a <code>Query</code>.</p>
 <p>The <code>as[T]</code> method is pretty flexible. Let’s get back the room ID and room title:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> roomInfo = sql<span class="st">&quot;&quot;&quot; select &quot;</span>id<span class="st">&quot;, &quot;</span>title<span class="st">&quot; from &quot;</span>room<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[(Long,String)]
-<span class="co">// roomInfo: slick.sql.SqlStreamingAction[Vector[(Long, String)], (Long, String), Effect] = slick.jdbc.SQLActionBuilder$$anon$1@6b78eb3d</span>
+<span class="co">// roomInfo: slick.sql.SqlStreamingAction[Vector[(Long, String)], (Long, String), Effect] = slick.jdbc.SQLActionBuilder$$anon$1@3169480b</span>
 
 <span class="fu">exec</span>(roomInfo)
 <span class="co">// res1: Vector[(Long, String)] = Vector(</span>
@@ -4991,7 +4990,7 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
     <span class="st">&quot;room&quot;</span>
   where
     <span class="st">&quot;title&quot;</span> = $roomName <span class="st">&quot;&quot;&quot;.as[(Long,String)].headOption</span>
-<span class="co">// podRoomAction: slick.sql.SqlStreamingAction[Vector[(Long, String)], (Long, String), Effect]#ResultAction[Option[(Long, String)], NoStream, Effect] = slick.jdbc.StreamingInvokerAction$HeadOptionAction@1a08cd24</span>
+<span class="co">// podRoomAction: slick.sql.SqlStreamingAction[Vector[(Long, String)], (Long, String), Effect]#ResultAction[Option[(Long, String)], NoStream, Effect] = slick.jdbc.StreamingInvokerAction$HeadOptionAction@3d0ce279</span>
 
 <span class="fu">exec</span>(podRoomAction)
 <span class="co">// res2: Option[(Long, String)] = Some((2L, &quot;Pod&quot;))</span></code></pre></div>
@@ -5004,7 +5003,7 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
 
 <span class="kw">val</span> badAction =
   sql<span class="st">&quot;&quot;&quot; select &quot;</span>id<span class="st">&quot; from &quot;</span>room<span class="st">&quot; where &quot;</span>title<span class="st">&quot; = $t &quot;&quot;&quot;</span>.<span class="fu">as</span>[Long]
-<span class="co">// badAction: slick.sql.SqlStreamingAction[Vector[Long], Long, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@415a79c1</span></code></pre></div>
+<span class="co">// badAction: slick.sql.SqlStreamingAction[Vector[Long], Long, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@f2847ce</span></code></pre></div>
 <p>This compiles, but fails at runtime as the type of the <code>title</code> column is a <code>String</code> and we’ve provided an <code>Int</code>:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="fu">exec</span>(badAction.<span class="fu">asTry</span>)
 <span class="co">// res3: util.Try[Vector[Long]] = Failure(</span>
@@ -5016,7 +5015,7 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> table = <span class="st">&quot;room&quot;</span>
 <span class="co">// table: String = &quot;room&quot;</span>
 <span class="kw">val</span> splicedAction = sql<span class="st">&quot;&quot;&quot; select &quot;</span>id<span class="st">&quot; from &quot;</span>#$table<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[Long]
-<span class="co">// splicedAction: slick.sql.SqlStreamingAction[Vector[Long], Long, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@20060e42</span></code></pre></div>
+<span class="co">// splicedAction: slick.sql.SqlStreamingAction[Vector[Long], Long, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@4fd5205f</span></code></pre></div>
 <p>In this situation we do not want the value of <code>table</code> to be treated as a <code>String</code>. If we did, it’d be an invalid query: <code>select &quot;id&quot; from &quot;'message'&quot;</code> (notice the double quotes and single quotes around the table name, which is not valid SQL).</p>
 <p>This means you can produce unsafe SQL with splicing. The golden rule is to never use <code>#$</code> with input supplied by users.</p>
 <p>To be sure you remember it, say it again with us: never use <code>#$</code> with input supplied by users.</p>
@@ -5051,7 +5050,7 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
 <p>The name of this value doesn’t matter. What’s important is that the value is implicit and the type is <code>GetResult[DateTime]</code>. This allows the compiler to lookup our conversion function when we mention a <code>DateTime</code>.</p>
 <p>Now we can construct our action:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">sql<span class="st">&quot;&quot;&quot; select &quot;</span>created<span class="st">&quot; from &quot;</span>message<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[DateTime]
-<span class="co">// res5: slick.sql.SqlStreamingAction[Vector[DateTime], DateTime, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@5325b2c0</span></code></pre></div>
+<span class="co">// res5: slick.sql.SqlStreamingAction[Vector[DateTime], DateTime, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@65e38b19</span></code></pre></div>
 <h3 id="case-classes"><span class="header-section-number">7.1.2</span> Case Classes</h3>
 <p>As you’ve probably guessed, returning a case class from a Plain SQL query means providing a <code>GetResult</code> for the case class. Let’s work through an example for the messages table.</p>
 <p>Recall that a message contains: an ID, some content, the sender ID, a timestamp, and an optional timestamp.</p>
@@ -5079,7 +5078,7 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
 <p>Now we can select into <code>Message</code> values:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> messageAction: DBIO[Seq[Message]] =
   sql<span class="st">&quot;&quot;&quot; select * from &quot;</span>message<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[Message]
-<span class="co">// messageAction: DBIO[Seq[Message]] = slick.jdbc.SQLActionBuilder$$anon$1@79d77c0</span></code></pre></div>
+<span class="co">// messageAction: DBIO[Seq[Message]] = slick.jdbc.SQLActionBuilder$$anon$1@7ee1bb89</span></code></pre></div>
 <p>In all likelihood you’ll prefer the lifted embedded style over Plain SQL in this specific example. But if you do find yourself using Plain SQL, for performance reasons perhaps, it’s useful to know how to convert database values up into meaningful domain types.</p>
 <div class="callout callout-warning">
 <p><strong><code>SELECT *</code></strong></p>
@@ -5092,14 +5091,14 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
 <p>Plain SQL updates will allow us to do this. The interpolator is <code>sqlu</code>:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> updateAction =
   sqlu<span class="st">&quot;&quot;&quot;UPDATE &quot;</span>message<span class="st">&quot; SET &quot;</span>content<span class="st">&quot; = CONCAT(&quot;</span>content<span class="st">&quot;, '!')&quot;&quot;&quot;</span>
-<span class="co">// updateAction: slick.sql.SqlAction[Int, NoStream, Effect] = slick.jdbc.StreamingInvokerAction$HeadAction@1881f6a4</span></code></pre></div>
+<span class="co">// updateAction: slick.sql.SqlAction[Int, NoStream, Effect] = slick.jdbc.StreamingInvokerAction$HeadAction@7b784f58</span></code></pre></div>
 <p>The <code>action</code> we have constructed, just like other actions, is not run until we evaluate it via <code>db.run</code>. But when it is run, it will append the exclamation mark to each row value, which is what we couldn’t do as efficiently with the lifted embedded style.</p>
 <p>Just like the <code>sql</code> interpolator, we also have access to <code>$</code> for binding to variables:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> <span class="dt">char</span> = <span class="st">&quot;!&quot;</span>
 <span class="co">// char: String = &quot;!&quot;</span>
 <span class="kw">val</span> interpolatorAction =
   sqlu<span class="st">&quot;&quot;&quot;UPDATE &quot;</span>message<span class="st">&quot; SET &quot;</span>content<span class="st">&quot; = CONCAT(&quot;</span>content<span class="st">&quot;, $char)&quot;&quot;&quot;</span>
-<span class="co">// interpolatorAction: slick.sql.SqlAction[Int, NoStream, Effect] = slick.jdbc.StreamingInvokerAction$HeadAction@60c26fc9</span></code></pre></div>
+<span class="co">// interpolatorAction: slick.sql.SqlAction[Int, NoStream, Effect] = slick.jdbc.StreamingInvokerAction$HeadAction@6275a61c</span></code></pre></div>
 <p>This gives us two benefits: the compiler will point out typos in variables names, but also the input is sanitized against <a href="https://en.wikipedia.org/wiki/SQL_injection">SQL injection attacks</a>.</p>
 <p>In this case, the statement that Slick generates will be:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">interpolatorAction.<span class="fu">statements</span>.<span class="fu">head</span>
@@ -5122,7 +5121,7 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
 <p>With this in place we can construct Plain SQL updates using <code>DateTime</code> instances:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> now =
   sqlu<span class="st">&quot;&quot;&quot;UPDATE &quot;</span>message<span class="st">&quot; SET &quot;</span>created<span class="st">&quot; = ${DateTime.now}&quot;&quot;&quot;</span>
-<span class="co">// now: slick.sql.SqlAction[Int, NoStream, Effect] = slick.jdbc.StreamingInvokerAction$HeadAction@1e0f72a3</span></code></pre></div>
+<span class="co">// now: slick.sql.SqlAction[Int, NoStream, Effect] = slick.jdbc.StreamingInvokerAction$HeadAction@1bb74208</span></code></pre></div>
 <p>Without the <code>SetParameter[DateTime]</code> instance the compiler would tell you:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala">could not find <span class="kw">implicit</span> SetParameter[DateTime]</code></pre></div>
 <h2 id="typed-checked-plain-sql"><span class="header-section-number">7.3</span> Typed Checked Plain SQL</h2>
@@ -5263,12 +5262,12 @@ Await.<span class="fu">result</span>(db.<span class="fu">run</span>(action), <sp
 <div class="solution">
 <p>The SQL statements are relatively simple. You need to take care to make the <code>as[T]</code> align to the result of the query.</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> q1 = sql<span class="st">&quot;&quot;&quot; select count(*) from &quot;</span>message<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[Int]
-<span class="co">// q1: slick.sql.SqlStreamingAction[Vector[Int], Int, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@72c035d5</span>
+<span class="co">// q1: slick.sql.SqlStreamingAction[Vector[Int], Int, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@68f99f04</span>
 <span class="kw">val</span> a1 = <span class="fu">exec</span>(q1)
 <span class="co">// a1: Vector[Int] = Vector(4)</span>
 
 <span class="kw">val</span> q2 = sql<span class="st">&quot;&quot;&quot; select &quot;</span>content<span class="st">&quot; from &quot;</span>message<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[String]
-<span class="co">// q2: slick.sql.SqlStreamingAction[Vector[String], String, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@6563d9ff</span>
+<span class="co">// q2: slick.sql.SqlStreamingAction[Vector[String], String, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@51420fcc</span>
 <span class="kw">val</span> a2 = <span class="fu">exec</span>(q2)
 <span class="co">// a2: Vector[String] = Vector(</span>
 <span class="co">//   &quot;Hello, HAL. Do you read me, HAL?&quot;,</span>
@@ -5283,12 +5282,12 @@ a2.<span class="fu">foreach</span>(println)
 <span class="co">// I'm sorry, Dave. I'm afraid I can't do that.</span>
 
 <span class="kw">val</span> q3 = sql<span class="st">&quot;&quot;&quot; select length(&quot;</span>content<span class="st">&quot;) from &quot;</span>message<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[Int]
-<span class="co">// q3: slick.sql.SqlStreamingAction[Vector[Int], Int, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@162c5ebd</span>
+<span class="co">// q3: slick.sql.SqlStreamingAction[Vector[Int], Int, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@1e4806be</span>
 <span class="kw">val</span> a3 = <span class="fu">exec</span>(q3)
 <span class="co">// a3: Vector[Int] = Vector(32, 30, 28, 44)</span>
 
 <span class="kw">val</span> q4 = sql<span class="st">&quot;&quot;&quot; select &quot;</span>content<span class="st">&quot;, length(&quot;</span>content<span class="st">&quot;) from &quot;</span>message<span class="st">&quot; &quot;&quot;&quot;</span>.<span class="fu">as</span>[(String,Int)]
-<span class="co">// q4: slick.sql.SqlStreamingAction[Vector[(String, Int)], (String, Int), Effect] = slick.jdbc.SQLActionBuilder$$anon$1@7353acb1</span>
+<span class="co">// q4: slick.sql.SqlStreamingAction[Vector[(String, Int)], (String, Int), Effect] = slick.jdbc.SQLActionBuilder$$anon$1@3fcea07d</span>
 <span class="kw">val</span> a4 = <span class="fu">exec</span>(q4)
 <span class="co">// a4: Vector[(String, Int)] = Vector(</span>
 <span class="co">//   (&quot;Hello, HAL. Do you read me, HAL?&quot;, 32),</span>
@@ -5329,7 +5328,7 @@ a4.<span class="fu">foreach</span>(println)
   where
     m.<span class="st">&quot;content&quot;</span> = 'Open the pod bay doors, HAL.'
   <span class="st">&quot;&quot;&quot;.as[String]</span>
-<span class="co">// whoSaidThatPlain: slick.sql.SqlStreamingAction[Vector[String], String, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@4e4193</span>
+<span class="co">// whoSaidThatPlain: slick.sql.SqlStreamingAction[Vector[String], String, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@1beb193f</span>
 
 <span class="fu">exec</span>(whoSaidThatPlain)
 <span class="co">// res16: Vector[String] = Vector(&quot;Dave&quot;)</span></code></pre></div>
@@ -5385,7 +5384,7 @@ a4.<span class="fu">foreach</span>(println)
 
 <span class="kw">val</span> query =  sql<span class="st">&quot;&quot;&quot; select min(&quot;</span>content<span class="st">&quot;), max(&quot;</span>content<span class="st">&quot;)</span>
                     from <span class="st">&quot;message&quot;</span> <span class="st">&quot;&quot;&quot;.as[FirstAndLast]</span>
-<span class="co">// query: slick.sql.SqlStreamingAction[Vector[FirstAndLast], FirstAndLast, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@7b19dc44</span>
+<span class="co">// query: slick.sql.SqlStreamingAction[Vector[FirstAndLast], FirstAndLast, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@5a9649e1</span>
 
 <span class="fu">exec</span>(query)
 <span class="co">// res20: Vector[FirstAndLast] = Vector(</span>
@@ -5420,7 +5419,7 @@ a4.<span class="fu">foreach</span>(println)
 <p>If you are familiar with <a href="http://xkcd.com/327/">xkcd’s Little Bobby Tables</a>, the title of the exercise has probably tipped you off: <code>#$</code> does not escape input.</p>
 <p>This means a user could use a carefully crafted email address to do evil:</p>
 <div class="sourceCode"><pre class="sourceCode scala"><code class="sourceCode scala"><span class="kw">val</span> evilAction = <span class="fu">lookup</span>(<span class="st">&quot;&quot;&quot;';DROP TABLE &quot;</span>user<span class="st">&quot;;--- &quot;&quot;&quot;</span>).<span class="fu">as</span>[Long]
-<span class="co">// evilAction: slick.sql.SqlStreamingAction[Vector[Long], Long, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@fb4bc2c</span>
+<span class="co">// evilAction: slick.sql.SqlStreamingAction[Vector[Long], Long, Effect] = slick.jdbc.SQLActionBuilder$$anon$1@4b5c9fb</span>
 <span class="fu">exec</span>(evilAction)
 <span class="co">// res25: Vector[Long] = Vector()</span></code></pre></div>
 <p>This “email address” turns into two queries:</p>

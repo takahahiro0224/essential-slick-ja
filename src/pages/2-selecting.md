@@ -1,16 +1,18 @@
 # Selecting Data {#selecting}
 
-The last chapter provided a shallow end-to-end overview of Slick. We saw how to model data, create queries, convert them to actions, and run those actions against a database. In the next two chapters we will look in more detail at the various types of query we can perform in Slick.
+前章では、Slickのエンドツーエンドの概要を浅く説明しました。データをモデル化し、クエリを作成し、それをアクションに変換し、データベースに対してそれらのアクションを実行する方法について見てきました。次の2つの章では、Slickで実行できる様々なタイプのクエリについて、より詳しく見ていきます。
 
-This chapter covers *selecting* data using Slick's rich type-safe Scala reflection of SQL. [Chapter 3](#Modifying) covers *modifying* data by inserting, updating, and deleting records.
+この章では、Slickの豊富なSQLの型安全なScalaリフレクションを使って、データの *選択（Select）* をカバーします。[第3章](#Modifying)では、レコードの挿入、更新、削除によるデータの *変更* について説明します。
 
-Select queries are our main means of retrieving data.
-In this chapter we'll limit ourselves to simple select queries that operate on a single table.
-In [Chapter 6](#joins) we'll look at more complex queries involving joins, aggregates, and grouping clauses.
+selectクエリは、データを取得するための主な手段です。
+この章では、単一のテーブルに対して操作する単純なselectクエリに限定して説明します。
+[第6章](#joins)では、結合、集約、およびグループ化句を含む、より複雑なクエリについて見ていきます。
 
 ## Select All The Rows!
 
-The simplest select query is the `TableQuery` generated from a `Table`. In the following example, `messages` is a `TableQuery` for `MessageTable`:
+最も単純な select クエリは、 `Table` から生成される `TableQuery` です。
+
+以下の例では、 `messages` が `MessageTable` に対する `TableQuery` です。
 
 ```scala mdoc
 import slick.jdbc.H2Profile.api._
@@ -32,21 +34,22 @@ class MessageTable(tag: Tag) extends Table[Message](tag, "message") {
 lazy val messages = TableQuery[MessageTable]
 ```
 
-The type of `messages` is `TableQuery[MessageTable]`, which is a subtype of a more general `Query` type that Slick uses to represent select, update, and delete queries. We'll discuss these types in the next section.
+メッセージの型は `TableQuery[MessageTable]` で、これはより一般的な `Query` 型のサブタイプであり、Slick は select, update, delete クエリを表現するためにこれを使用します。これらの型については、次のセクションで説明します。
 
-We can see the SQL of the select query by calling `result.statements`:
+select クエリの SQL は、 `result.statements` を呼び出すことで見ることができます。
 
 ```scala mdoc
 messages.result.statements.mkString
 ```
 
-Our `TableQuery` is the equivalent of the SQL `select * from message`.
+この `TableQuery` は、SQL の `select * from message` に相当するものです。
 
 <div class="callout callout-warning">
+
 **Query Extension Methods**
 
-Like many of the methods discussed below, the `result` method is actually an extension method applied to `Query` via an implicit conversion.
-You'll need to have everything from `H2Profile.api` in scope for this to work:
+以下で説明する多くのメソッドと同様に、 `result` メソッドは実際には暗黙の変換によって `Query` に適用される拡張メソッドです。
+これを動作させるには、 `H2Profile.api` に含まれるすべてのメソッドがスコープ内になければなりません。
 
 ```scala mdoc:silent
 import slick.jdbc.H2Profile.api._
@@ -55,37 +58,37 @@ import slick.jdbc.H2Profile.api._
 
 ## Filtering Results: The *filter* Method
 
-We can create a query for a subset of rows using the `filter` method:
+`filter`メソッドを使って、行の部分集合に対するクエリを作成することができます。
 
 ```scala mdoc
 messages.filter(_.sender === "HAL")
 ```
 
-The parameter to `filter` is a function from an instance of `MessageTable` to a value of type `Rep[Boolean]` representing a `WHERE` clause for our query:
+`filter` のパラメータは、 `MessageTable` のインスタンスから、クエリの `WHERE` 節を表す `Rep[Boolean]` 型の値への関数である。
 
 ```scala mdoc
 messages.filter(_.sender === "HAL").result.statements.mkString
 ```
 
-Slick uses the `Rep` type to represent expressions over columns as well as individual columns.
-A `Rep[Boolean]` can either be a `Boolean`-valued column in a table,
-or a `Boolean` expression involving multiple columns.
-Slick can automatically promote a value of type `A` to a constant `Rep[A]`,
-and provides a suite of methods for building expressions as we shall see below.
+Slick は `Rep` 型を使用して、個々のカラムだけでなく、カラムに対する式を表現することができます。
+`Rep[Boolean]` は、テーブルの `Boolean` 値のカラムを表したり、
+複数のカラムを含む `Boolean` 式を表すこともできます。
+Slick は `A` 型の値を自動的に定数 `Rep[A]` に昇格させることができる。
+また、以下に述べるように、式を構築するための一連のメソッドを提供します。
 
 ## The Query and TableQuery Types {#queryTypes}
 
-The types in our `filter` expression deserve some deeper explanation.
-Slick represents all queries using a trait `Query[M, U, C]` that has three type parameters:
+この `filter` 式の型については、もう少し詳しい説明が必要でしょう。
+Slickは全てのクエリを `Query[M, U, C]` という3つの型パラメータで表現しています。
 
- - `M` is called the *mixed* type. This is the function parameter type we see when calling methods like `map` and `filter`.
- 
- - `U` is called the *unpacked* type. This is the type we collect in our results.
- 
- - `C` is called the *collection* type. This is the type of collection we accumulate results into.
+ - `M` は *mixed* 型と呼ばれます。これは、 `map` や `filter` といったメソッドを呼び出す際に見られる、関数パラメータの型です。
 
-In the examples above, `messages` is of a subtype of `Query` called `TableQuery`.
-Here's a simplified version of the definition in the Slick codebase:
+ - `U` は *unpacked* 型と呼ばれます。これは、結果に収集される型です 
+ 
+ - `C` は *collection* 型と呼ばれます。これは、結果をコレクションに蓄積していく型です。 
+
+上記の例では、 `messages` は `Query` のサブタイプである `TableQuery` と呼ばれるものです。
+以下は、Slick コードベースにおける定義の簡略版です。
 
 ``` scala
 trait TableQuery[T <: Table[_]] extends Query[T, T#TableElementType, Seq] {
@@ -93,8 +96,8 @@ trait TableQuery[T <: Table[_]] extends Query[T, T#TableElementType, Seq] {
 }
 ```
 
-A `TableQuery` is actually a `Query` that uses a `Table` (e.g. `MessageTable`) as its mixed type and the table's element type (the type parameter in the constructor, e.g. `Message`) as its unpacked type.
-In other words, the function we provide to `messages.filter` is actually passed a parameter of type `MessageTable`:
+`TableQuery` は、実際には `Table` (例: `MessageTable`) をmixed型として、テーブルの要素の型 (コンストラクタの type パラメータ、例: `Message`) をunpacked型として使用する `Query` です。
+言い換えると、 `messages.filter` に渡す関数は、実際には `MessageTable` 型のパラメータを渡されます。
 
 ```scala mdoc
 messages.filter { messageTable: MessageTable =>
@@ -102,14 +105,14 @@ messages.filter { messageTable: MessageTable =>
 }
 ```
 
-This makes sense: `messageTable.sender` is one of the columns we defined in `MessageTable` above,
-and `messageTable.sender === "HAL"` creates a Scala value representing the SQL expression `message.sender = 'HAL'`.
+これは理にかなっています。 `messageTable.sender` は、上記の `MessageTable` で定義したカラムの 1 つです。
+そして `messageTable.sender === "HAL"` は、 SQL 式 `message.sender = 'HAL'` を表す Scala 値を作成します。
 
-This is the process that allows Slick to type-check our queries.
-`Query`s have access to the type of the `Table` used to create them,
-allowing us to directly reference the columns on the `Table` when we're using combinators like `map` and `filter`.
-Every column knows its own data type, so Slick can ensure we only compare columns of compatible types.
-If we try to compare `sender` to an `Int`, for example, we get a type error:
+これはSlickがクエリの型チェックをするための処理です。
+`Query`は、作成に使用した `Table` の型にアクセスすることができます。
+これにより、 `map` や `filter` などのコンビネータを使用する際に、 `Table` のカラムを直接参照することができるようになります。
+全てのカラムは自身のデータ型を把握しているので、Slick は互換性のあるデータ型のカラムのみを比較することを保証します。
+例えば、 `sender` と `Int` を比較しようとすると、型エラーが発生します。
 
 ```scala mdoc:fail
 messages.filter(_.sender === 123)
@@ -117,40 +120,42 @@ messages.filter(_.sender === 123)
 
 <div class="callout callout-info">
 <a name="constantQueries"/>
-**Constant Queries **
 
-So far we've built up queries from a `TableQuery`,
-and this is the common case we use in most of this book.
-However you should know that you can also construct constant queries, such as `select 1`, that are not related to any table.
+**Constant Queries**
 
-We can use the `Query` companion object for this. So...
+これまで、私たちは `TableQuery` からクエリを構築してきました。
+この本の大部分では、このようなケースが一般的です。
+しかし、`select 1` のような、テーブルとは関係のない定型のクエリも作成できることを知っておく必要があります。
+
+これには `Query` コンパニオンオブジェクトを使用します。
 
 ```scala mdoc:silent
 Query(1)
 ```
 
-will produce this query:
+上記はこのようなクエリを生成します。
 
 ```scala mdoc
 Query(1).result.statements.mkString
 ```
 
-The `apply` method of the `Query` object allows
-us to lift a scalar value to a `Query`.
 
-A constant query such as `select 1` can be used to confirm we have database connectivity.
-This could be a useful thing to do as an application is starting up, or a heartbeat system check that will consume minimal resources.
-
-We'll see another example of using a `from`-less query in [Chapter 3](#moreControlOverInserts).
 </div>
 
+`Query` オブジェクトの `apply` メソッドを使うと、スカラー値を `Query` に渡すことができます。
+
+`select 1` のような定型のクエリを使用して、データベースへの接続を確認することができます。
+これは、アプリケーションを起動するときに便利な機能です。また、最小限のリソースしか消費しないハートビートなシステムチェックにもなります。
+
+[第3章](#moreControlOverInserts)では、`from`なしのクエリを使用する別の例を見ていきましょう。
 
 ## Transforming Results
 
 <div class="callout callout-info">
+
 **`exec`**
 
-Just as we did in Chapter 1, we're using a helper method to run queries in the REPL:
+第1章で行ったように、REPLでクエリを実行するためにヘルパーメソッドを使用しています。
 
 ```scala mdoc:silent
 import scala.concurrent.{Await,Future}
@@ -164,10 +169,10 @@ def exec[T](action: DBIO[T]): T =
   Await.result(db.run(action), 4.seconds)
 ```
 
-This is included in the example source code for this chapter, in the `main.scala` file.
-You can run these examples in the REPL to follow along with the text.
+これは、この章のサンプルのソースコードの `main.scala` ファイルに含まれています。
+REPL でこれらの例を実行すれば、テキストを追うことができます。
 
-We have also set up the schema and sample data:
+また、スキーマとサンプルデータも設定しました。
 
 ```scala mdoc
 def freshTestData = Seq(
@@ -183,17 +188,17 @@ exec(messages.schema.create andThen (messages ++= freshTestData))
 
 ### The *map* Method
 
-Sometimes we don't want to select all of the columns in a `Table`.
-We can use the `map` method on a `Query` to select specific columns for inclusion in the results.
-This changes both the mixed type and the unpacked type of the query:
+時には、`Table` のすべてのカラムを選択したくないこともあります。
+`Query` の `map` メソッドを使用すると、特定のカラムを選択して結果に含めることができます。
+これは、クエリのmixed型とunpacked型の両方を変更します。
 
 ```scala mdoc
 messages.map(_.content)
 ```
 
-Because the unpacked type (second type parameter) has changed to `String`,
-we now have a query that selects `String`s when run.
-If we run the query we see that only the `content` of each message is retrieved:
+unpacked型（2番目の型パラメータ）が `String` に変更されたからです。
+これで、実行時に `String` を選択するクエリができました。
+このクエリを実行すると、各メッセージの `content` だけが取得されることがわかります。
 
 ```scala mdoc
 val query = messages.map(_.content)
@@ -201,16 +206,15 @@ val query = messages.map(_.content)
 exec(query.result)
 ```
 
-
-Also notice that the generated SQL has changed.
-Slick isn't cheating: it is actually telling the database to restrict the results to that column in the SQL:
+また、生成されたSQLが変更されていることに注目してください。
+Slickは不正をしているわけではありません。実際にデータベースに、SQLの中でそのカラムに結果を限定するように指示しているのです。
 
 ```scala mdoc
 messages.map(_.content).result.statements.mkString
 ```
 
-Finally, notice that the mixed type (first type parameter) of our new query has changed to `Rep[String]`.
-This means we are only passed the `content` column when we `filter` or `map` over this query:
+最後に、新しいクエリのmixed型 (最初の型パラメータ) が `Rep[String]` に変更されたことに注目してください。
+これは、このクエリに対して `filter` や `map` を実行したときに、 `content` カラムだけが渡されることを意味します。
 
 ```scala mdoc
 val pods = messages.
@@ -220,27 +224,25 @@ val pods = messages.
 exec(pods.result)
 ```
 
-This change of mixed type can complicate query composition with `map`.
-We recommend calling `map` only as the final step in a sequence of transformations on a query,
-after all other operations have been applied.
+この混合型の変更は、 `map` によるクエリの合成を複雑にする可能性があります。
+他の全ての操作を適用した後に、クエリに対する一連の変換の最終ステップとしてのみ、 `map` を呼び出すことを推奨します。
 
-It is worth noting that we can `map` to anything that Slick can pass to the database as part of a `select` clause.
-This includes individual `Rep`s and `Table`s,
-as well as `Tuple`s of the above.
-For example, we can use `map` to select the `id` and `content` columns of messages:
+注目すべきは、Slick が `select` 句の一部としてデータベースに渡すことができるものであれば、何でも `map` することができるということです。
+これには、個々の `Rep` や `Table` が含まれます。
+また、これらのタプルも含まれます。
+例えば、 `map` を使って、メッセージの `id` と `content` カラムを選択することができます。
 
 ```scala mdoc
 messages.map(t => (t.id, t.content))
 ```
 
-The mixed and unpacked types change accordingly,
-and the SQL is modified as we might expect:
+それに応じて，mixed型とunpacked型が変更され、SQLは予想通りに修正されます。
 
 ```scala mdoc
 messages.map(t => (t.id, t.content)).result.statements.mkString
 ```
 
-We can even map sets of columns to Scala data structures using `mapTo`:
+また、`mapTo`を使えば、カラムのセットをScalaのデータ構造にマッピングすることもできます。
 
 ```scala mdoc
 case class TextOnly(id: Long, content: String)
@@ -251,27 +253,28 @@ val contentQuery = messages.
 exec(contentQuery.result)
 ```
 
-We can also select column expressions as well as single columns:
+また、単一の列だけでなく、列の式もselectすることができます。
 
 ```scala mdoc
 messages.map(t => t.id * 1000L).result.statements.mkString
 ```
 
-This all means that `map` is a powerful combinator for controlling the `SELECT` part of your query.
+つまり、 `map` はクエリの `SELECT` 部分を制御するための強力なコンビネータなのです。
 
 <div class="callout callout-info">
+
 **Query's *flatMap* Method**
 
-`Query` also has a `flatMap` method with similar monadic semantics to that of `Option` or `Future`.
-`flatMap` is mostly used for joins, so we'll cover it in [Chapter 6](#joins).
+`Query` には `Option` や `Future` と同様のモナドセマンティクスを持つ `flatMap` メソッドも用意されています。
+`flatMap` は主にジョインに使用されるので、[6章](#joins) で説明します。
 </div>
 
 ### *exists*
 
-Sometimes we are less interested in the contents of a queries result than if results exist at all.
-For this we have `exists`, which will return `true` if the result set is not empty and false otherwise.
+時には、クエリの結果の内容よりも、結果が存在するかどうかに興味があることがあります。
+このような場合のために `exists` が用意されており、結果セットが空でなければ `true` を返し、そうでなければ false を返します。
 
-Let's look at a quick example to show how we can use an existing query with the `exists` keyword:
+既存のクエリを `exists` キーワードでどのように使用できるのか、簡単な例を見てみましょう。
 
 ```scala mdoc
 val containsBay = for {
@@ -283,10 +286,10 @@ val bayMentioned: DBIO[Boolean] =
   containsBay.exists.result
 ```
 
-The `containsBay` query returns all messages that mention "bay".
-We can then use this query in the `bayMentioned` expression to determine what to execute.
+`containsBay` クエリは "bay" に言及しているすべてのメッセージを返します。
+そして、このクエリを `bayMentioned` 式の中で使って、何を実行するかを決定します。
 
-The above will generate SQL which looks similar to this:
+上記は、以下のような SQL を生成します。
 
 ~~~ sql
 select exists(
@@ -296,66 +299,68 @@ select exists(
 )
 ~~~
 
-We will see a more useful example in [Chapter 3](#moreControlOverInserts).
+[第3章](#moreControlOverInserts)でより便利な例を見ることができます。
 
 
 ## Converting Queries to Actions
 
-Before running a query, we need to convert it to an *action*.
-We typically do this by calling the `result` method on the query.
-Actions represent sequences of queries. We start with actions
-representing single queries and compose them to form multi-action sequences.
+クエリを実行する前に、クエリを *action* に変換する必要があります。
+これは通常、クエリに対して `result` メソッドを呼び出すことで行います。
+アクションはクエリのシーケンスを表します。まず、単一のクエリを表すアクションから始めて 、それらを組み合わせて複数のアクションを形成します。
 
-Actions have the type signature `DBIOAction[R, S, E]`. The three type parameters are:
 
-- `R` is the type of data we expect to get back from the database (`Message`, `Person`, etc);
+アクションは `DBIOAction[R, S, E]` という型シグネチャを持ちます。3つの型パラメータは以下の通りです。
 
-- `S` indicates whether the results are streamed (`Streaming[T]`) or not (`NoStream`); and
+- `R` はデータベースから返されるデータの種類 (`Message`、`Person` など)。
 
-- `E` is the effect type and will be inferred.
+- `S` は結果がストリームされるか (`Streaming[T]`) またはされないか (`NoStream`)
 
-In many cases we can simplify the representation of an action to just `DBIO[T]`, which is an alias for `DBIOAction[T, NoStream, Effect.All]`.
+- `E` はエフェクトの種類で、推論されます。
+
+多くの場合、アクションの表現を単純化して、`DBIO[T]`とすることができます。これは、`DBIOAction[T, NoStream, Effect.All]` のエイリアスです。
 
 <div class="callout callout-info">
+
 **Effects**
 
-Effects are not part of Essential Slick, and we'll be working in terms of `DBIO[T]` for most of this text.
+エフェクトはEssential Slickの範囲ではないので、このテキストの大部分では `DBIO[T]` の観点から作業することになります。
 
-However, broadly speaking, an `Effect` is a way to annotate an action.
-For example, you can write a method that will only accept queries marked as `Read` or `Write`, or a combination such as `Read with Transactional`.
+しかし、大まかに言えば、`Effect`はアクションにアノテーションを付ける方法です。
+例えば、 `Read` や `Write` とマークされたクエリのみを受け付けるメソッドを書いたり、 `Read with Transactional` のような組み合わせを書いたりすることができます。
 
-The effects defined in Slick under the `Effect` object are:
+Slick の `Effect` オブジェクトで定義されているエフェクトは、以下のとおりです。
 
-- `Read` for queries that read from the database.
-- `Write` for queries that have a write effect on the database.
-- `Schema` for schema effects.
-- `Transactional` for transaction effects.
-- `All` for all of the above.
+- データベースから読み込むクエリには `Read` を指定します。
+- データベースへの書き込みを行うクエリには `Write` を指定します。
+- `Schema` はスキーマに対するエフェクトを表します。
+- トランザクションエフェクトには `Transactional` を指定します。
+- `All` は上記のすべてに対応します。
 
-Slick will infer the effect for your queries. For example, `messages.result` will be:
+Slick はクエリのエフェクトを推論します。例えば、`messages.result`は次のようになります。
 
 ~~~ scala
 DBIOAction[Seq[String], NoStream, Effect.Read]
 ~~~
 
-In the next chapter we will look at inserts and updates. The inferred effect for an update in this case is: `DBIOAction[Int, NoStream, Effect.Write]`.
+次の章では、挿入と更新について見ていきます。この場合、更新のために推論されるエフェクトは `DBIOAction[Int, NoStream, Effect.Write]` となります。
 
-You can also add your own `Effect` types by extending the existing types.
+また、既存の型を拡張して、独自の `Effect` 型を追加することもできます。
 </div>
 
 ## Executing Actions
 
-To execute an action, we pass it to one of two methods on our `db` object:
+アクションを実行するには、`db` オブジェクトの 2 つのメソッドのうちの 1 つにアクションを渡します。
 
- - `db.run(...)` runs the action and returns all the results in a single collection.
-   These are known as a _materialized_ result.
+- `db.run(...)` はアクションを実行し、すべての結果をひとつのコレクションにまとめて返します。
+  これらは _materialized_ result として知られています。
 
- - `db.stream(...)` runs the action and returns its results in a `Stream`,
-   allowing us to process large datasets incrementally without consuming large amounts of memory.
+- `db.stream(...)` はアクションを実行し、その結果を `Stream` に格納して返します。
+  これにより、大量のメモリを消費することなく、大きなデータセットを逐次的に処理することができます。
 
-In this book we will deal exclusively with materialized queries.
-`db.run` returns a `Future` of the final result of our action.
-We need to have an `ExecutionContext` in scope when we make the call:
+この本では、materializedクエリのみを扱うことにします。
+`db.run` はアクションの最終的な結果を `Future` として返します。
+呼び出す際には、`ExecutionContext` がスコープ内になければなりません。
+
 
 ```scala mdoc
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -364,44 +369,46 @@ val futureMessages = db.run(messages.result)
 ```
 
 <div class="callout callout-info">
+
 **Streaming**
 
-In this book we will deal exclusively with materialized queries.
-Let's take a quick look at streams now, so we are aware of the alternative.
+この本では、materializedクエリのみを扱います。
+代替手段を知っておくために、ストリームを簡単に見てみましょう。
 
-Calling `db.stream` returns a [`DatabasePublisher`][link-source-dbPublisher]
-object instead of a `Future`. This exposes three methods to interact with the stream:
+`db.stream` を呼び出すと、 `Future` の代わりに [`DatabasePublisher`][link-source-dbPublisher] オブジェクトが返されます。
+これは、ストリームを操作するための3つのメソッドを公開しています。
 
-- `subscribe` which allows integration with Akka;
-- `mapResult` which creates a new `Publisher` that maps the supplied function on the result set from the original publisher; and
-- `foreach`, to perform a side-effect with the results.
+- `subscribe` は Akka との統合を可能にします。
+- `mapResult`: 指定された関数を元のPublisherから取得した結果にマッピングする `Publisher` を新規に作成します。
+- 結果に対してサイドエフェクトを実行するための `foreach` です。
 
-Streaming results can be used to feed [reactive streams][link-reactive-streams],
-or [Akka streams or actors][link-akka-streams]. Alternatively,
-we can do something simple like use `foreach` to `println` our results:
+ストリーミングの結果は、[reactive streams][link-reactive-streams] のフィードとして使うことができます。
+または [Akka streams or actors][link-akka-streams] に供給するために使用されます。あるいは
+`foreach`を使用して、結果を `println` するような単純なこともできます。
+
 
 ```scala
 db.stream(messages.result).foreach(println)
 ```
 
-...which will eventually print each row.
+...これは最終的に各行を表示します。
 
-If you want to explore this area, start with the [Slick documentation on streaming][link-slick-streaming].
+この分野を探求したいのであれば、[Slick documentation on streaming][link-slick-streaming] から始めてみてください。
 </div>
 
 ## Column Expressions
 
-Methods like `filter` and `map` require us to build expressions based on columns in our tables.
-The `Rep` type is used to represent expressions as well as individual columns.
-Slick provides a variety of extension methods on `Rep` for building expressions.
+`filter` や `map` などのメソッドでは、テーブルのカラムをもとにした式を作成する必要があります。
+`Rep` 型は、個々のカラムだけでなく、式を表現するためにも使用されます。
+Slick では、式を構築するために `Rep` に様々な拡張メソッドを提供しています。
 
-We will cover the most common methods below.
-You can find a complete list in [ExtensionMethods.scala][link-source-extmeth] in the Slick codebase.
+ここでは、最も一般的なメソッドについて説明します。
+完全なリストは Slick のコードベースの [ExtensionMethods.scala][link-source-extmeth] にあります。
 
 ### Equality and Inequality Methods
 
-The `===` and `=!=` methods operate on any type of `Rep` and produce a `Rep[Boolean]`.
-Here are some examples:
+メソッド `===` と `=!=` は任意の型の `Rep` に対して操作し、 `Rep[Boolean]` を生成します。
+以下はその例です。
 
 ```scala mdoc
 messages.filter(_.sender === "Dave").result.statements
@@ -409,14 +416,14 @@ messages.filter(_.sender === "Dave").result.statements
 messages.filter(_.sender =!= "Dave").result.statements.mkString
 ```
 
-The `<`, `>`, `<=`, and `>=` methods can operate on any type of `Rep`
-(not just numeric columns):
+`<`、`>`、`<=` および `>=` メソッドは、任意の型の `Rep` に対して操作することができます (数値の列に限りません)。
 
 ```scala mdoc
 messages.filter(_.sender < "HAL").result.statements
 
 messages.filter(m => m.sender >= m.content).result.statements
 ```
+
 
 -------------------------------------------------------------------------
 Scala Code       Operand Types        Result Type        SQL Equivalent
@@ -435,25 +442,25 @@ Scala Code       Operand Types        Result Type        SQL Equivalent
 
 -------------------------------------------------------------------------
 
-: Rep comparison methods.
-  Operand and result types should be interpreted as parameters to `Rep[_]`.
+: Repの比較メソッド。
+  オペランドと結果の型は `Rep[_]` のパラメータとして解釈される必要があります。 
 
 ### String Methods
 
-Slick provides the `++` method for string concatenation (SQL's `||` operator):
+Slick は、文字列の連結のための `++` メソッド (SQL の `||` 演算子) を提供します。
 
 ```scala mdoc
 messages.map(m => m.sender ++ "> " ++ m.content).result.statements.mkString
 ```
 
-and the `like` method for SQL's classic string pattern matching:
+SQL の古典的な文字列パターンマッチングのための `like` メソッドです。
 
 ```scala mdoc
 messages.filter(_.content like "%pod%").result.statements.mkString
 ```
 
-Slick also provides methods such as `startsWith`, `length`, `toUpperCase`, `trim`, and so on.
-These are implemented differently in different DBMSs---the examples below are purely for illustration:
+また、Slick は `startsWith`, `length`, `toUpperCase`, `trim` などのメソッドも提供しています。
+これらは DBMS によって実装が異なるので、以下の例は単に説明のためのものです。
 
 ---------------------------------------------------------------------
 Scala Code              Result Type        SQL Equivalent
@@ -480,13 +487,14 @@ Scala Code              Result Type        SQL Equivalent
 
 --------------------------------------------------------------------------------------------------------
 
-: String column methods.
-  Operand (e.g., `col1`, `col2`) must be `String` or `Option[String]`.
-  Operand and result types should be interpreted as parameters to `Rep[_]`.
+: 文字列カラムのメソッド。
+  オペランド (例: `col1`, `col2`) は `String` または `Option[String]` でなければなりません。
+  オペランドと結果の型は、 `Rep[_]` のパラメータとして解釈される必要があります。
 
 ### Numeric Methods {#NumericColumnMethods}
 
-Slick provides a comprehensive set of methods that operate on `Rep`s with numeric values: `Int`s, `Long`s, `Double`s, `Float`s, `Short`s, `Byte`s, and `BigDecimal`s.
+
+Slick は、数値を持つ `Rep` を操作するための包括的なメソッド群を提供します。`Int`, `Long`, `Double`, `Float`, `Short`, `Byte`, そして `BigDecimal` といった数値を持つ `Rep` を操作するためのメソッドが用意されています。
 
 --------------------------------------------------------------------------------------------------------
 Scala Code              Operand Column Types               Result Type        SQL Equivalent
@@ -511,12 +519,12 @@ Scala Code              Operand Column Types               Result Type        SQ
 
 --------------------------------------------------------------------------------------------------------
 
-: Numeric column methods.
-  Operand and result types should be interpreted as parameters to `Rep[_]`.
+: 数値カラムのメソッド。
+  オペランドと結果の型は `Rep[_]` のパラメータとして解釈される必要があります。
 
 ### Boolean Methods
 
-Slick also provides a set of methods that operate on boolean `Rep`s:
+また、Slickはboolean値の `Rep` を操作するメソッド群も提供しています。
 
 --------------------------------------------------------------------------------------------------------
 Scala Code              Operand Column Types               Result Type        SQL Equivalent
@@ -529,17 +537,17 @@ Scala Code              Operand Column Types               Result Type        SQ
 
 --------------------------------------------------------------------------------------------------------
 
-: Boolean column methods.
-  Operand and result types should be interpreted as parameters to `Rep[_]`.
+: Bool型カラムのメソッド。
+  オペランドと結果の型は `Rep[_]` のパラメータとして解釈される必要があります。
 
 ### Date and Time Methods
 
-Slick provides column mappings for: `Instant`, `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, `OffsetDateTime`, and `ZonedDateTime`.
-That means you can use all of those types as columns in your table definitions.
+Slick は以下のカラムマッピングを提供します。Slick では、 `Instant`, `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, `OffsetDateTime`, そして `ZonedDateTime` のカラムマッピングを提供しています。
+つまり、これらの型はすべて、テーブル定義のカラムとして使用することができるのです。
 
-How your columns are mapped will depend on the database you're using,
-as different databases have different capabilities when it comes to time and date.
-The table below shows the SQL types used for three common databases:
+カラムがどのようにマッピングされるかは、使用しているデータベースに依存します。
+データベースによって、時刻と日付に関する機能は異なるからです。
+下の表は、一般的な 3 つのデータベースで使用される SQL 型を示しています。
 
 --------------------------------------------------------------------------
 Scala Type           H2 Column Type   PostgreSQL         MySQL
@@ -560,18 +568,17 @@ Scala Type           H2 Column Type   PostgreSQL         MySQL
 
 --------------------------------------------------------------------------
 
-: Mapping from `java.time` types to SQL column types for three databases.
-  There's a full list as part of the The [Slick 3.3 Upgrade Guide][link-slick-ug-time].
+: 3つのデータベースの `java.time` 型から SQL カラム型へのマッピング。
+  [Slick 3.3 Upgrade Guide][link-slick-ug-time] に完全なリストがあります。
 
-Unlike the `String` and `Boolean` types, there are no special methods for the `java.time` types.
-However, as all types have the equality methods, you can use `===`, `>`, `<=`, and so on with date and time types as you'd expect.
+文字列型やブール型とは異なり、 `java.time` 型には特別なメソッドはありません。
+しかし、すべての型が等価メソッドを持っているので、 `===`, `>`, `<=` などを日付や時刻の型に対して期待通りに使用することができます。
 
 ### Option Methods and Type Equivalence {#type_equivalence}
 
-Slick models nullable columns in SQL as `Rep`s with `Option` types.
-We'll discuss this in some depth in [Chapter 5](#Modelling).
-However, as a preview, know that if we have a nullable column in our database, we declare it as optional in our `Table`:
-
+Slick は SQL で nullableなカラムを `Rep` と `Option` 型でモデル化します。
+これについては [5章](#Modelling) で詳しく説明します。
+しかし、プレビューとして、データベースに nullableなカラムがある場合、それを `Table` でオプションとして宣言することを知っておいてください。
 ~~~ scala
 final class PersonTable(tag: Tag) /* ... */ {
   // ...
@@ -580,39 +587,39 @@ final class PersonTable(tag: Tag) /* ... */ {
 }
 ~~~
 
-When it comes to querying on optional values,
-Slick is pretty smart about type equivalence.
+オプショナルな値に対するクエリになると
+Slickは型の等価性に関してかなり賢いです。
 
-What do we mean by type equivalence?
-Slick type-checks our column expressions to make sure the operands are of compatible types.
-For example, we can compare `String`s for equality but we can't compare a `String` and an `Int`:
+型の等価性とはどういう意味でしょうか？
+Slickは、オペランドが互換性のある型であることを確認するために、列式の型チェックを行います。
+例えば、 `String` と `Int` を等価に比較することはできますが、 `String` と `Int` を比較することはできません。
 
 ```scala mdoc:fail
 messages.filter(_.id === "foo")
 ```
 
-Interestingly, Slick is very finickity about numeric types.
-For example, comparing an `Int` to a `Long` is considered a type error:
+興味深いことに、Slick は数値型に対して非常に細かいです。
+例えば、 `Int` と `Long` を比較すると、型エラーとみなされます。
 
 ```scala mdoc:fail
 messages.filter(_.id === 123)
 ```
 
-On the flip side of the coin,
-Slick is clever about the equivalence of optional and non-optional columns.
-As long as the operands are some combination of the types `A` and `Option[A]` (for the same value of `A`), the query will normally compile:
+裏を返せば
+Slick はオプションと非オプションのカラムの等価性に関して賢いです。
+オペランドが `A` と `Option[A]` 型の組み合わせである限り (`A` の値が同じであれば)、クエリは通常コンパイルされます。
 
 ```scala mdoc
 messages.filter(_.id === Option(123L)).result.statements
 ```
 
-However, any optional arguments must be strictly of type `Option`, not `Some` or `None`:
+ただし、オプションの引数は `Some` や `None` ではなく、厳密に `Option` 型でなければなりません。
 
 ```scala mdoc:fail
 messages.filter(_.id === Some(123L)).result.statements
 ```
 
-If you find yourself in this situation, remember you can always provide a type ascription to the value:
+このような状況に陥った場合、値に型付けをすることができることを忘れないでください。
 
 ```scala mdoc
 messages.filter(_.id === (Some(123L): Option[Long]) )
@@ -621,8 +628,8 @@ messages.filter(_.id === (Some(123L): Option[Long]) )
 
 ## Controlling Queries: Sort, Take, and Drop
 
-There are a trio of functions used to control the order and number of results returned from a query.
-This is great for pagination of a result set, but the methods listed in the table below can be used independently.
+クエリから返される結果の順番と数を制御するために使用される三種類の関数があります。
+これは結果セットのページネーションに最適ですが、以下の表にあるメソッドは単独で使用することもできます。
 
 -------------------------------------------
 Scala Code             SQL Equivalent
@@ -635,15 +642,15 @@ Scala Code             SQL Equivalent
 
 -------------------------------------------------
 
-:  Methods for ordering, skipping, and limiting the results of a query.
+: クエリの結果を順序付け、スキップ、制限するためのメソッド。 
 
-We'll look at each in turn, starting with an example of `sortBy`. Say we want messages in order of the sender's name:
+まず `sortBy` の例から順番に見ていきましょう。例えば、メッセージを送信者の名前の順に並べたいとします。
 
 ```scala mdoc
 exec(messages.sortBy(_.sender).result).foreach(println)
 ```
 
-Or the reverse order:
+逆順だとこのようになります。
 
 ```scala mdoc
 exec(messages.sortBy(_.sender.desc).result).foreach(println)
@@ -651,25 +658,25 @@ exec(messages.sortBy(_.sender.desc).result).foreach(println)
 
 
 
-To sort by multiple columns, return a tuple of columns:
+複数の列でソートする場合は、列のタプルを返します。
 
 ```scala mdoc
 messages.sortBy(m => (m.sender, m.content)).result.statements
 ```
 
-Now we know how to sort results, perhaps we want to show only the first five rows:
+さて、結果の並べ替えの方法がわかったところで、最初の5行だけを表示させたいとします。
 
 ```scala mdoc
 messages.sortBy(_.sender).take(5)
 ```
 
-If we are presenting information in pages, we'd need a way to show the next page (rows 6 to 10):
+ページ単位で情報を提示するのであれば、次のページ（6～10行目）を表示する方法が必要になります。
 
 ```scala mdoc
 messages.sortBy(_.sender).drop(5).take(5)
 ```
 
-This is equivalent to:
+これは以下のSQLと等価です。
 
 ~~~ sql
 select "sender", "content", "id"
@@ -679,21 +686,22 @@ limit 5 offset 5
 ~~~~
 
 <div class="callout callout-info">
+
 **Sorting on Null columns**
 
-We had a brief introduction to nullable columns earlier in the chapter when we looked at [Option Methods and Type Equivalence](#type_equivalence).
-Slick offers three modifiers which can be used in conjunction with `desc` and `asc` when sorting on nullable columns: `nullFirst`, `nullsDefault` and `nullsLast`.
-These do what you expect, by including nulls at the beginning or end of the result set.
-The `nullsDefault` behaviour will use the SQL engines preference.
+この章の前のほうで、[オプションメソッドと型の等価性](#type_equivalence) を見たときに、nullable なカラムについて簡単に紹介しました。
+Slick では、 `desc` や `asc` と組み合わせて使用できる 3 つの修飾子を提供しています。`nullFirst`, `nullsDefault`, `nullsLast` です。
+これらは、結果セットの最初または最後に null を含めることで、期待通りの結果を得ることができます。
+`nullsDefault` の動作は、SQL エンジンの優先順位を使用します。
 
-We don't have any nullable fields in our example yet.
-But here's a look at what sorting a nullable column is like:
+今までの例では、まだ nullableなフィールドはありません。
+しかし、ここでは、nullable なカラムのソートがどのようなものかを見てみましょう。
 
 ```scala
 users.sortBy(_.name.nullsFirst)
 ```
 
-The generated SQL for the above query would be:
+上記のクエリに対して生成されるSQLは次のようになります。
 
 ~~~ sql
 select "name", "email", "id"
@@ -701,67 +709,68 @@ from "user"
 order by "name" nulls first
 ~~~
 
-We cover nullable columns in [Chapter 5](#Modelling) and include an example of sorting on nullable columns in [example project][link-example] the code is in _nulls.scala_ in the folder _chapter-05_.
+[5章](#Modelling)でnullableカラムを取り上げ、[example project][link-example] でnullableカラムでのソートの例を紹介しています。このコードは _chapter-05_ フォルダの _nulls.scala_ にあります。
 </div>
 
 
 ## Conditional Filtering
 
-So far we've seen query operations such as  `map`, `filter`, and `take`,
-and in later chapters we'll see joins and aggregations.
-Much of your work with Slick will likely be with just these few operations.
+これまで、`map`、`filter`、`take` などのクエリオペレーションを見てきました。
+そして、後の章では結合と集約を見ることになります。
+Slick を使って行う作業の多くは、これらの数個の操作に限られることでしょう。
 
-There are two other methods, `filterOpt` and `filterIf`,
-that help with dynamic queries, where you may (or may not) want to filter rows based on some condition.
+他にも、 `filterOpt` と `filterIf` という2つのメソッドがあります。
+これは、動的なクエリで、何らかの条件に基づいて行をフィルタリングしたい場合に役立ちます。
 
-For example, suppose we want to give our user the option to filter by crew member (message sender).
-That is, if you don't specify a crew member, you'll get everyone's messages.
+例えば、クルーメンバー（メッセージの送信者）でフィルタリングするオプションをユーザーに提供したいとします。
+つまり、クルーメンバーを指定しなければ、全員のメッセージを取得することになります。
 
-Our first attempt at this might be:
+最初の試みは次のようになります。
 
 ```scala mdoc
 def query1(name: Option[String]) =
   messages.filter(msg => msg.sender === name)
 ```
 
-That's a valid query, but if you feed it `None`, you'll get no results, rather than all results.
-We could add more checks to the query, such as also adding `|| name.isEmpty`.
-But what we want to do is only filter when we have a value. And that's what `filterOpt` does:
+これは有効なクエリですが、`None` を与えると、すべての結果が得られるのではなく、結果が得られなくなります。
+クエリにさらにチェックを追加して、例えば `|| name.isEmpty` も追加することができます。
+しかし、私たちがしたいことは、値があるときだけフィルタリングすることです。そして、それを行うのが `filterOpt` です。
+
 
 ```scala mdoc
 def query2(name: Option[String]) =
   messages.filterOpt(name)( (row, value) => row.sender === value )
 ```
 
-You can read this query as: we're going to optionally filter on `name`,
-and if `name` has a value, we can use the `value` to filter the `row`s in the query.
+このクエリは次のように読むことができます:
+- オプションで `name` をフィルタリングします。
+- そして、もし `name` に値があれば、その値を使ってクエリの `row` をフィルタリングすることができます。
 
-The upshot of that is, when there's no crew member provided, there's no condition on the SQL:
+その結果、クルーメンバーが存在しないときは、SQLに条件がないことになります。
 
 ```scala mdoc
 query2(None).result.statements.mkString
 ```
 
-And when there is, the condition applies:
+そして、存在する場合は、その条件が適用されます。
 
 ```scala mdoc
 query2(Some("Dave")).result.statements.mkString
 ```
 
 <div class="callout callout-info">
-Once you're in the swing of using `filterOpt`, you may prefer to use a short-hand version:
+一度 `filterOpt` を使うようになると、ショートハンド版を使うのが好ましいかもしれません。
 
 ```scala mdoc
 def queryShortHand(name: Option[String]) =
   messages.filterOpt(name)(_.sender === _)
 ```
 
-The behaviour of `query` is the same if you use this short version or the longer version
-we used in the main text.
+`query` の挙動は、この短いバージョンでも、本文で使用した長いバージョンでも同じです。
 </div>
 
-`filterIf` is a similar capability, but turns a where condition on or off.
-For example, we can give the user an option to exclude "old" messages:
+`filterIf` は似たような機能ですが、where条件のオン・オフを切り替えます。
+例えば、"古い "メッセージを除外するオプションをユーザに与えることができます。
 
 ```scala mdoc
 val hideOldMessages = true
@@ -769,11 +778,11 @@ val queryIf = messages.filterIf(hideOldMessages)(_.id > 100L)
 queryIf.result.statements.mkString
 ```
 
-Here we see a condition of `ID > 100` added to the query because `hideOldMessages` is `true`.
-If it were false, the query would not contain the where clause.
+ここでは、`hideOldMessages`が`true`なので、`ID > 100`という条件がクエリに追加されています。
+もし false ならば、このクエリには where 節が含まれません。
 
-The great convenience of `filterIf` and `filterOpt` is that you can chain them one after another
-to build up concise dynamic queries:
+`filterIf` と `filterOpt` の大きな利点は、それらを次々に連結して、簡潔な動的クエリを構築できることです。
+
 
 ```scala mdoc
 val person = Some("Dave")
@@ -788,38 +797,39 @@ queryToRun.result.statements.mkString
 
 ## Take Home Points
 
-Starting with a `TableQuery` we can construct a wide range of queries with `filter` and `map`.
-As we compose these queries, the types of the `Query` follow along to give type-safety throughout our application.
+`TableQuery` から始めると、 `filter` と `map` を使って様々なクエリを作成することができます。
+これらのクエリを構成する際に、 `Query` の型が追従するので、アプリケーション全体で型安全性を確保することができます。
 
-The expressions we use in queries are defined in extension methods,
-and include `===`, `=!=`, `like`, `&&` and so on, depending on the type of the `Rep`.
-Comparisons to `Option` types are made easy for us as Slick will compare `Rep[T]` and `Rep[Option[T]]` automatically.
+クエリで使用する式は、拡張メソッドで定義されています。
+クエリで使用する式は、 `Rep` の型に応じて、 `===`, `=!=`, `like`, `&&` などの拡張メソッドで定義されます。
+`Option` 型との比較は、Slick が `Rep[T]` と `Rep[Option[T]]` を自動的に比較するので、簡単に行うことができます。
 
-We've seen that `map` acts like a SQL `select`, and `filter` is like a `WHERE`.
-We'll see the Slick representation of `GROUP` and `JOIN` in [Chapter 6](#joins).
+これまで、 `map` が SQL の `select` のように振る舞い、 `filter` が `WHERE` のように振る舞うことを見てきました。
+[第6章](#joins)では、 `GROUP` と `JOIN` のSlickな表現について見ていきます。
 
-We introduced some new terminology:
+新しい用語もいくつか紹介しました。
 
-* _unpacked_ type, which is the regular Scala types we work with, such as `String`; and
+* _unpacked_ 型:  `String` のような通常のScalaの型です。
 
-* _mixed_ type, which is Slick's column representation, such as `Rep[String]`.
+* _mixed_ 型: `Rep[String]`のようなSlickの列表現です。
 
-We run queries by converting them to actions using the `result` method.
-We run the actions against a database using `db.run`.
+クエリは `result` メソッドを用いてアクションに変換して実行します。
+アクションをデータベースに対して実行するには、 `db.run` を使用します。
 
-The database action type constructor `DBIOAction` takes three arguments that represent the result, streaming mode, and effect.
-`DBIO[R]` simplifies this to just the result type.
+データベースアクションのコンストラクタ `DBIOAction` は、結果、ストリーミングモード、エフェクトを表す 3 つの引数を取ります。
+`DBIO[R]`はこれを結果型だけに単純化したものです。
 
-What we've seen for composing queries will help us to modify data using `update` and `delete`.
-That's the topic of the next chapter.
+これまで見てきたクエリの作成方法は、 `update` や `delete` を使ってデータを変更する際に役立ちます。
+これは次の章のトピックです。
+
 
 ## Exercises
 
-If you've not already done so, try out the above code.
-In the [example project][link-example] the code is in _main.scala_ in the folder _chapter-02_.
+この章で出てきたコードを試していない方は試してみてください。
+[サンプルプロジェクト][link-example]では、コードは _chapter-02_ フォルダの _main.scala_ にあります。
 
-Once you've done that, work through the exercises below.
-An easy way to try things out is to use  _triggered execution_ with SBT:
+それができたら、以下の練習問題に取り組んでみてください。
+SBTで _triggered execution_ を使うと、簡単に試すことができます。
 
 ~~~ bash
 $ cd example-02
@@ -827,22 +837,24 @@ $ sbt
 > ~run
 ~~~
 
-That `~run` will monitor the project for changes,
-and when a change is seen,
-the _main.scala_ program will be compiled and run.
-This means you can edit _main.scala_ and then look in your terminal window to see the output.
+`~run` は、プロジェクトに変更がないかどうかを監視します。
+変更が見られるとプログラムがコンパイルされて実行されます。
+つまり、_main.scala_ を編集して、ターミナルウィンドウでその出力を見ることができるのです。
 
 ### Count the Messages
 
-How would you count the number of messages?
-Hint: in the Scala collections the method `length` gives you the size of the collection.
+メッセージの数はどうやって数えるのでしょうか？
+
+ヒント：Scala のコレクションでは、 `length` メソッドがコレクションのサイズを教えてくれます
+
 
 <div class="solution">
+
 ```scala mdoc
 val results = exec(messages.length.result)
 ```
 
-You could also use `size`, which is an alias for `length`.
+`length`のエイリアスである `size` を使用することもできます。
 ```scala mdoc:invisible
 messages.size
 ```
@@ -850,14 +862,15 @@ messages.size
 
 ### Selecting a Message
 
-Using a for comprehension,
-select the message with the id of 1.
-What happens if you try to find a message with an id of 999?
+for式を使ってid=1を持つメッセージを選択しましょう。
+またidが999のメッセージを探そうとするとどうなりますか？
 
-Hint: our IDs are `Long`s.
-Adding `L` after a number in Scala, such as `99L`, makes it a long.
+ヒント：私たちのidは `Long` です。
+Scalaでは数字の後に`L`をつけると、例えば`99L`のように、longになります。
+
 
 <div class="solution">
+
 ```scala mdoc
 val id1query = for {
   message <- messages if message.id === 1L
@@ -866,7 +879,7 @@ val id1query = for {
 val id1result = exec(id1query.result)
 ```
 
-Asking for `999`, when there is no row with that ID, will give back an empty collection.
+存在しないidである `999` を要求すると、空のコレクションが返されます。
 
 ```scala mdoc:invisible
 {
@@ -879,40 +892,44 @@ Asking for `999`, when there is no row with that ID, will give back an empty col
 
 ### One Liners
 
-Re-write the query from the last exercise to not use a for comprehension.
-Which style do you prefer? Why?
+前回の練習問題のクエリを、for式を使わないように書き直してみましょう。
+あなたはどちらのスタイルが好きですか？それはなぜですか？
 
 <div class="solution">
+
 ```scala mdoc
 val filterResults = exec(messages.filter(_.id === 1L).result)
 ```
 </div>
 
-### Checking the SQL
+### Checking the SQL
 
-Calling the `result.statements` methods on a query will give you the SQL to be executed.
-Apply that to the last exercise.
-What query is reported?
-What does this tell you about the way `filter` has been mapped to SQL?
+クエリに対して `result.statements` メソッドを呼び出すと、実行する SQL が得られます。
+それを前回の演習に当てはめてみましょう。
+どのようなクエリが得られますか？
+このことから、`filter` が SQL にマップされていることについて何がわかるでしょうか？
 
 <div class="solution">
-The code you need to run is:
+このようなコードを実行する必要があります。
 
 ```scala mdoc
 val sql = messages.filter(_.id === 1L).result.statements
 println(sql.head)
 ```
 
-From this we see how `filter` corresponds to a SQL `where` clause.
+`filter` が SQL の `where` 節にどのように対応するかがわかりますね。
+
 </div>
 
 ### Is HAL Real?
 
-Find if there are any messages by HAL in the database,
-but only return a boolean value from the database.
+データベースにHALからのメッセージがあるかどうか確認してみましょう。
+ただし、データベースからブール値を返すだけです（存在するか確認するだけ）。
+
 
 <div class="solution">
-That's right, we want to know if HAL `exists`:
+
+そうです、私たちはHALが「存在する」のかどうかを知りたいのです。
 
 ```scala mdoc
 val queryHalExists = messages.filter(_.sender === "HAL").exists
@@ -927,8 +944,8 @@ assert(found, s"Expected to find HAL, not: $found")
 }
 ```
 
-The query will return `true` as we do have records from HAL,
-and Slick will generate the following SQL:
+このクエリは、HALからのレコードがあるので、`true`を返します。
+そして、Slickは以下のSQLを生成します。
 
 ```scala mdoc
 queryHalExists.result.statements.head
@@ -938,26 +955,27 @@ queryHalExists.result.statements.head
 
 ### Selecting Columns
 
-So far we have been returning `Message` classes, booleans, or counts.
-Now we want to select all the messages in the database, but return just their `content` columns.
+これまでは、 `Message` クラス、ブール値、またはカウント値を返してきました。
+今度は、データベース内のすべてのメッセージを選択し、その `content` カラムだけを返すようにしたいと思います。
 
-Hint: think of messages as a collection and what you would do to a collection to just get back a single field of a case class.
+ヒント: メッセージをコレクションとして考え、コレクションに対して case クラスの単一のフィールドを返すために何をするのかを考えてみましょう。
 
-Check what SQL would be executed for this query.
+このクエリでどのような SQL が実行されるかを確認してみましょう。
 
 <div class="solution">
+
 ```scala mdoc
 val contents = messages.map(_.content)
 exec(contents.result)
 ```
 
-You could have also said:
+以下のようにも書けます。
 
 ```scala mdoc
 val altQuery = for { message <- messages } yield message.content
 ```
 
-The query will return only the `content` column from the database:
+このクエリは、データベースから `content` カラムのみを返します。
 
 ```scala mdoc
 altQuery.result.statements.head
@@ -967,19 +985,21 @@ altQuery.result.statements.head
 
 ### First Result
 
-The methods `head` and `headOption` are useful methods on a `result`.
-Find the first message that HAL sent.
+メソッド `head` と `headOption` は、 `result` に対する便利なメソッドです。
+HAL が最初に送信したメッセージを探しましょう。
 
-What happens if you use `head` to find a message from "Alice" (note that Alice has sent no messages).
+もし `head` を使って "Alice" からのメッセージを見つけたらどうなるでしょうか (Alice は何もメッセージを送っていないことに注意してください)。
 
 <div class="solution">
+
 ```scala mdoc
 val msg1 = messages.filter(_.sender === "HAL").map(_.content).result.head
 ```
 
-You should get an action that produces "Affirmative, Dave. I read you."
+"Affirmative, Dave. I read you." を生成するアクションを得られたはずです。
 
-For Alice, `head` will throw a run-time exception as we are trying to return the head of an empty collection. Using `headOption` will prevent the exception.
+Alice の場合、空のコレクションの先頭を返そうとしているので、 `head` は実行時例外を発生させます。`headOption` を使用すると、例外を回避できます。
+
 
 ```scala mdoc
 exec(messages.filter(_.sender === "Alice").result.headOption)
@@ -988,21 +1008,22 @@ exec(messages.filter(_.sender === "Alice").result.headOption)
 
 ### Then the Rest
 
-In the previous exercise you returned the first message HAL sent.
-This time find the next five messages HAL sent.
-What messages are returned?
+前回の練習では、HAL が最初に送ったメッセージを返しました。
+今回は、HAL が次に送った 5 つのメッセージを探してください。
+どんなメッセージが返ってくるでしょうか？
 
-What if we'd asked for HAL's tenth through to twentieth message?
+もし、HALの10番目から20番目までのメッセージを求めたらどうでしょうか？
 
 <div class="solution">
-It's `drop` and `take` to the rescue:
+
+`drop` と `take` を利用します
 
 ```scala mdoc
 val msgs = messages.filter(_.sender === "HAL").drop(1).take(5).result
 ```
 
-HAL has only two messages in total.
-Therefore our result set should contain one messages
+HALは全部で2つのメッセージしか持っていません。
+したがって、私たちの結果セットには1つのメッセージが含まれるはずです。
 
 ```scala
 Message(HAL,I'm sorry, Dave. I'm afraid I can't do that.,4)
@@ -1015,7 +1036,7 @@ Message(HAL,I'm sorry, Dave. I'm afraid I can't do that.,4)
 }
 ```
 
-And asking for any more messages will result in an empty collection.
+これ以上メッセージを求めると、空のコレクションになってしまいます。
 
 ```scala mdoc
 val allMsgs = exec(
@@ -1038,17 +1059,20 @@ val allMsgs = exec(
 
 ### The Start of Something
 
-The method `startsWith` on a `String` tests to see if the string starts with a particular sequence of characters.
-Slick also implements this for string columns.
-Find the message that starts with "Open".
-How is that query implemented in SQL?
+`String` の `startsWith` メソッドは、その文字列が特定の文字列で始まるかどうかをテストします。
+Slickでは、文字列のカラムに対してもこれを実装しています。
+
+"Open "で始まるメッセージを検索しましょう。
+そのクエリはSQLでどのように実装されていますか？
+
 
 <div class="solution">
+
 ```scala mdoc
 messages.filter(_.content startsWith "Open")
 ```
 
-The query is implemented in terms of `LIKE`:
+このクエリは `LIKE` という句で実装されています。
 
 ```scala mdoc
 messages.filter(_.content startsWith "Open").result.statements.head
@@ -1057,28 +1081,31 @@ messages.filter(_.content startsWith "Open").result.statements.head
 
 ### Liking
 
-Slick implements the method `like`.
-Find all the messages with "do" in their content.
+Slick は `like` というメソッドを実装しています。
+コンテンツに "do" を含むすべてのメッセージを検索してください。
 
-Can you make this case insensitive?
+大文字と小文字を区別しないようにできるでしょうか？
 
 <div class="solution">
-If you have familiarity with SQL `like` expressions, it probably wasn't too hard to find a case-sensitive version of this query:
+
+SQL の `like` 式に慣れていれば、このクエリの大文字小文字を区別するバージョンを見つけるのはそれほど難しくないでしょう。
 
 ```scala mdoc
 messages.filter(_.content like "%do%")
 ```
 
-To make it case sensitive you could use `toLowerCase` on the `content` field:
+大文字と小文字を区別しないようにするには、`content` フィールドで `toLowerCase` を使用するとよいでしょう。
 
 ```scala mdoc
 messages.filter(_.content.toLowerCase like "%do%")
 ```
 
-We can do this because `content` is a `Rep[String]` and that `Rep` has implemented `toLowerCase`.
-That means, the `toLowerCase` will be translated into meaningful SQL.
+これは、`content` が `Rep[String]` であり、その `Rep` が `toLowerCase` を実装しているからです。
+つまり、 `toLowerCase` は意味のある SQL に変換されます。
 
-There will be three results: "_Do_ you read me", "Open the pod bay *do*ors", and "I'm afraid I can't _do_ that".
+結果は3つあります。"_Do_ you read me", "Open the pod bay *do*ors", そして "I'm afraid I can't _do_ that" の3つになります。
+
+
 ```scala mdoc:invisible
 {
   val likeDo = exec( messages.filter(_.content.toLowerCase like "%do%").result )
@@ -1090,14 +1117,15 @@ There will be three results: "_Do_ you read me", "Open the pod bay *do*ors", and
 
 ### Client-Side or Server-Side?
 
-What does this do and why?
+これは何をするものですか？ そしてなぜですか？
 
 ```scala
 exec(messages.map(_.content.toString + "!").result)
 ```
 
 <div class="solution">
-The query Slick generates looks something like this:
+
+Slickが生成するクエリは、次のようなものです。
 
 ```sql
 select '(message Ref @421681221).content!' from "message"
@@ -1110,38 +1138,40 @@ select '(message Ref @421681221).content!' from "message"
 }
 ```
 
-That is a select expression for a strange constant string.
+これは奇妙な定数文字列のselect式です。
 
-The `_.content.toString + "!"` expression converts `content` to a string and appends the exclamation point.
-What is `content`? It's a `Rep[String]`, not a `String` of the content.
-The end result is that we're seeing something of the internal workings of Slick.
+`_.content.toString + "!"` 式は `content` を文字列に変換し、感嘆符を追加します。
+`content` とは何でしょうか？それは `Rep[String]` であり、コンテンツの `String` ではありません。
+結局のところ、Slickの内部動作のようなものが見えていることになります。
 
-It is possible to do this mapping in the database with Slick.
-We need to remember to work in terms of `Rep[T]` classes:
+このマッピングをデータベースで行うことはSlickでも可能です。
+このとき、`Rep[T]` クラスという単位で作業することを忘れないようにしましょう。
+
 
 ```scala mdoc
 messages.map(m => m.content ++ LiteralColumn("!"))
 ```
 
-Here `LiteralColumn[T]` is type of `Rep[T]` for holding a constant value to be inserted into the SQL.
-The `++` method is one of the extension methods defined for any `Rep[String]`.
+ここで `LiteralColumn[T]` は `Rep[T]` の型であり、SQL に挿入する定数値を保持するためのものである。
+`++`メソッドは、任意の `Rep[String]` に対して定義された拡張メソッドの 1 つである。
 
-Using `++` will produce the desired query:
+`++`を使うと、希望通りのクエリが作成されます。
+
 
 ```sql
 select "content"||'!' from "message"
 ```
 
-You can also write:
+このようにも書けます。
 
 ```scala mdoc
 messages.map(m => m.content ++ "!")
 ```
 
-...as `"!"` will be lifted to a `Rep[String]`.
+`"!"` は `Rep[String]` にリフティングされました。
 
-This exercise highlights that inside of a `map` or `filter` you are working in terms of `Rep[T]`.
-You should become familiar with the operations available to you.
-The tables we've included in this chapter should help with that.
+この演習では、 `map` や `filter` の内部では、 `Rep[T]` という単位で作業していることに注目してください。
+利用できる操作に慣れる必要があります。
+この章に含まれている表は、その助けとなるはずです。
 
 </div>
