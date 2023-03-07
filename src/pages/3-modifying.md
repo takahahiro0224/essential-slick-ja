@@ -36,17 +36,17 @@ exec(messages.schema.create andThen (messages ++= freshTestData))
 
 # Creating and Modifying Data {#Modifying}
 
-In the last chapter we saw how to retrieve data from the database using select queries. In this chapter we will look at modifying stored data using insert, update, and delete queries.
+前章では、selectクエリを使用してデータベースからデータを取得する方法について説明しました。この章では、insert、update、deleteクエリを使用して、保存されたデータを変更する方法を説明します。
 
-SQL veterans will know that update and delete queries share many similarities with select queries. The same is true in Slick, where we use the `Query` monad and combinators to build the different kinds of query. Ensure you are familiar with the content of [Chapter 2](#selecting) before proceeding.
+SQLの経験者なら、updateやdeleteクエリがselectクエリと多くの類似点があることを知っているでしょう。Slickでも同じで、`Query`モナドとコンビネータを使って様々な種類のクエリを構築しています。[第2章](#selecting)の内容をよく理解していることを確認した上で、次に進んでください。
 
 ## Inserting Rows
 
-As we saw in [Chapter 1](#Basics), adding new data looks like an append operation on a mutable collection. We can use the `+=` method to insert a single row into a table, and `++=` to insert multiple rows. We'll discuss both of these operations below.
+[第1章](#基本編)で見たように、新しいデータを追加することは、ミュータブルコレクションに対するアペンド操作のように見えます。テーブルに1つの行を挿入するには `+=` メソッドを、複数の行を挿入するには `++=` メソッドを使用することができます。この2つの操作については後述します。
 
 ### Inserting Single Rows
 
-To insert a single row into a table we use the `+=` method. Note that, unlike the select queries we've seen, this creates a `DBIOAction` immediately without an intermediate `Query`:
+テーブルに1行を挿入するには、`+=`メソッドを使用します。これまで見てきた select クエリとは異なり、このメソッドでは中間の `Query` を使わずにすぐに `DBIOAction` を作成できることに注意してください。
 
 ```scala mdoc
 val insertAction =
@@ -55,16 +55,17 @@ val insertAction =
 exec(insertAction)
 ```
 
-We've left the `DBIO[Int]` type annotation off of `action`, so you'll see the specific type Slick is using.
-It's not important for this discussion, but worth knowing that Slick has a number of different kinds of `DBIOAction` classes in use under the hood.
+`action`の `DBIO[Int]` 型アノテーションを外したので、Slickが使用している特定の型を確認することができます。
+この議論では重要ではありませんが、Slickは内部で多くの異なる種類の`DBIOAction`クラスを使用していることを知っておくのは価値があります。
 
-The result of the action is the number of rows inserted. However, it is often useful to return something else, such as the primary key generated for the new row. We can get this information using a method called `returning`. Before we get to that, we first need to understand where the primary key comes from.
+アクションの結果は、挿入された行の数です。しかし、新しい行に対して生成された主キーのような他のものを返すと便利なことがよくあります。この情報は `returning` と呼ばれるメソッドで取得することができます。その前に、まず主キーがどこから来るのかを理解する必要があります。
 
 ### Primary Key Allocation
 
-When inserting data, we need to tell the database whether or not to allocate primary keys for the new rows. It is common practice to declare auto-incrementing primary keys, allowing the database to allocate values automatically if we don't manually specify them in the SQL.
+データを挿入する際、新しい行に主キーを割り当てるかどうかをデータベースに指示する必要があります。自動インクリメントの主キーを宣言するのが一般的で、SQLで手動で指定しなくても、データベースが自動的に値を割り当てるようにします。
 
-Slick allows us to allocate auto-incrementing primary keys via an option on the column definition. Recall the definition of `MessageTable` from Chapter 1, which looked like this:
+Slickでは、カラム定義のオプションで自動インクリメントの主キーを割り当てることができます。第1章に登場した`MessageTable`の定義を思い出してください。
+
 
 ```scala
 class MessageTable(tag: Tag) extends Table[Message](tag, "message") {
@@ -77,14 +78,14 @@ class MessageTable(tag: Tag) extends Table[Message](tag, "message") {
 }
 ```
 
-The `O.AutoInc` option specifies that the `id` column is auto-incrementing, meaning that Slick can omit the column in the corresponding SQL:
+`O.AutoInc`オプションは、`id`カラムがオートインクリメントであることを指定するもので、Slickは対応するSQLでこのカラムを省略できることを意味します。
 
 ```scala mdoc
 insertAction.statements.head
 ```
 
-As a convenience, in our example code we put the `id` field at the end of the case class and gave it a default value of `0L`.
-This allows us to skip the field when creating new objects of type `Message`:
+便宜上、このサンプルコードでは `id` フィールドを case クラスの最後に置き、デフォルト値として `0L` を与えています。
+これにより、`Message`型の新しいオブジェクトを作成する際に、このフィールドを省略することができます。
 
 ```scala
 case class Message(
@@ -97,11 +98,11 @@ case class Message(
 ```scala mdoc
 Message("Dave", "You're off my Christmas card list.")
 ```
+デフォルトの値である`0L`は、特に何も意味することはないのです。
+`O.AutoInc`オプションは、`+=`の挙動を決定するものです。
 
-There is nothing special about our default value of `0L`---it doesn't signify anything in particular.
-It is the `O.AutoInc` option that determines the behaviour of `+=`.
+データベースのデフォルトの自動インクリメント動作をオーバーライドして、独自の主キーを指定したい場合があります。Slickはこれを実現するために `forceInsert` メソッドを提供しています。
 
-Sometimes we want to override the database's default auto-incrementing behaviour and specify our own primary key. Slick provides a `forceInsert` method that does just this:
 
 ```scala mdoc:silent
 val forceInsertAction = messages forceInsert Message(
@@ -110,8 +111,7 @@ val forceInsertAction = messages forceInsert Message(
    1000L)
 ```
 
-Notice that the SQL generated for this action includes a manually specified ID,
-and that running the action results in a record with the ID being inserted:
+このアクションのために生成されたSQLには手動で指定したIDが含まれていること,そしてアクションを実行するとそのIDを持つレコードが挿入されることに注意してください。
 
 ```scala mdoc
 forceInsertAction.statements.head
@@ -123,8 +123,8 @@ exec(messages.filter(_.id === 1000L).result)
 
 ### Retrieving Primary Keys on Insert
 
-When the database allocates primary keys for us it's often the case that we want to get the key back after an insert.
-Slick supports this via the `returning` method:
+データベースが主キーを割り当てた場合、挿入後にキーを取り戻したいと思うことがよくあります。
+Slickは `returning` メソッドでこれをサポートしています。
 
 ```scala mdoc
 val insertDave: DBIO[Long] =
@@ -137,16 +137,16 @@ val pk: Long = exec(insertDave)
 assert(pk == 1001L, "Text below expects PK of 1001L")
 ```
 
-The argument to `messages returning` is a `Query` over the same table, which is why `messages.map(_.id)` makes sense here.
-The query specifies what data we'd like the database to return once the insert has finished.
+`messages returning` の引数は同じテーブルに対する `Query` であり、これが `messages.map(_.id)` がここで意味を持つ理由です。
+クエリには、挿入が完了した後にデータベースが返すべきデータを指定します。
 
-We can demonstrate that the return value is a primary key by looking up the record we just inserted:
+先ほど挿入したレコードを調べることで、戻り値がプライマリキーであることを証明することができます。
 
 ```scala mdoc
 exec(messages.filter(_.id === 1001L).result.headOption)
 ```
 
-For convenience, we can save a few keystrokes and define an insert query that always returns the primary key:
+便利なことに、いくつかのキー操作を節約して、常に主キーを返す挿入クエリを定義することができます。
 
 ```scala mdoc
 lazy val messagesReturningId = messages returning messages.map(_.id)
@@ -154,39 +154,42 @@ lazy val messagesReturningId = messages returning messages.map(_.id)
 exec(messagesReturningId += Message("HAL", "Humans, eh."))
 ```
 
-Using `messagesReturningId` will return the `id` value, rather than the count of the number of rows inserted.
+`messagesReturningId`を使用すると、挿入された行数のカウントではなく、`id`値を返します。
 
 ### Retrieving Rows on Insert {#retrievingRowsOnInsert}
 
-Some databases allow us to retrieve the complete inserted record, not just the primary key.
-For example, we could ask for the whole `Message` back:
+データベースによっては、主キーだけでなく、挿入されたレコード全体を取得することができるものもあります。
+例えば、`Message`全体を返してもらうことができます。
 
 ```scala
 exec(messages returning messages +=
   Message("Dave", "So... what do we do now?"))
 ```
 
-Not all databases provide complete support for the `returning` method.
-H2 only allows us to retrieve the primary key from an insert.
+すべてのデータベースが `returning` メソッドを完全にサポートしているわけではありません。
+H2 では、インサートから主キーを取得することだけが可能です。
 
-If we tried this with H2, we get a runtime error:
+H2でこれを試すと、ランタイムエラーが発生します。
 
 ```scala mdoc:crash
 exec(messages returning messages +=
   Message("Dave", "So... what do we do now?"))
 ```
 
-This is a shame, but getting the primary key is often all we need.
+これは残念なことですが、主キーを取得することで、必要なものがすべて揃うことが多いです。
 
 <div class="callout callout-info">
+
 **Profile Capabilities**
 
-The Slick manual contains a comprehensive table of the [capabilities for each database profile][link-ref-dbs]. The ability to return complete records from an insert query is referenced as the `jdbc.returnInsertOther` capability.
+Slickのマニュアルには、[各データベースプロファイルのケイパビリティ][link-ref-dbs]の総合表が掲載されています。挿入クエリから完全なレコードを返す機能は、`jdbc.returnInsertOther`ケイパビリティとして参照されます。
 
-The API documentation for each profile also lists the capabilities that the profile *doesn't* have. For an example, the top of the [H2 Profile Scaladoc][link-ref-h2driver] page points out several of its shortcomings.
+各プロファイルのAPIドキュメントには、そのプロファイルが *持っていない* ケイパビリティも記載されています。例えば、[H2 Profile Scaladoc][link-ref-h2driver] ページのトップには、その欠点がいくつか指摘されています。
+
 </div>
 
-If we want to get a complete populated `Message` back from a database without `jdbc.returnInsertOther` support, we retrieve the primary key and manually add it to the inserted record. Slick simplifies this with another method, `into`:
+`jdbc.returnInsertOther`をサポートしていないデータベースから、完全に入力された `Message` を取得したい場合は、主キーを取得し、挿入したレコードに手動で追加します。Slickでは、別のメソッドである `into` でこれを簡略化しています。
+
 
 ```scala mdoc
 val messagesReturningRow =
@@ -200,39 +203,36 @@ val insertMessage: DBIO[Message] =
 exec(insertMessage)
 ```
 
-The `into` method allows us to specify a function to combine the record and the new primary key. It's perfect for emulating the `jdbc.returnInsertOther` capability, although we can use it for any post-processing we care to imagine on the inserted data.
+`into`メソッドでは、レコードと新しい主キーを結合するための関数を指定することができます。これは、`jdbc.returnInsertOther`機能をエミュレートするのに最適ですが、挿入されたデータに対するあらゆる後処理を想像して使用することができます。
 
 ### Inserting Specific Columns {#insertingSpecificColumns}
 
-If our database table contains a lot of columns with default values,
-it is sometimes useful to specify a subset of columns in our insert queries.
-We can do this by `mapping` over a query before calling `insert`:
+データベーステーブルにデフォルト値を持つカラムが多く含まれている場合、挿入クエリでカラムのサブセットを指定することが有用な場合があります。
+これは、`insert`を呼び出す前にクエリを `mapping` することで実現できます。
 
 ```scala mdoc
 messages.map(_.sender).insertStatement
 ```
-
-The parameter type of the `+=` method is matched to the *unpacked* type of the query:
+`+=`メソッドのパラメータ型は、クエリの *unpacked* 型と一致します。
 
 ```scala mdoc
 messages.map(_.sender)
 ```
 
-... so we execute this query by passing it a `String` for the `sender`:
+そこで、`sender`に`String`を渡して、このクエリを実行します。
 
 ```scala mdoc:silent:crash
 exec(messages.map(_.sender) += "HAL")
 ```
 
-The query fails at runtime because the `content` column is non-nullable in our schema.
-No matter. We'll cover nullable columns when discussing schemas in [Chapter 5](#Modelling).
-
+`content`カラムが我々のスキーマではnullableでないため、クエリは実行時に失敗します。
+問題ありません。第5章](#Modelling)でスキーマについて説明するときに、NULL可能なカラムを取り上げることにします。
 
 ### Inserting Multiple Rows
 
-Suppose we want to insert several `Message`s at the same time. We could just use `+=` to insert each one in turn. However, this would result in a separate query being issued to the database for each record, which could be slow for large numbers of inserts.
+例えば、複数の「メッセージ」を同時に挿入したいとします。このとき、`+=`を使って順番に挿入していくこともできます。しかし、この場合、各レコードに対して別々のクエリがデータベースに発行されることになり、大量の挿入には時間がかかることがあります。
 
-As an alternative, Slick supports *batch inserts*, where all the inserts are sent to the database in one go. We've seen this already in the first chapter:
+その代わり、Slickは *batch inserts* をサポートしており、すべての挿入が一度にデータベースに送信されます。これは第1章ですでに見たとおりです。
 
 ```scala mdoc
 val testMessages = Seq(
@@ -245,13 +245,13 @@ val testMessages = Seq(
 exec(messages ++= testMessages)
 ```
 
-This code prepares one SQL statement and uses it for each row in the `Seq`.
-In principle Slick could optimize this insert further using database-specific features.
-This can result in a significant boost in performance when inserting many records.
+このコードでは、1つのSQL文を用意し、`Seq`の各行に対してそれを使用します。
+原理的には、Slick はデータベース固有の機能を使ってこの挿入をさらに最適化することができます。
+これにより、多数のレコードを挿入する際のパフォーマンスを大幅に向上させることができます。
 
-As we saw earlier this chapter, the default return value of a single insert is the number of rows inserted. The multi-row insert above is also returning the number of rows, except this time the type is `Option[Int]`. The reason for this is that the JDBC specification permits the underlying database driver to indicate that the number of rows inserted is unknown.
+この章の前半で見たように、単一のインサートのデフォルトの戻り値は、挿入された行の数です。上の複数行の挿入も行数を返しますが、今回は型が `Option[Int]` であることを除いては、行数です。この理由は、JDBCの仕様では、基礎となるデータベースドライバが、挿入された行数が不明であることを示すことを許可しているからです。
 
-Slick also provides a batch version of `messages returning...`, including the `into` method. We can use the `messagesReturningRow` query we defined last section and write:
+また、Slickは `into` メソッドを含む `messages returning...` のバッチ版も提供しています。前節で定義した `messagesReturningRow` クエリを使用して、次のように記述することができます。
 
 ```scala mdoc
 exec(messagesReturningRow ++= testMessages)
@@ -259,23 +259,23 @@ exec(messagesReturningRow ++= testMessages)
 
 ### More Control over Inserts {#moreControlOverInserts}
 
-At this point we've inserted fixed data into the database.
-Sometimes you need more flexibility, including inserting data based on another query.
-Slick supports this via `forceInsertQuery`.
+この時点では、データベースに固定データを挿入しています。
+別のクエリに基づいてデータを挿入するなど、より柔軟な対応が必要な場合もあります。
+Slick は `forceInsertQuery` を使ってこれをサポートします。
 
 
-The argument to `forceInsertQuery` is a query.  So the form is:
+`forceInsertQuery`の引数はクエリです。 つまり、形式は以下のようになります。
 
 ```scala
  insertExpression.forceInsertQuery(selectExpression)
 ```
 
-Our `selectExpression` can be pretty much anything, but it needs to match the columns required by our `insertExpression`.
+`selectExpression`はほとんど何でも良いのですが、`insertExpression`が必要とするカラムと一致する必要があります。
 
-As an example, our query could check to see if a particular row of data already exists, and insert it if it doesn't.
-That is, an "insert if doesn't exist" function.
+例えば、クエリは特定の行のデータが既に存在するかどうかをチェックし、存在しない場合はそれを挿入することができます。
+つまり、"insert if doesn't exist "関数である。
 
-Let's say we only want the director to be able to say "Cut!" once. The SQL would end up like this:
+例えば、監督が「カット！」と言えるのは1回だけだとしましょう。SQLは次のようになります。
 
 ~~~ sql
 insert into "messages" ("sender", "content")
@@ -289,18 +289,19 @@ where
                  and   "content" = 'Cut!')
 ~~~
 
-That looks quite involved, but we can build it up gradually.
+かなり複雑に見えますが、徐々に構築していけばいいのです。
 
-The tricky part of this is the `select 'Stanley', 'Cut!'` part, as there is no `FROM` clause there.
-We saw an example of how to create that in [Chapter 2](#constantQueries), with `Query.apply`. For this situation it would be:
+この中で厄介なのは、`select 'Stanley', 'Cut!'` の部分で、ここには `FROM` 句がありません。
+[第2章](#constantQueries)で、`Query.apply`を使ってそれを作る例を見ました。この状況なら、こうなります。
+
 
 ```scala mdoc
 val data = Query(("Stanley", "Cut!"))
 ```
 
-`data` is a constant query that returns a fixed value---a tuple of two columns. It's the equivalent of running `SELECT 'Stanley', 'Cut!';` against the database, which is one part of the query we need.
+`data`は、固定値（2つのカラムのタプル）を返す定数クエリです。これは、データベースに対して `SELECT 'Stanley', 'Cut!';` を実行するのと同じことで、私たちが必要とするクエリの一部分でもあります。
 
-We also need to be able to test to see if the data already exists. That's straightforward:
+また、データがすでに存在するかどうかをテストすることも必要です。これは簡単なことです。
 
 ```scala mdoc:silent
 val exists =
@@ -308,16 +309,15 @@ val exists =
    filter(m => m.sender === "Stanley" && m.content === "Cut!").
    exists
 ```
-
-We want to use the `data` when the row _doesn't_ exist, so combine the `data` and `exists` with `filterNot` rather than `filter`:
+行が _存在しない_ ときに `data` を使いたいので、`data` と `exists` を組み合わせて、`filter` ではなく `filterNot` とします。
 
 ```scala mdoc:silent
 val selectExpression = data.filterNot(_ => exists)
 ```
 
-Finally, we need to apply this query with `forceInsertQuery`.
-But remember the column types for the insert and select need to match up.
-So we `map` on `messages` to make sure that's the case:
+最後に、このクエリを `forceInsertQuery` で適用する必要があります。
+しかし、insert と select のカラムタイプは一致させる必要があることを忘れないでください。
+そこで、`messages`に`map`して、それが正しいことを確認します。
 
 ```scala mdoc
 val forceAction =
@@ -330,12 +330,11 @@ exec(forceAction)
 exec(forceAction)
 ```
 
-The first time we run the query, the message is inserted.
-The second time, no rows are affected.
+クエリを最初に実行したときは、メッセージが挿入されます。
+2回目は、行に影響はありません。
 
-In summary, `forceInsertQuery` provides a way to build-up more complicated inserts.
-If you find situations beyond the power of this method,
-you can always make use of Plain SQL inserts, described in [Chapter 7](#PlainSQL).
+要約すると、`forceInsertQuery` は、より複雑な挿入を構築するための方法を提供します。
+もし、このメソッドで対応できない状況の場合は[7章](#PlainSQL)で説明するPlain SQLの挿入を常に使用することができます。
 
 
 ## Deleting Rows
