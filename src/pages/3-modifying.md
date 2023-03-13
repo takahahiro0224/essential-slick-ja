@@ -339,8 +339,8 @@ exec(forceAction)
 
 ## Deleting Rows
 
-Slick lets us delete rows using the same `Query` objects we saw in [Chapter 2](#selecting).
-That is, we specify which rows to delete using the `filter` method, and then call `delete`:
+Slickでは、[第2章](#selecting)で見たのと同じ `Query` オブジェクトを使って行を削除することができます。
+つまり、`filter`メソッドで削除する行を指定し、`delete`を呼び出します。
 
 ```scala mdoc
 val removeHal: DBIO[Int] =
@@ -349,15 +349,16 @@ val removeHal: DBIO[Int] =
 exec(removeHal)
 ```
 
-The return value is the number of rows affected.
+戻り値は、影響を受けた行の数です。
 
-The SQL generated for the action can be seen by calling `delete.statements`:
+このアクションのために生成されたSQLは、`delete.statements` を呼び出すことで見ることができます。
+
 
 ```scala mdoc
 messages.filter(_.sender === "HAL").delete.statements.head
 ```
 
-Note that it is an error to use `delete` in combination with `map`. We can only call `delete` on a `TableQuery`:
+なお、`delete`を`map`と組み合わせて使用するのは誤りです。`delete`は `TableQuery` に対してのみ呼び出すことができます。
 
 ```scala mdoc:fail
 messages.map(_.content).delete
@@ -366,70 +367,75 @@ messages.map(_.content).delete
 
 ## Updating Rows {#UpdatingRows}
 
-So far we've only looked at inserting new data and deleting existing data. But what if we want to update existing data without deleting it first? Slick lets us create SQL `UPDATE` actions via the kinds of `Query` values we've been using for selecting and deleting rows.
+ここまでは、新しいデータの挿入と既存のデータの削除についてだけ見てきました。しかし、既存のデータを削除せずに更新したい場合はどうすればよいのでしょうか。Slickでは、これまで行の選択と削除に使用してきた `Query` 値を使用して、SQLの `UPDATE` アクションを作成できます。
 
 
 <div class="callout callout-info">
+
 **Restoring Data**
 
-In the last section we removed all the rows for HAL. Before continuing with updating rows, we should put them back:
+前節では、HAL用の行をすべて削除しました。行の更新を続ける前に、行を元に戻しておく必要があります。
 
 ```scala mdoc
 exec(messages.delete andThen (messages ++= freshTestData) andThen messages.result)
 ```
 
-_Action combinators_, such as `andThen`, are the subject of the next chapter.
+`andThen` のような _Action combinators_ は次の章の主題である。
+
 </div>
 
 ### Updating a Single Field
 
-In the `Messages` we've created so far we've referred to the computer from *2001: A Space Odyssey* as "`HAL`", but the correct name is "`HAL 9000`". 
-Let's fix that.
+これまで作成した `Messages` の中で、*2001年宇宙の旅* に登場するコンピュータを「`HAL`」と呼んでいましたが、正しくは「`HAL 9000`」です。
+これを修正しましょう。
 
-We start by creating a query to select the rows to modify, and the columns to change:
+まず、修正する行と変更する列を選択するクエリを作成することから始めます。
+
 
 ```scala mdoc
 val updateQuery =
   messages.filter(_.sender === "HAL").map(_.sender)
 ```
 
-We can use `update` to turn this into an action to run.
-Update requires the new values for the column we want to change:
+これを実行するアクションに変えるには、`update`を使用します。
+updateには、変更したいカラムの新しい値が必要です。
 
 ```scala mdoc
 exec(updateQuery.update("HAL 9000"))
 ```
 
-We can retrieve the SQL for this query by calling `updateStatment` instead of `update`:
+このクエリのSQLは、`update`の代わりに`updateStatment`を呼び出すことで取得することができます。
+
 
 ```scala mdoc
 updateQuery.updateStatement
 ```
 
-Let's break down the code in the Scala expression.
-By building our update query from the `messages` `TableQuery`, we specify that we want to update records in the `message` table in the database:
+Scalaの表現でコードを分解してみましょう。
+`messages` `TableQuery` から更新クエリを構築することで、データベースの `message` テーブルのレコードを更新したいことを明示します。
+
 
 ```scala mdoc
 val messagesByHal = messages.filter(_.sender === "HAL")
 ```
 
-We only want to update the `sender` column, so we use `map` to reduce the query to just that column:
+更新したいのは `sender` カラムだけなので、`map` を使ってクエリをそのカラムだけに絞り込んでいます。
 
 ```scala mdoc
 val halSenderCol = messagesByHal.map(_.sender)
 ```
 
-Finally we call the `update` method, which takes a parameter of the *unpacked* type (in this case `String`):
+最後に `update` メソッドを呼び出します。このメソッドは *unpacked* 型のパラメータ (この場合は `String`) を受け取ります。
 
 ```scala mdoc
 val action: DBIO[Int] = halSenderCol.update("HAL 9000")
 ```
 
-Running that action would return the number of rows changed.
+そのアクションを実行すると、変更された行の数が返されます。
 
 ### Updating Multiple Fields
 
-We can update more than one field at the same time by mapping the query to a tuple of the columns we care about...
+クエリを気になるカラムのタプルにマッピングすることで、複数のフィールドを同時に更新することができます。
 
 ```scala mdoc:invisible
 val assurance_10167 = exec(messages.filter(_.content like "I'm sorry, Dave%").result)  
@@ -443,7 +449,7 @@ val query = messages.
     map(message => (message.sender, message.content))
 ```
 
-...and then supplying the tuple values we want to used in the update:
+そして、更新に使用したいタプルの値をメソッドに渡します。
 
 ```scala mdoc
 val updateAction: DBIO[Int] =
@@ -454,7 +460,7 @@ exec(updateAction)
 exec(messages.filter(_.sender === "HAL 9000").result)
 ```
 
-Again, we can see the SQL we're running using the `updateStatement` method. The returned SQL contains two `?` placeholders, one for each field as expected:
+ここでも、`updateStatement`メソッドを使って実行しているSQLを見ることができます。返されたSQLには、予想通り、各フィールドに1つずつ、2つの `?` プレースホルダーが含まれています。
 
 ```scala mdoc
 messages.
@@ -463,7 +469,7 @@ messages.
   updateStatement
 ```
 
-We can even use `mapTo` to use case classes as the parameter to `update`:
+また、`mapTo`を使って、`update`のパラメータとしてケースクラスを使うこともできます。
 
 ```scala mdoc
 case class NameText(name: String, text: String)
@@ -478,24 +484,25 @@ messages.
 
 ### Updating with a Computed Value
 
-Let's now turn to more interesting updates. How about converting every message to be all capitals? Or adding an exclamation mark to the end of each message? Both of these queries involve expressing the desired result in terms of the current value in the database. In SQL we might write something like:
+それでは、もっと面白いアップデートに目を向けましょう。すべてのメッセージを大文字にするのはどうでしょう？あるいは、各メッセージの末尾に感嘆符をつけるのはどうでしょう。これらのクエリはどちらも、データベース内の現在の値という観点から、希望する結果を表現するものです。SQLでは、次のように書くことができます。
 
 ~~~ sql
 update "message" set "content" = CONCAT("content", '!')
 ~~~
 
-This is not currently supported by `update` in Slick, but there are ways to achieve the same result.
-One such way is to use Plain SQL queries, which we cover in [Chapter 7](#PlainSQL).
-Another is to perform a *client-side update* by defining a Scala function to capture the change to each row:
+これは現在Slickの`update`ではサポートされていませんが、同じ結果を得るための方法はあります。
+そのような方法の1つは、[第7章](#PlainSQL)で説明するPlain SQLクエリを使用することです。
+もうひとつは、各行の変更を取得するScala関数を定義して、*client-side update* を実行する方法です。
 
 ```scala mdoc
 def exclaim(msg: Message): Message =
   msg.copy(content = msg.content + "!")
 ```
 
-We can update rows by selecting the relevant data from the database, applying this function, and writing the results back individually. Note that approach can be quite inefficient for large datasets---it takes `N + 1` queries to apply an update to `N` results.
+データベースから該当するデータを選択し、この関数を適用して、結果を個別に書き戻すことで、行を更新することができます。この方法は大規模なデータセットでは非常に非効率的であることに注意してください。
+つまり`N`個の結果に更新を適用するために`N + 1`個のクエリを必要とします。
 
-You may be tempted to write something like this:
+このような書き方をしたくなるかもしれません。
 
 ```scala mdoc
 def modify(msg: Message): DBIO[Int] =
@@ -507,16 +514,16 @@ for {
 } yield exec(modify(msg))
 ```
 
-This will have the desired effect, but at some cost.
-What we have done there is use our own `exec` method which will wait for results.
-We use it to fetch all rows, and then we use it on each row to modify the row.
-That's a lot of waiting.
-There is also no support for transactions as we `db.run` each action separately.
+これは望ましい効果をもたらしますが、多少の犠牲を伴います。
+今回行ったのは、結果を待つための独自の `exec` メソッドを使用することです。
+このメソッドを使用してすべての行を取得し、各行に対してこのメソッドを使用して行を変更します。
+これは非常に多くの待ち時間が発生します。
+また、トランザクションもサポートされていないので、各アクションを個別に `db.run` します。
 
-A better approach is to turn our logic into a single `DBIO` action using _action combinators_.
-This, together with transactions, is the topic of the next chapter.
+より良いアプローチは、_action combinators_ を使用して、ロジックを1つの`DBIO`アクションにすることです。
+これはトランザクションと一緒に次の章のトピックになります。
 
-However, for this particular example, we recommend using Plain SQL ([Chapter 7](#PlainSQL)) instead of client-side updates.
+しかし、この特定の例では、クライアントサイドの更新ではなく、プレーンSQL（[7章](#PlainSQL)）を使用することをお勧めします。
 
 
 ## Take Home Points

@@ -592,7 +592,7 @@ Slickは型の等価性に関してかなり賢いです。
 
 型の等価性とはどういう意味でしょうか？
 Slickは、オペランドが互換性のある型であることを確認するために、列式の型チェックを行います。
-例えば、 `String` と `Int` を等価に比較することはできますが、 `String` と `Int` を比較することはできません。
+例えば、 `String` 同士を等価に比較することはできますが、 `String` と `Int` を比較することはできません。
 
 ```scala mdoc:fail
 messages.filter(_.id === "foo")
@@ -690,7 +690,7 @@ limit 5 offset 5
 **Sorting on Null columns**
 
 この章の前のほうで、[オプションメソッドと型の等価性](#type_equivalence) を見たときに、nullable なカラムについて簡単に紹介しました。
-Slick では、 `desc` や `asc` と組み合わせて使用できる 3 つの修飾子を提供しています。`nullFirst`, `nullsDefault`, `nullsLast` です。
+Slick では、 `desc` や `asc` と組み合わせて使用できる 3 つの修飾子を提供しています。`nullsFirst`, `nullsDefault`, `nullsLast` です。
 これらは、結果セットの最初または最後に null を含めることで、期待通りの結果を得ることができます。
 `nullsDefault` の動作は、SQL エンジンの優先順位を使用します。
 
@@ -742,7 +742,8 @@ def query2(name: Option[String]) =
   messages.filterOpt(name)( (row, value) => row.sender === value )
 ```
 
-このクエリは次のように読むことができます:
+このクエリは次のように読むことができます
+
 - オプションで `name` をフィルタリングします。
 - そして、もし `name` に値があれば、その値を使ってクエリの `row` をフィルタリングすることができます。
 
