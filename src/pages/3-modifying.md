@@ -528,40 +528,42 @@ for {
 
 ## Take Home Points
 
-For modifying the rows in the database we have seen that:
+データベースの行の変更については、以下の通りです。
 
-* inserts are via a  `+=` or `++=` call on a table;
+- インサートは、テーブルの`+=`または`++=`呼び出しによって行われます。
 
-* updates are via an `update` call on a query, but are somewhat limited when you need to update using the existing row value; and
+- 更新はクエリの`update`呼び出しで行いますが、既存の行の値を使って更新する必要がある場合は、やや制限されます。
 
-* deletes are via a  `delete` call to a query.
+- 削除は、クエリへの`delete`呼び出しによって行われます。
 
-Auto-incrementing values are inserted by Slick, unless forced. The auto-incremented values can be returned from the insert by using `returning`.
+自動インクリメントの値は、強制されない限り、Slickによって挿入されます。自動インクリメントされた値は、`returning`を使用することで挿入から戻すことができます。
 
-Databases have different capabilities. The limitations of each profile is listed in the profile's Scala Doc page.
+データベースにはさまざまな機能があります。各プロファイルの制限事項は、そのプロファイルのScala Docページに記載されています。
+
+
 
 
 ## Exercises
 
-The code for this chapter is in the [GitHub repository][link-example] in the _chapter-03_ folder.  As with chapter 1 and 2, you can use the `run` command in SBT to execute the code against an H2 database.
+本章のコードは、[GitHub repository][link-example]の _chapter-03_ フォルダーにあります。1章、2章と同様に、SBTの`run`コマンドを使用して、H2データベースに対してコードを実行することができます。
 
 
 <div class="callout callout-info">
+
 **Where Did My Data Go?**
 
-Several of the exercises in this chapter require you to delete or update  content from the database.
-We've shown you above how to restore you data,
-but if you want to explore and change the schema you might want to completely reset the schema.
+本章のいくつかの演習では、データベースからコンテンツを削除したり更新したりする必要があります。上記ではデータを復元する方法を紹介しましたが、スキーマを調査して変更したい場合は、スキーマを完全にリセットすることをお勧めします。
 
-In the example code we provide a `populate` method you can use:
+サンプルコードでは、使用可能な`populate`メソッドを提供しています：
+
 
 ``` scala
 exec(populate)
 ```
 
-This will drop, create, and populate the `messages` table with known values.
+これにより、`messages`テーブルがドロップされ、作成され、既知の値で入力されます。
 
-Populate is defined as:
+Populateとは、以下のように定義されています：
 
 ```scala mdoc
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -575,26 +577,24 @@ def populate: DBIOAction[Option[Int], NoStream, Effect.All] =
   } yield count
 ```
 
-We'll meet `asTry` and `andThen` in the next chapter.
+次章で`asTry`と`andThen`について学びます。
 </div>
 
 
 ### Get to the Specifics
 
-In [Inserting Specific Columns](#insertingSpecificColumns) we looked at only inserting the sender column:
+[Inserting Specific Columns](#insertingSpecificColumns)では、senderカラムの挿入のみ検討しました。 
 
 ```scala mdoc:silent
 messages.map(_.sender) += "HAL"
 ```
 
-This failed when we tried to use it as we didn't meet the requirements of the `message` table schema.
-For this to succeed we need to include `content` as well as `sender`.
+これは, `message`テーブルスキーマの要件を満たしていないため、使用しようとすると失敗します。これを成功させるためには、`sender`だけでなく`content`も含める必要があります。
 
-Rewrite the above query to include the `content` column.
+上記のクエリを、`content`カラムを含むように書き換えてください。
 
 <div class="solution">
-The requirements of the `messages` table is `sender` and `content` can not be null.
-Given this, we can correct our query:
+`messages`テーブルの要件は、`sender`と`content`がnullであってはならないことです。これを踏まえると、クエリを修正することができます
 
 ```scala mdoc
 val senderAndContent = messages.map { m => (m.sender, m.content) }
@@ -602,16 +602,15 @@ val insertSenderContent = senderAndContent += ( ("HAL","Helllllo Dave") )
 exec(insertSenderContent)
 ```
 
-We have used `map` to create a query that works on the two columns we care about.
-To insert using that query, we supply the two field values.
+`map`を使って、気になる2つのカラムに対して動作するクエリを作成しました。そのクエリを使用して挿入するために、2つのフィールド値を供給します。
 
-In case you're wondering, we've out the extra parentheses around the column values
-to be clear it is a single value which is a tuple of two values.
+念のため、列の値を囲む余分な括弧を削除して、2つの値のタプルが1つの値であることを明確にしています。
+
 </div>
 
 ### Bulk All the Inserts
 
-Insert the conversation below between Alice and Bob, returning the messages populated with `id`s.
+アリスとボブの間で以下の会話を挿入し、`id`を入力したメッセージを返すようにしてください。
 
 ```scala mdoc:silent
 val conversation = List(
@@ -628,7 +627,7 @@ val conversation = List(
 ```
 
 <div class="solution">
-For this we need to use a batch insert (`++=`) and `into`:
+batch insert（`++=`）と`into`を使う必要がありま
 
 ```scala mdoc
 val messageRows =
@@ -642,10 +641,10 @@ exec(messageRows ++= conversation).foreach(println)
 
 ### No Apologies
 
-Write a query to delete messages that contain "sorry".
+"sorry"を含むメッセージを削除するクエリを作成してください。
 
 <div class="solution">
-The pattern is to define a query to select the data, and then use it with `delete`:
+データを選択するクエリを定義し、deleteを使用することで実現できます。
 
 ```scala mdoc
 messages.filter(_.content like "%sorry%").delete
@@ -655,7 +654,7 @@ messages.filter(_.content like "%sorry%").delete
 
 ### Update Using a For Comprehension
 
-Rewrite the update statement below to use a for comprehension.
+以下のupdate文を、for式を使用するように書き直してください。
 
 ```scala mdoc
 val rebootLoop = messages.
@@ -664,10 +663,10 @@ val rebootLoop = messages.
   update(("HAL 9000", "Rebooting, please wait..."))
 ```
 
-Which style do you prefer?
+どのスタイルが好みですか？
 
 <div class="solution">
-We've split this into a `query` and then an `update`:
+`query`と`update`に分けました。
 
 ```scala mdoc
 val halMessages = for {
@@ -680,19 +679,18 @@ val rebootLoopUpdate = halMessages.update(("HAL 9000", "Rebooting, please wait..
 
 ### Selective Memory
 
-Delete `HAL`s first two messages. This is a more difficult exercise.
+HALの最初の2つのメッセージを削除してください。これはより難しい練習です。
 
-You don't know the IDs of the messages, or the content of them.
-But you do know the IDs increase. 
+メッセージのIDも、内容もわかりません。しかし、あなたはIDが増えることを知っています。
 
-Hints: 
+ヒント：
 
-- First write a query to select the two messages. Then see if you can find a way to use it as a subquery.
+- まず、2つのメッセージを選択するクエリを書きます。次に、サブクエリとして使用する方法を見つけられるかどうかを確認します。
 
-- You can use `in` in a query to see if a value is in a set of values returned from a query.
+- クエリで`in`を使用すると、ある値がクエリから返される値の集合の中にあるかどうかを確認することができます。
 
 <div class="solution">
-We've selected HAL's message IDs, sorted by the ID, and used this query inside a filter:
+HALのメッセージIDを選択し、IDでソートし、このクエリーをフィルター内で使用しています：
 
 ```scala mdoc
 val selectiveMemory =

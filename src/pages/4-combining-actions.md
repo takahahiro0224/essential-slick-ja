@@ -35,33 +35,21 @@ exec(messages.schema.create andThen (messages ++= freshTestData))
 ```
 # Combining Actions {#combining}
 
-At some point you'll find yourself writing a piece of code made up of multiple actions.
-You might need a simple sequence of actions to run one after another;
-or you might need something more sophisticated where one action depends on the results of another.
+複数のアクションで構成されたコードを書くことがあると思います。あるアクションが次々と実行される単純なシーケンスが必要な場合もあれば、あるアクションが他のアクションの結果に依存するような、より高度なものが必要な場合もあるでしょう。
 
-In Slick you use _action combinators_ to turn a number of actions into a single action.
-You can then run this combined action just like any single action.
-You might also run these combined actions in a _transaction_.
+Slickでは、_action combinators_ を使用して、いくつかのアクションを1つのアクションに変換します。そして、この結合されたアクションを、単一のアクションと同様に実行することができます。また、これらの結合されたアクションを _transaction_ で実行することもできます。
 
-This chapter focuses on these combinators.
-Some, such as `map`, `fold`, and `zip`, will be familiar from the Scala collections library.
-Others, such as `sequence` and `asTry` may be less familiar.
-We will give examples of how to use many of them in this chapter.
+この章では、これらのコンビネータに焦点を当てます。`map`、`fold`、`zip` などは Scala のコレクションライブラリでおなじみのものです。`sequence`や`asTry`のようなものは、あまり馴染みがないかもしれません。この章では、それらの多くをどのように使うかについて例を挙げて説明します。
 
-This is a key concept in Slick.
-Make sure you spend time getting comfortable with combining actions.
+これはSlickの重要なコンセプトです。アクションを組み合わせることに慣れるために、時間をかけるようにしてください。
 
 ## Combinators Summary
 
-The temptation with multiple actions might be to run each action, use the result, and run another action.
-This will require you to deal with multiple `Future`s.
-We recommend you avoid that whenever you can.
+複数のアクションを実行すると、それぞれのアクションを実行し、その結果を使用して、別のアクションを実行するという誘惑にかられるかもしれません。この場合、複数のFutureを処理する必要があり、できる限り避けることをお勧めします。
 
-Instead, focus on the actions and how they combine together, not on the messy details of running them.
-Slick provides a set of combinators to make this possible.
+その代わりに、アクションを実行するための面倒な詳細ではなく、アクションとそれらがどのように組み合わされるかに焦点を当てます。Slickはこれを可能にするためにコンビネーターのセットを提供します。
 
-Before getting into the detail, take a look at the two tables below. They list out the key methods available on an action,
-and also the combinators available on `DBIO`.
+詳細な説明に入る前に、以下の2つの表を見てみてください。これらは、アクションで利用できる主要なメソッドと、`DBIO`で利用できるコンビネータをリストアップしています。
 
 
 --------------------------------------------------------------------
@@ -92,6 +80,8 @@ Method              Arguments                       Result Type
   Types simplified.
   (EC) Indicates an execution context is required.
 
+: `DBIOAction`（具体的には`DBIO[T]`）のアクションインスタンスに対するコンビネータ。型は簡略化されています。(EC) は実行コンテキストが必要であることを示しています。
+
 
 ---------------------------------------------------------------------------
 Method       Arguments                       Result Type                   
@@ -109,15 +99,13 @@ Method       Arguments                       Result Type
 `fold` (EC)   `(Seq[DBIO[T]], T)  (T,T)=>T`   `DBIO[T]`
 ----------------------------------------------------------------------------
 
-: Combinators on `DBIO` object, with types simplified.
-  (EC) Indicates an execution context is required.
+: `DBIO[T]`オブジェクト対するコンビネータ。型は簡略化されています。(EC) は実行コンテキストが必要であることを示しています。 
 
 ## Combinators in Detail
 
 ### `andThen` (or `>>`)
 
-The simplest way to run one action after another is perhaps `andThen`.
-The combined actions are both run, but only the result of the second is returned:
+あるアクションを別のアクションの後に実行する最も簡単な方法は、`andThen`です。組み合わせたアクションは両方とも実行されますが、2番目の結果だけが返されます：
 
 ```scala mdoc
 val reset: DBIO[Int] =
@@ -126,14 +114,14 @@ val reset: DBIO[Int] =
 exec(reset)
 ```
 
-The result of the first query is ignored, so we cannot use it.
-Later we will see how `flatMap` allows us to use the result to make choices about which action to run next.
+最初のクエリの結果は無視されるので、使うことはできません。後で、`flatMap`で結果を利用して、次に実行するアクションを選択できるようにする方法を説明します。
+
 
 <div class="callout callout-warning">
+
 **Combined Actions Are Not Automatically Transactions**
 
-By default, when you combine actions together you do not get a single transaction.
-At the [end of this chapter][Transactions] we'll see that it's very easy to run combined actions in a transaction with:
+デフォルトでは、アクションを組み合わせても、1つのトランザクションにはなりません。[この章の終わり][Transactions]で、組み合わせたアクションを単一トランザクションで実行するのが非常に簡単であることを確認します：
 
 ```scala
 db.run(actions.transactionally)
@@ -142,22 +130,23 @@ db.run(actions.transactionally)
 
 ### `DBIO.seq`
 
-If you have a bunch of actions you want to run, you can use `DBIO.seq` to combine them:
+実行したいアクションがたくさんある場合、`DBIO.seq`を使ってそれらを組み合わせることができます：
+
 
 ```scala mdoc:silent
 val resetSeq: DBIO[Unit] =
   DBIO.seq(messages.delete, messages.size.result)
 ```
 
-This is rather like combining the actions with `andThen`, but even the last value is discarded.
+これはどちらかというと`andThen`でアクションを組み合わせるようなものですが、最後の値まで捨てられるのです。
 
 
 ### `map`
 
-Mapping over an action is a way to set up a transformation of a value from the database.
-The transformation will run on the result of the action when it is returned by the database.
+アクションに対するマッピングは、データベースからの値の変換を設定する方法です。変換は、データベースから返されたアクションの結果に対して実行されます。
 
-As an example, we can create an action to return the content of a message, but reverse the text:
+例として、メッセージの内容を返すが、テキストを反転させるアクションを作成することができます：
+
 
 ```scala mdoc
 // Restore the data we deleted in the previous section
@@ -174,20 +163,18 @@ val backwards: DBIO[Option[String]] =
 exec(backwards)
 ```
 
-Here we have created an action called `backwards` that, when run, ensures a function
-is applied to the result of the `text` action.
-In this case the function is to apply `reverse` to an optional `String`.
+ここでは、`backwards`というアクションを作成し、実行すると、`text`アクションの結果に関数が適用されるようにしました。この場合、関数はオプションの`String`に`reverse`を適用するものです。
 
-Note that we have made three uses of `map` in this example:
+なお、この例では、mapを3回使用しています：
 
-- an `Option` `map` to apply `reverse` to our `Option[String]` result;
-- a `map` on a query to select just the `content` column; and
-- `map` on our action so that the result will be transform when the action is run.
+- `Option[String]`の結果に`reverse`を適用するための`Option map`。
+- `content`カラムだけを選択するためのクエリ上の`map`。
+- `map`をアクションに追加することで、アクションが実行されたときに結果が変換されるようになります。
+- 
+コンビネーターだらけですね！
 
-Combinators everywhere!
+この例では、`Option[String]`を別の`Option[String]`に変換しています。`map`が値の型を変更すると、`DBIO`の型も変更されるのはご想像の通りです：
 
-This example transformed an `Option[String]` to another `Option[String]`.
-As you may expect if `map` changes the type of a value, the type of `DBIO` changes too:
 
 ```scala mdoc
 text.map(os => os.map(_.length))
