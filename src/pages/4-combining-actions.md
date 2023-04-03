@@ -180,22 +180,20 @@ exec(backwards)
 text.map(os => os.map(_.length))
 ```
 
-Note that the first type parameter on the `DBIOAction` is now `Option[Int]` (as `length` returns an `Int`), not `Option[String]`.
+`DBIOAction`の最初の型パラメータは、`Option[String]`ではなく、`Option[Int]`（lengthがIntを返すため）になっていることに注意してください。
 
 <div class="callout callout-info">
+
 **Execution Context Required**
 
-Some methods require an execution context and some don't. For example, `map` does, but `andThen` does not.
-What gives?
+メソッドには、Execution Contextが必要なものと必要でないものがあります。例えば、`map`はそうですが、`andThen`はそうではありません。どうなんでしょう？
 
-The reason is that `map` allows you to call arbitrary code when joining the actions together.
-Slick cannot allow that code to be run on its own execution context,
-because it has no way to know if you are going to tie up Slicks threads for a long time.
+その理由は、`map`によってアクションを結合する際に任意のコードを呼び出すことができるからです。Slickはそのコードを自分のExecution Contextで実行させることができません。なぜなら、Slicksのスレッドを長時間拘束することになるのかどうか、知る術がないからです。
 
-In contrast, methods such as `andThen` which combine actions without custom code can be run on Slick's own execution context.
-Therefore, you do not need an execution context available for `andThen`.
+一方、`andThen`のようにカスタムコードなしでアクションを組み合わせるメソッドは、Slick自身のExecution Context上で実行することができます。したがって、`andThen`で利用するためのExecution Contextは必要ありません。
 
-You'll know if you need an execution context, because the compiler will tell you:
+Execution Contextが必要かどうかは、コンパイラが教えてくれます：
+
 
 ~~~
 Cannot find an implicit ExecutionContext. You might pass
@@ -203,46 +201,44 @@ Cannot find an implicit ExecutionContext. You might pass
   or import scala.concurrent.ExecutionContext.Implicits.global.
 ~~~
 
-The Slick manual discusses this in the section on [Database I/O Actions][link-ref-actions].
+Slickのマニュアルでは[Database I/O Actions][link-ref-actions]のセクションでこのことについて説明しています。
 </div>
 
 
 ### `DBIO.successful` and `DBIO.failed`
 
-When combining actions you will sometimes need to create an action that represents a simple value.
-Slick provides `DBIO.successful` for that purpose:
+アクションを組み合わせる際に、単純な値を表すアクションを作成する必要がある場合があります。Slickでは、そのために`DBIO.successful`を用意しています：
 
 ```scala mdoc:silent
 val ok: DBIO[Int] = DBIO.successful(100)
 ```
 
-We'll see an example of this when we discuss `flatMap`.
+`flatMap`について議論するときにその例を見てみましょう。
 
-And for failures, the value is a `Throwable`:
+また失敗の場合は`Throwable`が値となります。
 
 ```scala mdoc:silent
 val err: DBIO[Nothing] =
   DBIO.failed(new RuntimeException("pod bay door unexpectedly locked"))
 ```
 
-This has a particular role to play inside transactions, which we cover later in this chapter.
+これは、本章の後半で取り上げるトランザクションの内部で特に重要な役割を果たします。
 
 ### `flatMap`
 
-Ahh, `flatMap`. Wonderful `flatMap`.
-This method gives us the power to sequence actions and decide what we want to do at each step.
+ああ `flatMap`. 素晴らしい `flatMap`.
 
-The signature of `flatMap` should feel similar to the `flatMap` you see elsewhere:
+このメソッドは、アクションを連続させ、各ステップで何をしたいかを決める力を与えてくれます。
+`flatMap`のシグネチャーは、他の場所で見かける`flatMap`と同じような感じになっているはずです。
 
 ~~~ scala
 // Simplified:
 def flatMap[S](f: R => DBIO[S])(implicit e: ExecutionContext): DBIO[S]
 ~~~
 
-That is, we give `flatMap` a function that depends on the value from an action, and evaluates to another action.
+つまり、あるアクションの値に依存し、別のアクションを評価する関数を`flatMap`に与えるのです。
 
-As an example, let's write a method to remove all the crew's messages, and post a message saying how many messages were removed.
-This will involve an `INSERT` and a `DELETE`, both of which we're familiar with:
+例として、クルーのメッセージをすべて削除し、何件削除されたかというメッセージを投稿するメソッドを書いてみましょう。これには、私たちがよく知っている`INSERT`と`DELETE`が含まれます：
 
 ```scala mdoc:silent
 val delete: DBIO[Int] =
@@ -252,7 +248,7 @@ def insert(count: Int) =
   messages += Message("NOBODY", s"I removed ${count} messages")
 ```
 
-The first thing `flatMap` allows us to do is run these actions in order:
+`flatMap`でまずできることは、これらのアクションを順番に実行することです：
 
 ```scala mdoc
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -260,12 +256,20 @@ import scala.concurrent.ExecutionContext.Implicits.global
 val resetMessagesAction: DBIO[Int] =
   delete.flatMap{ count => insert(count) }
 
+// resetMessagesAction: DBIO[Int] = FlatMapAction(
+//   slick.jdbc.JdbcActionComponent$DeleteActionExtensionMethodsImpl$$anon$4@586ff5d7,
+//   <function1>,
+//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@25bc3124[Running, parallelism = 2, size = 1, active = 0, running = 0, steals = 111, tasks = 0, submissions = 0]
+// )
+
 exec(resetMessagesAction)
+// res5: Int = 1
 ```
 
-The `1` we see is the result of `insert`, which is the number of rows inserted.
+表示される`1`は`insert`の結果で、挿入された行の数です。
 
-This single action produces the two SQL expressions you'd expect:
+この1回の操作で、期待通りの2つのSQL式が生成されます：
+
 
 ``` sql
 delete from "message";
@@ -273,8 +277,8 @@ insert into "message" ("sender","content")
   values ('NOBODY', 'I removed 4 messages');
 ```
 
-Beyond sequencing, `flatMap` also gives us control over which actions are run.
-To illustrate this we will produce a variation of `resetMessagesAction` which will not insert a message if no messages were removed in the first step:
+シーケンスだけでなく、`flatMap`はどのアクションを実行するかを制御することもできます。これを説明するために、`resetMessagesAction`のバリエーションとして、最初のステップでメッセージが削除されなかった場合、メッセージを挿入しないものを作成することにします：
+
 
 ```scala mdoc:silent:silent
 val logResetAction: DBIO[Int] =
@@ -284,28 +288,26 @@ val logResetAction: DBIO[Int] =
   }
 ```
 
-We've decided a result of `0` is right if no message was inserted.
-But the point here is that `flatMap` gives us arbitrary control over how actions can be combined.
+メッセージが挿入されなかった場合は、`0`という結果が正しいと判断しています。しかし、ここで重要なのは、`flatMap`はアクションの組み合わせ方を任意にコントロールできるということです。
 
-Occasionally the compiler will complain about a `flatMap` and need your help to figuring out the types.
-Recall that `DBIO[T]` is an alias for `DBIOAction[T,S,E]`, encoding streaming and effects.
-When mixing effects, such as inserts and selects, you may need to explicitly specify the type parameters to apply to the resulting action:
+時々、コンパイラが`flatMap`について文句を言い、型を特定するためにあなたの助けが必要になることがあります。`DBIO[T]`は`DBIOAction[T,S,E]`の別名で、ストリーミングとエフェクトを符号化することを思い出してください。挿入や選択などのエフェクトを混在させる場合、結果のアクションに適用する型パラメータを明示的に指定する必要がある場合があります：
+
 
 ``` scala
 query.flatMap[Int, NoStream, Effect.All] { result => ... }
 ```
 
-...but in many cases the compiler will figure these out for you.
+
+...しかし、多くの場合、コンパイラがこれらを解決してくれるでしょう。
 
 
 <div class="callout callout-info">
+
 **Do it in the database if you can**
 
-Combining actions to sequence queries is a powerful feature of Slick.
-However, you may be able to reduce multiple queries into a single database query.
-If you can do that, you're probably better off doing it.
+アクションを組み合わせてクエリーを連続させることは、Slickの強力な機能です。しかし、複数のクエリを1つのデータベースクエリに減らすことができるかもしれません。それができるのであれば、その方がよいでしょう。
 
-As an example, you could implement "insert if not exists" like this:
+例として、「insert if not exists」を次のように実装することができます：
 
 ```scala mdoc:silent:silent
 // Not the best way:
@@ -319,22 +321,20 @@ def insertIfNotExists(m: Message): DBIO[Int] = {
 }
 ```
 
-...but as we saw earlier in ["More Control over Inserts"](#moreControlOverInserts) you can achieve the same effect with a single SQL statement.
+しかし先ほどの ["More Control over Inserts"](#moreControlOverInserts) で見たように、SQL文1つで同じ効果を得ることができます。 
 
-One query can often (but doesn't always) perform better than a sequence of queries.
-Your mileage may vary.
+1つのクエリが、一連のクエリよりも優れた性能を発揮することがよくあります（ただし、常にそうとは限りません）。お客様のご判断にお任せします。
+
 </div>
 
 
 
 ### `DBIO.sequence`
 
-Despite the similarity in name to `DBIO.seq`, `DBIO.sequence` has a different purpose.
-It takes a sequence of `DBIO`s and gives back a `DBIO` of a sequence.
-That's a bit of a mouthful, but an example may help.
+`DBIO.seq`と名前が似ていますが、`DBIO.sequence`は異なる目的を持っています。これは`DBIO`のシーケンスを受け取り、シーケンスの`DBIO`を返すものです。ちょっと難しい話ですが、例で説明します。
 
-Let's say we want to reverse the text of every message (row) in the database.
-We start with this:
+例えば、データベース内のすべてのメッセージ（行）のテキストを反転させたいとします。まず、こんなところから始めます：
+
 
 ```scala mdoc:silent
 def reverse(msg: Message): DBIO[Int] =
@@ -343,8 +343,7 @@ def reverse(msg: Message): DBIO[Int] =
   update(msg.content.reverse)
 ```
 
-That's a straightforward method that returns an update action for one message.
-We can apply it to every message...
+これは、1つのメッセージに対する更新アクションを返す、わかりやすいメソッドです。すべてのメッセージに適用することができます...
 
 ```scala mdoc:silent
 // Don't do this
@@ -353,14 +352,13 @@ val manyUpdates: DBIO[Seq[DBIO[Int]]] =
   map(msgs => msgs.map(reverse))
 ```
 
-...which will give us an action that returns actions!
-Note the crazy type signature.
 
-You can find yourself in this awkward situation when you're trying to do something like a join, but not quite.
-The puzzle is how to run this kind of beast.
+...これで、アクションを返すアクションが出来ました！クレイジーな型シグネチャに注目してください。
 
-This is where `DBIO.sequence` saves us.
-Rather than produce many actions via `msgs.map(reverse)` we use `DBIO.sequence` to return a single action:
+結合のようなことをしようとすると、このような厄介な状況に陥ることがあります。このような獣をどう走らせるかがパズルです。
+
+そこで、`DBIO.sequence` が役に立ちます。`msgs.map(reverse)` で多数のアクションを生成するのではなく、`DBIO.sequence` を使って単一のアクションを返します：
+
 
 ```scala mdoc:silent
 val updates: DBIO[Seq[Int]] =
@@ -368,14 +366,13 @@ val updates: DBIO[Seq[Int]] =
   flatMap(msgs => DBIO.sequence(msgs.map(reverse)))
 ```
 
-The difference is:
+違いとしては
+- `Seq[DBIO]`を`DBIO.sequence`でラップして、`DBIO[Seq[Int]]`を1つにしています。
+- `flatMap`を使ってシーケンスと元のクエリを結合しています。
 
-- we've wrapped the `Seq[DBIO]` with `DBIO.sequence` to give a single `DBIO[Seq[Int]]`; and
-- we use `flatMap` to combine the sequence with the original query.
+最終的には、他のアクションと同じように走らせることができる正気のタイプです。
 
-The end result is a sane type which we can run like any other action.
-
-Of course this one action turns into many SQL statements:
+もちろん、この1アクションは多くのSQL文に変化します：
 
 ```sql
 select "sender", "content", "id" from "message"
@@ -387,7 +384,7 @@ update "message" set "content" = ? where "message"."id" = 4
 
 ### `DBIO.fold`
 
-Recall that many Scala collections support `fold` as a way to combine values:
+多くのScalaコレクションが、値を結合する方法として`fold`をサポートしていることを思い出してください：
 
 ```scala mdoc
 List(3,5,7).fold(1) { (a,b) => a * b }
@@ -395,11 +392,9 @@ List(3,5,7).fold(1) { (a,b) => a * b }
 1 * 3 * 5 * 7
 ```
 
-You can do the same kind of thing in Slick:
-when you need to run a sequence of actions, and reduce the results down to a value, you use `fold`.
+Slickでも同じようなことができます。一連のアクションを実行し、その結果をある値に還元する必要がある場合、`fold`を使用します。
 
-As an example, suppose we have a number of reports to run.
-We want to summarize all these reports to a single number.
+例として、実行するレポートがいくつもあるとします。これらのレポートをすべて1つの数値にまとめたいと思います。
 
 ```scala mdoc:silent
 // Pretend these two reports are complicated queries
@@ -411,28 +406,37 @@ val reports: List[DBIO[Int]] =
   report1 :: report2 :: Nil
 ```
 
-We can `fold` those `reports` with a function.
+関数を使って `reports` を `fold` (畳み込み)することができます。
 
-But we also need to consider our starting position:
+しかし、スタートポジションを考えることも必要です：
 
 ```scala mdoc:silent
 val default: Int = 0
 ```
 
-Finally we can produce an action to summarize the reports:
+最後に、レポートをまとめるためのアクションを作成します：
 
 ```scala mdoc
 val summary: DBIO[Int] =
   DBIO.fold(reports, default) {
     (total, report) => total + report
 }
+// summary: DBIO[Int] = FlatMapAction(
+//   FlatMapAction(
+//     SuccessAction(0),
+//     slick.dbio.DBIOAction$$$Lambda$9231/331080430@7e39519,
+//     scala.concurrent.impl.ExecutionContextImpl$$anon$3@25bc3124[Running, parallelism = 2, size = 1, active = 0, running = 0, steals = 111, tasks = 0, submissions = 0]
+//   ),
+//   slick.dbio.DBIOAction$$$Lambda$9231/331080430@1baeae8b,
+//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@25bc3124[Running, parallelism = 2, size = 1, active = 0, running = 0, steals = 111, tasks = 0, submissions = 0]
+// )
 
 exec(summary)
+// res8: Int = 42
 ```
 
-`DBIO.fold` is a way to combine actions, such that the results are combined by a function you supply.
-As with other combinators, your function isn't run until we execute the action itself.
-In this case all our reports are run, and the sum of the values reported.
+
+`DBIO.fold`は、あなたが用意する関数でアクションを組み合わせることが結果を得ることができる方法です。他のコンビネータと同様に、アクションそのものを実行するまで、関数は実行されません。この場合、すべてのレポートが実行され、その値の合計が報告されます。
 
 
 ### `zip`
