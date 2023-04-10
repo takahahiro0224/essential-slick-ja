@@ -188,7 +188,7 @@ text.map(os => os.map(_.length))
 
 メソッドには、Execution Contextが必要なものと必要でないものがあります。例えば、`map`はそうですが、`andThen`はそうではありません。どうなんでしょう？
 
-その理由は、`map`によってアクションを結合する際に任意のコードを呼び出すことができるからです。Slickはそのコードを自分のExecution Contextで実行させることができません。なぜなら、Slicksのスレッドを長時間拘束することになるのかどうか、知る術がないからです。
+その理由は、`map`によってアクションを結合する際に任意のコードを呼び出すことができるからです。Slickはそのコードを自分のExecution Contextで実行させることができません。なぜなら、Slickのスレッドを長時間拘束することになるのかどうか、知る術がないからです。
 
 一方、`andThen`のようにカスタムコードなしでアクションを組み合わせるメソッドは、Slick自身のExecution Context上で実行することができます。したがって、`andThen`で利用するためのExecution Contextは必要ありません。
 
@@ -421,15 +421,6 @@ val summary: DBIO[Int] =
   DBIO.fold(reports, default) {
     (total, report) => total + report
 }
-// summary: DBIO[Int] = FlatMapAction(
-//   FlatMapAction(
-//     SuccessAction(0),
-//     slick.dbio.DBIOAction$$$Lambda$9231/331080430@7e39519,
-//     scala.concurrent.impl.ExecutionContextImpl$$anon$3@25bc3124[Running, parallelism = 2, size = 1, active = 0, running = 0, steals = 111, tasks = 0, submissions = 0]
-//   ),
-//   slick.dbio.DBIOAction$$$Lambda$9231/331080430@1baeae8b,
-//   scala.concurrent.impl.ExecutionContextImpl$$anon$3@25bc3124[Running, parallelism = 2, size = 1, active = 0, running = 0, steals = 111, tasks = 0, submissions = 0]
-// )
 
 exec(summary)
 // res8: Int = 42
@@ -441,9 +432,8 @@ exec(summary)
 
 ### `zip`
 
-We've seen how `DBIO.seq` combines actions and ignores the results.
-We've also seen that `andThen` combines actions and keeps one result.
-If you want to keep both results, `zip` is the combinator for you:
+`DBIO.seq`がアクションを組み合わせ、その結果を無視することを見てきました。また、`andThen`はアクションを組み合わせ、1つの結果を保持することも見てきました。もし両方の結果を残したいのであれば、`zip`が使えます。
+
 
 ```scala mdoc
 val zip: DBIO[(Int, Seq[Message])] =
@@ -452,18 +442,20 @@ val zip: DBIO[(Int, Seq[Message])] =
 // Make sure we have some messages from HAL:
 exec(messages ++= freshTestData)
 
+
 exec(zip)
+
 ```
 
-The action returns a tuple representing the results of both queries:
-a count of the total number of messages, and the messages from HAL.
+このアクションは、両方のクエリの結果を表すタプル（メッセージの総数のカウントと、HALからのメッセージ）を返します。
 
 
 ### `andFinally` and `cleanUp`
 
-The two methods `cleanUp` and `andFinally` act a little like Scala's `catch` and `finally`.
+`cleanUp`と`andFinally`の2つのメソッドは、Scalaの`catch`と`finally`のように少し動作します。
 
-`cleanUp` runs after an action completes, and has access to any error information as an `Option[Throwable]`:
+`cleanUp`はアクションが完了した後に実行され、`Option[Throwable]`としてあらゆるエラー情報にアクセスすることができます。
+
 
 ```scala mdoc:silent
 // An action to record problems we encounter:
@@ -479,13 +471,13 @@ val action: DBIO[Int] = work.cleanUp {
 }
 ```
 
-The result of running this `action` is still the original exception...
+
 
 ```scala mdoc:crash
 exec(action)
 ```
 
-...but `cleanUp` has produced a side-effect for us:
+...しかし、`cleanUp`は私たちに副次的な効果をもたらしてくれます。
 
 ```scala mdoc
 exec(messages.filter(_.sender === "SYSTEM").result)
@@ -498,27 +490,26 @@ exec(messages.filter(_.sender === "SYSTEM").result)
 }
 ```
 
-Both `cleanUp` and `andFinally` run after an action, regardless of whether it succeeds or fails.
-`cleanUp` runs in response to a previous failed action; `andFinally` runs all the time, regardless of success or failure, and has no access to the `Option[Throwable]` that `cleanUp` sees.
+`cleanUp`と`andFinally`は、成功・失敗にかかわらず、アクションの後に実行されます。`cleanUp`は、以前に失敗したアクションに対応して実行されます。`andFinally`は、成功・失敗にかかわらず常に実行され、`cleanUp`が見る`Option［Throwable］`へのアクセスはありません。
 
 ### `asTry`
 
-Calling `asTry` on an action changes the action's type from a `DBIO[T]` to a `DBIO[Try[T]]`.
-This means you can work in terms of Scala's `Success[T]` and `Failure` instead of exceptions.
+アクションに対してasTryを呼び出すと、アクションの型が`DBIO[T]`から`DBIO[Try[T]]`に変更されます。つまり、例外ではなく、Scalaの`Success[T]`と`Failure`で動作できるようになります。
 
-Suppose we had an action that might throw an exception:
+仮に、例外を投げる可能性のあるアクションがあったとします。
+
 
 ```scala mdoc:silent
 val tryAction = DBIO.failed(new RuntimeException("Boom!"))
 ```
 
-We can place this inside `Try` by combining the action with `asTry`:
+アクションを`asTry`と組み合わせることで、これを`Try`の内側に配置することができます：
 
 ```scala mdoc
 exec(tryAction.asTry)
 ```
 
-And successful actions will evaluate to a `Success[T]`:
+成功したアクションは`Success[T]`と評価されます。
 
 ```scala mdoc
 exec(messages.size.result.asTry)
@@ -527,27 +518,30 @@ exec(messages.size.result.asTry)
 
 ## Logging Queries and Results
 
-With actions combined together, it's useful to see the queries that are being executed.
+アクションを組み合わせて、実行中のクエリを確認できるのは便利ですね。
 
-We've seen how to retrieve the SQL of a query using `insertStatement` and similar methods on a query,
-or the `statements` method on an action.
-These are useful for experimenting with Slick, but sometimes we want to see all the queries *when Slick executes them*.
-We can do that by configuring logging.
+これまで、クエリの`insertStatement`などのメソッドや、アクションの`statements`メソッドを使って、クエリのSQLを取得する方法について見てきました。
 
-Slick uses a logging interface called [SLF4J][link-slf4j]. We can configure this to capture information about the queries being run. The `build.sbt` files in the exercises use an SLF4J-compatible logging back-end called [Logback][link-logback], which is configured in the file *src/main/resources/logback.xml*. In that file we can enable statement logging by turning up the logging to debug level:
+これらはSlickの実験に便利ですが、Slickが実行したときにすべてのクエリを確認したいこともあります。ロギングを設定することでそれを実現することができます。
+
+Slickは[SLF4J][link-slf4j]というロギングインターフェイスを使用しています。これを設定することで、実行中のクエリに関する情報を取得することができます。
+
+練習問題の`build.sbt`ファイルは、[Logback][link-logback]というSLF4J互換のロギングバックエンドを使用しており、*src/main/resources/logback.xml* というファイルで設定されています。
+このファイルでは、ロギングをdebugレベルにすることで、statementロギングを有効にすることができます。
 
 ``` xml
 <logger name="slick.jdbc.JdbcBackend.statement" level="DEBUG"/>
 ```
 
-This causes Slick to log every query, including modifications to the schema:
+これにより、Slickはスキーマの変更を含むすべてのクエリを記録するようになります。
 
 ```
 DEBUG slick.jdbc.JdbcBackend.statement - Preparing statement:
   delete from "message" where "message"."sender" = 'HAL'
 ```
 
-We can change the level of various loggers, as shown in the table below.
+下の表に示すように、各種ロガーのレベルを変更することができます。
+
 
 -----------------------------------------------------------------------------------------------------------------------------
 Logger                                                             Will log...
@@ -565,8 +559,7 @@ Logger                                                             Will log...
 
 : Slick loggers and their effects.
 
-The `StatementInvoker.result` logger, in particular, is pretty cute.
-Here's an example from running a select query:
+特に`StatementInvoker.result`のロガーはかなりキュートです。以下は、selectクエリを実行したときの例です。
 
 ```
 result - /--------+----------------------+----\
@@ -576,9 +569,8 @@ result - | HAL    | Affirmative, Dave... | 2  |
 result - | HAL    | I'm sorry, Dave. ... | 4  |
 result - \--------+----------------------+----/
 ```
+`parameter`と`statement`の組み合わせで、`?`プレースホルダに結合された値を表示することができます。例えば、行を追加するときに、挿入される値を見ることができます。
 
-The combination of `parameter` and `statement` can show you the values bound to `?` placeholders.
-For example, when adding rows we can see the values being inserted:
 
 ```
 statement - Preparing statement: insert into "message" 
@@ -596,11 +588,12 @@ parameter - \--------+---------------------------/
 
 ## Transactions {#Transactions}
 
-So far each of the changes we've made to the database run independently of the others. That is, each insert, update, or delete query we run can succeed or fail independently of the rest.
+これまでのところ、私たちがデータベースに加えたそれぞれの変更は、他のものとは独立して実行されています。つまり、挿入、更新、削除の各クエリは、他のクエリとは独立して成功または失敗することができます。
 
-We often want to tie sets of modifications together in a *transaction* so that they either *all* succeed or *all* fail. We can do this in Slick using the `transactionally` method.
+私たちはしばしば、トランザクションで一連の変更を結びつけて、それらがすべて成功するか、すべて失敗するようにしたい時があります。。Slickでは`transactionally`メソッドを使ってこれを行うことができます。
 
-As an example, let's re-write the movie script. We want to make sure the script changes all complete or nothing changes. We can do this by finding the old script text and replacing it with some new text:
+例として、映画の脚本を書き換えてみましょう。このとき、脚本がすべて完全に変化するか、何も変化しないかを確認したい。そのためには、古い脚本テキストを見つけ、新しいテキストに置き換える必要があります。
+
 
 ```scala mdoc
 def updateContent(old: String) =
@@ -615,9 +608,9 @@ exec {
 exec(messages.result).foreach(println)
 ```
 
-The changes we make in the `transactionally` block are temporary until the block completes, at which point they are *committed* and become permanent.
+`transactionally`ブロックで行った変更は、ブロックが完了するまでの一時的なもので、完了後にコミットされ永続化されます。
 
-To manually force a rollback you need to call `DBIO.failed` with an appropriate exception.
+手動で強制的にロールバックするには、適切な例外を指定して`DBIO.failed`を呼び出す必要があります。
 
 ```scala mdoc
 val willRollback = (
@@ -630,33 +623,30 @@ val willRollback = (
 exec(willRollback.asTry)
 ```
 
-The result of running `willRollback` is that the database won't have changed.
-Inside of transactional block you would see the inserts until `DBIO.failed` is called.
+`willRollback`を実行した結果、データベースが変更されることはないでしょう。トランザクションブロックの内部では、`DBIO.failed`が呼ばれるまで挿入が行われることになります。
 
-If we removed the `.transactionally` that is wrapping our combined actions, the first two inserts would succeed,
-even though the combined action failed.
+もし、組み合わせたアクションを包んでいる`.transactionally`を削除したら、組み合わせたアクションが失敗しても、最初の2つの挿入は成功するでしょう。
+
 
 ## Take Home Points
 
-Inserts, selects, deletes and other forms of Database Action can be combined using `flatMap` and other combinators.
-This is a powerful way to sequence actions, and make actions depend on the results of other actions.
+挿入、選択、削除、その他の形式のDatabase Actionは、`flatMap`やその他のコンビネータを使用して組み合わせることができます。これは、アクションを連続させたり、アクションを他のアクションの結果に依存させたりする強力な方法です。
 
-Combining actions avoid having to deal with awaiting results or having to sequence `Future`s yourself.
+アクションを組み合わせることで、結果が出るまで待つことや、自分で`Future`のシーケンスを扱う必要がありません。
 
-We saw that the SQL statements executed and the result returned from the database can be monitored by configuring the logging system.
+ロギングシステムを設定することで、実行されたSQL文とデータベースから返された結果を監視できることを確認しました。
 
-Finally, we saw that actions that are combined together can also be run inside a transaction.
+最後に、組み合わせたアクションをトランザクションの中で実行することもできることを確認しました。
+
 
 ## Exercises
 
 ### And Then what?
 
-In Chapter 1 we created a schema and populated the database as separate actions.
-Use your newly found knowledge to combine them.
+第1章では、スキーマの作成とデータベースへのデータ投入を別々のアクションとして行いました。新しく見つけた知識を使って、それらを組み合わせてみましょう。
 
-This exercise expects to start with an empty database.
-If you're already in the REPL and the database exists,
-you'll need to drop the table first:
+この演習では、空のデータベースで開始することを想定しています。すでに REPL にいてデータベースが存在する場合は、最初にテーブルを削除する必要があります。
+
 
 ```scala mdoc
 val drop:     DBIO[Unit]        = messages.schema.drop
@@ -667,7 +657,9 @@ exec(drop)
 ```
 
 <div class="solution">
-Using the values we've provided, you can create a new database with a single action:
+
+私たちが用意した値を使えば、ワンアクションで新しいデータベースを作成することができます。
+
 
 ```scala mdoc:invisible
 exec(drop.asTry >> create)
@@ -676,7 +668,7 @@ exec(drop.asTry >> create)
 exec(drop andThen create andThen populate)
 ```
 
-If we don't care about any of the values we could also use `DBIO.seq`:
+もし、返ってくる値が必要なければ、`DBIO.seq`を使うこともできます：
 
 ```scala mdoc
 val allInOne = DBIO.seq(drop,create,populate)
@@ -686,23 +678,24 @@ val result = exec(allInOne)
 
 ### First!
 
-Create a method that will insert a message, but if it is the first message in the database,
-automatically insert the message "First!" before it.
+メッセージを挿入するメソッドを作成してください。
+ただし、それがデータベースの最初のメッセージである場合、その前に「First！」というメッセージを自動的に挿入するようにしてください。
 
-Your method signature should be:
+メソッドシグネチャはこうしてください。
 
 ```scala
 def prefixFirst(m: Message): DBIO[Int] = ???
 ```
 
-Use your knowledge of the `flatMap` action combinator to achieve this.
+`flatMap`アクションコンビネータの知識を使いましょう。
 
 <div class="solution">
-There are two elements to this problem:
 
-1. being able to use the result of a count, which is what `flatMap` gives us; and
+この問題には、2つの要素があります。
 
-2. combining two inserts via `andThen`.
+1. flatMapでカウントの結果を利用できること。
+2. andThenを介して2つのインサートを結合すること。 
+
 
 ```scala mdoc
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -730,19 +723,20 @@ exec(messages.result).foreach(println)
 
 ### There Can be Only One
 
-Implement `onlyOne`, a method that guarantees that an action will return only one result.
-If the action returns anything other than one result, the method should fail with an exception.
+アクションが1つの結果しか返さないことを保証するメソッド、`onlyOne`を実装してください。アクションが1つ以外の結果を返す場合、そのメソッドは例外で失敗するはずです。
 
-Below is the method signature and two test cases:
+以下は、メソッドのシグネチャーと2つのテストケースです。
+
 
 ```scala
 def onlyOne[T](ms: DBIO[Seq[T]]): DBIO[T] = ???
 ```
 
-You can see that `onlyOne` takes an action as an argument, and that the action could return a sequence of results.
-The return from the method is an action that will return a single value.
+`onlyOne`は引数としてアクションを受け取り、そのアクションが一連の結果を返す可能性があることがわかります。このメソッドからのリターンは、単一の値を返すアクションです。
 
-In the example data there is only one message that contains the word "Sorry", so we expect `onlyOne` to return that row:
+例のデータでは、"Sorry "という単語を含むメッセージは1つだけなので、onlyOneはその行を返すと予想されます。
+
+
 
 ```scala mdoc
 val happy = messages.filter(_.content like "%sorry%").result
@@ -753,7 +747,8 @@ val happy = messages.filter(_.content like "%sorry%").result
 // ...to return a message.
 ```
 
-However, there are two messages containing the word "I". In this case `onlyOne` should fail:
+
+しかし、"I "という単語を含むメッセージが2つ存在します。この場合、`onlyOne`は失敗するはずです。
 
 ```scala mdoc
 val boom  = messages.filter(_.content like "%I%").result
@@ -765,14 +760,17 @@ val boom  = messages.filter(_.content like "%I%").result
 // java.lang.RuntimeException: Expected 1 result, not 2
 ```
 
-Hints:
+ヒント
 
-- The signature of `onlyOne` is telling us we will take an action that produces a `Seq[T]` and return an action that produces a `T`. That tells us we need an action combinator here.
+- `onlyOne`のシグネチャは、`Seq[T]`を生成するアクションを受け取り、`T`を生成するアクションを返します。アクションコンビネータが必要です。 
 
-- That fact that the method may fail means we want to use `DBIO.successful` and `DBIO.failed` in there somewhere.
+- メソッドが失敗する可能性があるということは、どこかで`DBIO.successful`と`DBIO.failed`を使いたいわけです。
+
+
 
 <div class="solution">
-The basis of our solution is to `flatMap` the action we're given into a new action with the type we want:
+
+私たちのソリューションの基本は、与えられたアクションを、私たちが望む型を持つ新しいアクションにflatMapすることです。
 
 ```scala mdoc:silent
 def onlyOne[T](action: DBIO[Seq[T]]): DBIO[T] = action.flatMap { ms =>
@@ -785,10 +783,9 @@ def onlyOne[T](action: DBIO[Seq[T]]): DBIO[T] = action.flatMap { ms =>
 }
 ```
 
-If you've not seen `+:` before: it is "cons" for `Seq` (a standard part of Scala, equivalent to `::` for `List`).
+`+:`はScalaの標準機能であるSeq（Listの`::`に相当）の「cons」です。
 
-Our `flatMap` is taking the results from the action, `ms`, and in the case it is a single message, we return it.
-In the case it's something else, we fail with an informative message.
+`flatMap`は`ms`というアクションから結果を受け取り、それが単一のメッセージである場合はそれを返します。それ以外のメッセージの場合は、情報提供のメッセージとともに失敗します。
 
 ```scala mdoc
 exec(populate)
@@ -805,14 +802,14 @@ exec(onlyOne(happy))
 
 ### Let's be Reasonable
 
-Some _fool_ is throwing exceptions in our code, destroying our ability to reason about it.
-Implement `exactlyOne` which wraps `onlyOne` encoding the possibility of failure using types rather than exceptions.
+ある馬鹿が我々のコードに例外を投げて、それを推論する能力を破壊しています。例外ではなく型を使って失敗の可能性をエンコードする `onlyOne` をラップした `exactlyOne` を実装します。
 
-Then rerun the test cases.
+その後、テストケースを再実行します。
+
 
 <div class="solution">
-There are several ways we could have implemented this.
-Perhaps the simplest is using `asTry`:
+
+これを実装する方法はいくつかあります。最もシンプルなのは、`asTry`を使うことでしょう。
 
 ```scala mdoc
 import scala.util.Try
