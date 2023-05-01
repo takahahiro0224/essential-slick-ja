@@ -798,6 +798,7 @@ exec(onlyOne(boom))
 ```scala mdoc
 exec(onlyOne(happy))
 ```
+
 </div>
 
 ### Let's be Reasonable
@@ -826,37 +827,34 @@ exec(exactlyOne(boom))
 
 ### Filtering
 
-There is a `DBIO` `filter` method, but it produces a runtime exception if the filter predicate is false.
-It's like `Future`'s `filter` method in that respect. We've not found a situation where we need it.
+`DBIO`の`filter`メソッドはありますが、filter述語が`false`の場合、実行時例外を発生させるものです。その点では、`Future`の`filter`メソッドと同じです。必要な場面は見つかっていません。
 
-However, we can create our own kind of filter.
-It can take some alternative action when the filter predicate fails.
+しかし、私たちは独自の種類の`filter`を作成することができます。それは、filter述語が失敗したときに、何らかの代替措置を取ることができます。
 
-The signature could be:
 
+シグネチャーは以下のようになるでしょう
 ```scala
 def myFilter[T](action: DBIO[T])(p: T => Boolean)(alternative: => T) = ???
 ```
 
-If you're not comfortable with the `[T]` type parameter,
-or the by name parameter on `alternative`,
-just use `Int` instead:
+`[T]`型パラメータや`alternative`のby nameパラメータに抵抗がある場合は、代わりに`Int`を使用すればよいでしょう
+
 
 ```scala
 def myFilter(action: DBIO[Int])(p: Int => Boolean)(alternative: Int) = ???
 ```
 
-Go ahead and implement `myFilter`.
+`myFilter`を実装しましょう。
 
-We have an example usage from the ship's marketing department.
-They are happy to report the number of chat messages, but only if that number is at least 100:
+船のマーケティング部門での使用例が以下です。彼らはチャットメッセージの数を報告することに満足していますが、その数が少なくとも100である場合に限ります
 
 ```scala
 myFilter(messages.size.result)( _ > 100)(100)
 ```
 
 <div class="solution">
-This is a fairly straightforward example of using `map`:
+
+`map`を使ったわかりやすい例です。
 
 ```scala mdoc:silent
 def myFilter[T](action: DBIO[T])(p: T => Boolean)(alternative: => T) =
@@ -869,17 +867,14 @@ def myFilter[T](action: DBIO[T])(p: T => Boolean)(alternative: => T) =
 
 ### Unfolding
 
-This is a challenging exercise.
+これは、チャレンジングなエクササイズです。
 
-We saw that `fold` can take a number of actions and reduce them using a function you supply.
-Now imagine the opposite: unfolding an initial value into a sequence of values via a function.
-In this exercise we want you to write an `unfold` method that will do just that.
+`fold`は、いくつかのアクションを受け取り、提供された関数を使用してそれらをreduceすることができることを確認しました。今度はその逆で、関数を使って初期値を一連の値に展開することを想像してみてください。この演習では、それを実現する`unfold`メソッドを記述してもらいます。
 
-Why would you need to do something like this?
-One example would be when you have a tree structure represented in a database and need to search it.
-You can follow a link between rows, possibly recording what you find as you follow those links.
+なぜこのようなことをする必要があるのでしょうか。例えば、データベースでツリー構造を表現し、それを検索する必要がある場合です。行と行の間のリンクをたどり、そのリンクをたどりながら見つけたものを記録することができます。
 
-As an example, let's pretend the crew's ship is a set of rooms, one connected to just one other:
+例として、クルーの船は、1つの部屋が1つだけつながっている集合体だとします：
+
 
 ```scala mdoc
 case class Room(name: String, connectsTo: String)
@@ -902,7 +897,7 @@ exec {
 }
 ```
 
-For any given room it's easy to find the next room. For example:
+任意の部屋に対して、次の部屋を簡単に見つけることができます。例えば、こんな感じです
 
 ~~~ sql
 SELECT
@@ -915,11 +910,10 @@ WHERE
 -- Returns 'Galley'
 ~~~
 
-Write a method `unfold` that will take any room name as a starting point,
-and a query to find the next room,
-and will follow all the connections until there are no more connecting rooms.
+任意の部屋名を出発点として、次の部屋を見つけるためのクエリを受け取り、接続する部屋がなくなるまですべての接続をたどるメソッド`unfold`を実装してください。
 
-The signature of `unfold` _could_ be:
+`unfold`のシグネチャーは以下のようになるでしょう。
+
 
 ```scala
 def unfold(
@@ -928,12 +922,12 @@ def unfold(
 ): DBIO[Seq[String]] = ???
 ```
 
-...where `z` is the starting ("zero") room, and `f` will lookup the connecting room (an action for the query to find the next room).
+...ここで、zはスタート（「ゼロ」）ルーム、fはコネクティングルームを検索する（次のルームを探すクエリーのアクション）。
 
-If `unfold` is given `"Podbay"` as a starting point it should return an action which, when run, will produce: `Seq("Podbay", "Galley", "Computer", "Engine Room")`.
+`unfold`が「Podbay」を出発点として与えられた場合、実行すると生成されるアクションを返すはずです：`Seq("Podbay", "Galley", "Computer", "Engine Room")`
 
-You'll want to accumulate results of the rooms you visit.
-One way to do that would be to use a different signature:
+訪問した部屋の結果を蓄積しておきたいところです。そのためには、別のシグネチャーを使うのも一つの手でしょう：
+
 
 ```scala
 def unfold(
@@ -945,15 +939,14 @@ def unfold(
 
 <div class="solution">
 
-The trick here is to recognize that:
+ここでのコツは、以下を認識することです：
 
-1. this is a recursive problem, so we need to define a stopping condition;
+1. これは再帰的な問題であるため、停止条件を定義する必要があります
 
-2. we need `flatMap` to sequence queries ; and
+2. クエリの配列にはflatMapが必要である。
 
-3. we need to accumulate results from each step.
+3. 各ステップでの成果を積み重ねていく必要があります。
 
-In code...
 
 ```scala mdoc:silent
 def unfold(
@@ -967,11 +960,7 @@ def unfold(
   }
 ```
 
-The basic idea is to call our action (`f`) on the first room name (`z`).
-If there's no result from the query, we're done.
-Otherwise we add the room to the list of rooms, and recurse starting from the room we just found.
-
-Here's how we'd use it:
+基本的な考え方は、最初の部屋名(z)に対してアクション(f)を呼び出すことです。クエリの結果がない場合は、終了です。そうでない場合は、その部屋を部屋のリストに追加し、今見つけた部屋から再検索します。
 
 ```scala mdoc
 def nextRoom(roomName: String): DBIO[Option[String]] =
