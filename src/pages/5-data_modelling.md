@@ -1,62 +1,55 @@
 # Data Modelling {#Modelling}
 
-We can do the basics of connecting to a database, running queries, and changing data.
-We turn now to richer models of data and how our application hangs together.
+データベースへの接続、クエリーの実行、データの変更といった基本的な操作ができるようになりました。次は、より豊かなデータモデルと、アプリケーションの連携について説明します。
 
-In this chapter we will:
 
-- understand how to structure an application;
+この章では以下について学習します。
 
-- look at alternatives to modelling rows as case classes;
+- アプリケーションの構成方法を理解できる 
 
-- store richer data types in columns; and
+- case classで列をモデル化することの代替案を検討する
 
-- expand on our knowledge of modelling tables to introduce optional values and foreign keys.
+- より豊富なデータ型をカラムに格納する 
 
-To do this, we'll expand the chat application schema to support more than just messages.
+- テーブルのモデリングに関する知識を深め、オプション値や外部キーを導入する
+
+上記のために、チャットアプリケーションのスキーマを拡張して、メッセージ以外にも対応できるようにします。
 
 ## Application Structure
 
-So far, all of our examples have been written in a single Scala file.
-This approach doesn't scale to larger application codebases.
-In this section we'll explain how to split up application code into modules.
+これまでのところ、すべてのサンプルは1つのScalaファイルで書かれています。この方法は、より大きなアプリケーションのコードベースにはスケールしません。このセクションでは、アプリケーションコードをモジュールに分割する方法について説明します
 
-Until now we've also been exclusively using Slick's H2 profile.
-When writing real applications we often need to be able to
-switch profiles in different circumstances.
-For example, we may use PostgreSQL in production and H2 in our unit tests.
+また、これまではSlickのH2プロファイルを独占的に使用してきました。実際のアプリケーションを書くときには、異なる状況でプロファイルを切り替えられるようにする必要があることがよくあります。例えば、本番環境ではPostgreSQLを使い、ユニットテストではH2を使うことがあります。
 
-An example of this pattern can be found in the [example project][link-example],
-folder _chapter-05_, file _structure.scala_.
+このパターンの例は、[サンプルプロジェクト][link-example]の _chapter-05_ の _structure.scala_ で見ることができます。
+
 
 ### Abstracting over Databases
 
-Let's look at how we can write code that works with multiple different database profiles.
-When we previously wrote...
+ここでは、複数の異なるデータベースプロファイルで動作するコードを書く方法について見てみましょう。以前書いたときは...
 
 ```scala mdoc:silent
 import slick.jdbc.H2Profile.api._
 ```
 
-...we were locking ourselves into H2.
-We want to write an import that works with a variety of profiles.
-Fortunately, Slick provides a common supertype for profiles---a trait called `JdbcProfile`:
+
+...私たちはH2に自分自身をロックしていました。今回は様々なプロファイルで動作するインポートを書きたい。
+幸い、Slickはプロファイルの共通スーパータイプである`JdbcProfile`と呼ばれるトレイトを提供しています。
+
 
 ```scala mdoc:silent
 import slick.jdbc.JdbcProfile
 ```
 
-We can't import directly from `JdbcProfile` because it isn't a concrete object.
-Instead, we have to *inject a dependency* of type `JdbcProfile` into our application
-and import from that. The basic pattern we'll use is as follows:
+`JdbcProfile`は具象オブジェクトではないため、直接インポートすることはできません。その代わりに、アプリケーションに`JdbcProfile`型の依存関係を注入し、そこからインポートする必要があります。私たちが使用する基本的なパターンは、次のとおりです。
 
-* isolate our database code into a trait (or a few traits);
+* データベース実装を1つ（またはいくつかの）のトレイトに分離する
 
-* declare the Slick profile as an abstract `val` and import from that; and
+* Slickプロファイルをabstract `val` として宣言し、そこからインポートする
 
-* extend our database trait to make the profile concrete.
+* プロファイルを具体化するためにデータベーストレイトを拡張する 
 
-Here's a simple form of this pattern:
+以下がこのパターンのシンプルな形になります。
 
 ```scala mdoc:silent
 trait DatabaseModule {
@@ -77,17 +70,17 @@ object Main1 extends App {
 }
 ```
 
-In this pattern, we declare our profile using an abstract `val`.
-This is enough to allow us to write `import profile.api._`.
-The compiler knows that the `val` is *going to be* an immutable `JdbcProfile`
-even if we haven't yet said which one.
-When we instantiate the `DatabaseModule` we bind `profile` to our profile of choice.
+このパターンでは、abstract`val`を使用してプロファイルを宣言します。これは、`import profile.api._` と書くので十分です。
+コンパイラは、valがイミュータブルな`JdbcProfile`であることを認識しています（どのプロファイルかはまだ言っていません）。
+`DatabaseModule`をインスタンス化するときに、`profile`を選択したプロファイルにバインドします。
+
 
 ### Scaling to Larger Codebases
 
-As our applications get bigger,
-we need to split our code up into multiple files to keep it manageable.
-We can do this by extending the pattern above to a family of traits:
+アプリケーションの規模が大きくなると、コードを複数のファイルに分割して管理する必要があります。
+これを実現するには、上記のパターンを拡張して、トレイトファミリーにする必要があります。
+
+
 
 ```scala mdoc:silent
 trait Profile {
@@ -118,19 +111,18 @@ object Main2 extends App {
 }
 ```
 
-Here we factor out our `profile` dependency into its own `Profile` trait.
-Each module of database code specifies `Profile` as a self-type,
-meaning it can only be extended by a class that also extends `Profile`.
-This allows us to share the `profile` across our family of modules.
+ここでは、`profile`の依存関係をそれ自身の`Profile`トレイトに分解しています。
+データベース実装の各モジュールは、`Profile`を自分型として指定します。
+つまり、`Profile`を拡張するクラスによってのみ拡張することができます。
+これにより、モジュール群全体で`profile`を共有することができます。
 
-To work with a different database, we inject a different profile
-when we instantiate the database code:
+異なるデータベースで動作させるために、データベース実装をインスタンス化する際に、異なるプロファイルを注入します：
 
 ```scala mdoc
 val anotherDatabaseLayer = new DatabaseLayer(slick.jdbc.PostgresProfile)
 ```
 
-This basic pattern is a reasonable way of structuring your application.
+この基本パターンは、アプリケーションを構成する上で合理的な方法です。
 
 <!--
 ### Namespacing Queries
@@ -164,17 +156,14 @@ val action =
 
 ## Representations for Rows
 
-In previous chapters we modelled rows as case classes.
-Although this is a common usage pattern, and the one we recommend,
-there are several representation options available, including tuples,
-case classes, and `HList`s.
-Let's investigate these by looking in more detail
-at how Slick relates columns in our database to fields in our classes.
+前の章では、行をケースクラスでモデリングしました。
+これは一般的な使用パターンであり、我々も推奨している方法ですが、タプル、ケースクラス、`HList`など、いくつかの表現方法があります。
+ここでは、Slickがデータベースのカラムとクラスのフィールドをどのように関連付けるかについて、より詳細に調べることにしましょう。
+
 
 ### Projections, `ProvenShapes`, `mapTo`, and `<>`
 
-When we declare a table in Slick, we are required to implement a `*` method
-that specifies a "default projection":
+Slickでテーブルを宣言する際、"default projection"を指定する`*`メソッドを実装することが必須になっています。
 
 ```scala mdoc:silent
 class MyTable(tag: Tag) extends Table[(String, Int)](tag, "mytable") {
@@ -185,21 +174,20 @@ class MyTable(tag: Tag) extends Table[(String, Int)](tag, "mytable") {
 ```
 
 <div class="callout callout-info">
+
 **Expose Only What You Need**
 
-We can hide information by excluding it from our row definition.
-The default projection controls what is returned, in what order,
-and is driven by our row definition.
+行の定義から情報を除外することで、情報を隠すことができます。デフォルトプロジェクションは、何をどのような順序で返すかを制御し、行の定義に従います。
 
-For example, we don't need to map everything
-in a table with legacy columns that aren't being used.
+例えば、使われていないレガシーなカラムを持つテーブルのすべてをマッピングする必要はないのです。
+
 </div>
 
-Projections provide mappings between database columns and Scala values.
-In the code above, the definition of `*` is mapping `column1` and `column2`
-from the database to the `(String, Int)` tuples defined in the `extends Table` clause.
+プロジェクションは、データベースのカラムとScalaの値との間のマッピングを提供します。
+上記のコードでは、`*`の定義は、データベースから`extends Table`句で定義された`(String, Int)`タプルに`column1`と`column2`をマッピングすることです。
 
-If we look at the definition of `*` in the `Table` class, we see something confusing:
+Tableクラスの`*`の定義を見てみると、紛らわしいことが書いてあります。
+
 
 ~~~ scala
 abstract class Table[T] {
@@ -207,17 +195,15 @@ abstract class Table[T] {
 }
 ~~~
 
-The type of `*` is actually something called a `ProvenShape`,
-not a tuple of columns as we specified in our example.
-There is clearly something else going on here.
-Slick is using implicit conversions
-to build a `ProvenShape` object from the columns we provided.
+`*` の型は、実際には`ProvenShape`と呼ばれるもので、サンプルで指定したような列のタプルではありません。
+ここでは明らかに他のことが行われています。
+Slickは暗黙の変換を使用して、私たちが提供した列から`ProvenShape`オブジェクトを構築しています。
 
-The internal workings of `ProvenShape` are certainly beyond the scope of this book.
-Suffice to say that Slick can use any Scala type as a projection provided it can generate a compatible `ProvenShape`.
-If we look at the rules for `ProvenShape` generation,
-we will get an idea about what data types we can map.
-Here are the three most common use cases:
+`ProvenShape`の内部構造については、本書の範囲を超えていることは確かです。
+Slickは、互換性のある`ProvenShape`を生成できるのであれば、どんなScalaの型でもプロジェクションとして使用できることは言うまでもありません。
+`ProvenShape`生成のルールを見てみると、どのようなデータ型をマッピングできるのかがわかると思います。
+ここでは、最も一般的な3つのユースケースを紹介します。
+
 
 ```scala mdoc:reset:invisible
 import slick.jdbc.H2Profile.api._
@@ -252,9 +238,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
     }
 ```
 
-1.  Single `column` definitions produce shapes that map the column contents
-to a value of the column's type parameter.
-For example, a column of `Rep[String]` maps a value of type `String`:
+1. 単一の列の定義は、列の値を列の型パラメーターの値にマッピングするシェイプを生成します。例えば、`Rep[String]`の列は、`String`型の値をマッピングします。
 
     ```scala
     class MyTable1(tag: Tag) extends Table[String](tag, "mytable") {
@@ -264,10 +248,9 @@ For example, a column of `Rep[String]` maps a value of type `String`:
     ```
     <!-- If you change this ^^ code update the invisible block above -->
 
-2. Tuples of database columns map tuples of their type parameters.
-For example, `(Rep[String], Rep[Int])` is mapped to `(String, Int)`:
-
-    ```scala
+2. データベースカラムのタプルは、その型パラメーターのタプルをマッピングします。例えば、`(Rep[String], Rep[Int])` は `(String, Int)` にマップされます。
+    
+   ```scala
     class MyTable2(tag: Tag) extends Table[(String, Int)](tag, "mytable") {
       def column1 = column[String]("column1")
       def column2 = column[Int]("column2")
@@ -276,11 +259,7 @@ For example, `(Rep[String], Rep[Int])` is mapped to `(String, Int)`:
     ```
     <!-- If you change this ^^ code update the invisible block above -->
 
-3. If we have a `ProvenShape[A]`, we can convert it to a `ProvenShape[B]`
-using the "projection operator" `<>`.
-In this example we know we can get `ProvenShape[A]` when the `A` is the `String` and `Int` tuple (from the previous example).
-We supply functions to convert each way between `A` and `B`
-and Slick builds the resulting shape. Here our `B` is the `User` case class:
+3. `ProvenShape[A]`があれば、"projection operator"の`<>`を使って`ProvenShape[B]`に変換することができます。このサンプルでは、`A`を`String`と`Int`のタプルにすると、`ProvenShape[A]`が得られることが分かっています（前の例）。`A`-`B`間の各変換を行う関数を与え、Slickは結果型を構築します。ここでは、`B`は`User`ケースクラスです。
 
     ```scala
     case class User(name: String, id: Long)
@@ -293,25 +272,22 @@ and Slick builds the resulting shape. Here our `B` is the `User` case class:
     ```
     <!-- If you change this ^^ code update the invisible block above -->
 
-The projection operator `<>` is the secret ingredient that
-allows us to map a wide variety of types.
-As long as we can convert a tuple of columns to and from some type `B`,
-we can store instances of `B` in a database.
 
-We've not seen `<>` until now because the `mapTo` macro builds a projection for us.
-In most situations `mapTo` is both more convenient and more efficient to use than `<>`.
-However, `<>` is available and worth knowing about if we need more control over the mapping.
-It will also be a method you see a great deal in code bases created before Slick 3.2.
+プロジェクションオペレーター `<>`は、さまざまな型のマッピングを可能にする隠し味です。
+カラムのタプルをある型`B`と相互変換できる限り、`B`のインスタンスをデータベースに格納することができます。
 
-The two arguments to `<>` are:
+今まで`<>`を見なかったのは、`mapTo`マクロがプロジェクションを構築してくれるからです。
+ほとんどの場合、`<>`よりも`mapTo`の方が便利で効率的です。
+しかし、`<>`は利用可能であり、マッピングをよりコントロールする必要がある場合は知っておく価値があります。
+また、Slick 3.2以前に作成されたコードベースでは、この方法をよく目にすることになるでしょう。
 
-* a function from `A => B`, which converts
-  from the existing shape's unpacked row-level encoding `(String, Long)`
-  to our preferred representation (`User`); and
 
-* a function from `B => Option[A]`, which converts the other way.
+`<>` は2つの引数を持ちます。
 
-We can supply these functions by hand if we want:
+* `A => B`の関数で、既存の型のアンパックされた行レベルエンコーディング `(String, Long)`から私たちが好む表現である`User`に変換します。
+* `B => Option[A]`の関数で, 逆向きに変換します。 
+
+必要であれば、これらの関数を手作業で供給することも可能です。
 
 ```scala mdoc:silent
 def intoUser(pair: (String, Long)): User =
@@ -321,7 +297,7 @@ def fromUser(user: User): Option[(String, Long)] =
   Some((user.name, user.id))
 ```
 
-and write:
+結果このようになります。
 
 ```scala mdoc:silent
 class UserTable(tag: Tag) extends Table[User](tag, "user") {
@@ -330,15 +306,11 @@ class UserTable(tag: Tag) extends Table[User](tag, "user") {
   def * = (name, id).<>(intoUser, fromUser)
 }
 ```
+`User`の例では、`User.tupled`と`User.unapply`によってケースクラスがこれらの関数を提供しているので、自分たちで構築する必要はありません。
+しかし、行のパッケージングとアンパッケージングをより精巧に行うために、独自の関数を提供できることを覚えておくと便利です。
+この章の練習問題で、このことを説明します。
 
-In the `User` example, the case class supplies these functions
-via `User.tupled` and `User.unapply`, so we don't need to build them ourselves.
-However it is useful to remember that we can provide our own functions
-for more elaborate packaging and unpackaging of rows.
-We will see this in one of the exercises in this chapter.
-
-In this section we've looked at the details of projections.
-In general, though, the `mapTo` macro is sufficient for many situations.
+このセクションでは、プロジェクションの詳細について見てきました。しかし、一般的には、`mapTo`マクロで多くの場面で十分です。
 
 ### Tuples versus Case Classes
 
