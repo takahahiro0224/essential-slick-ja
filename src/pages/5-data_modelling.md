@@ -314,12 +314,10 @@ class UserTable(tag: Tag) extends Table[User](tag, "user") {
 
 ### Tuples versus Case Classes
 
-We've seen how Slick is able to map case classes and tuples of values.
-But which should we use? In one sense there is little difference
-between case classes and tuples---both represent fixed sets of values.
-However, case classes differ from tuples in two important respects.
+Slickがケースクラスと値のタプルをマッピングすることができることを見てきました。
+しかし、どちらを使うべきなのでしょうか？ある意味では、ケースクラスとタプルの間にほとんど違いはありません。しかし、ケースクラスは2つの重要な点でタプルと異なります。
 
-First, case classes have field names, which improves code readability:
+まず、ケースクラスにはフィールド名があり、コードの読みやすさを向上させることができます。
 
 ```scala mdoc
 val dave = User("Dave", 0L)
@@ -329,8 +327,7 @@ val tuple = ("Dave", 0L)
 tuple._1 // tuple field access
 ```
 
-Second, case classes have types that distinguish them
-from other case classes with the same field types:
+次に、ケースクラスは、同じフィールド型を持つ他のケースクラスと区別する型を持っています。
 
 ```scala mdoc:fail
 case class Dog(name: String, id: Long)
@@ -343,28 +340,24 @@ val dog  = Dog("Lassie", 0L)
 user == dog
 ```
 
-As a general rule, we recommend using case classes to represent database rows
-for these reasons.
+このような理由から、データベースの行を表現する際には、原則としてケースクラスを使用することをお勧めします。
 
 
 ### Heterogeneous Lists
 
-We've seen how Slick can map database tables to tuples and case classes.
-Scala veterans identify a key weakness in this approach---tuples
-and case classes run into limitations at 22 fields[^scala211-limit22].
+Slickがデータベースのテーブルをタプルとケースクラスにマッピングする方法について見てきました。
+Scalaのベテランは、このアプローチの重要な弱点であるタプルとケースクラスが22フィールドで限界に達することを認識しています[^scala211-limit22]。
 
-[^scala211-limit22]: Scala 2.11 introduced the ability
-to define case classes with more than 22 fields,
-but tuples and functions are still limited to 22.
-We've written about this in [a blog post](https://underscore.io/blog/posts/2016/10/11/twenty-two.html).
 
-Many of us have heard horror stories of legacy tables in enterprise databases
-that have tens or hundreds of columns. How do we map these rows?
-Fortunately, Slick provides an [`HList`][link-slick-hlist] implementation
-to support tables with very large numbers of columns.
+[^scala211-limit22]: Scala 2.11では、22以上のフィールドを持つケースクラスを定義できるようになりましたが、タプルと関数はまだ22に制限されています。
+これについては、[ブログ記事](https://underscore.io/blog/posts/2016/10/11/twenty-two.html)にも書いています。
 
-To motivate this, let's consider a poorly-designed legacy table
-for storing product attributes:
+エンタープライズデータベースのレガシーテーブルで、数十から数百のカラムを持つ恐ろしい話を聞いたことがある人は多いでしょう。
+これらの行をどのようにマッピングすればよいのでしょうか？
+幸い、Slickは非常に多くの列を持つテーブルをサポートする[`HList`][link-slick-hlist]の実装を提供しています。
+
+
+その動機付けとして、設計が不十分な商品属性を保存するためのレガシーテーブルについて考えてみましょう。
 
 ```scala mdoc
 case class Attr(id: Long, productId: Long /* ...etc */)
@@ -401,22 +394,20 @@ class AttrTable(tag: Tag) extends Table[Attr](tag, "attrs") {
 }
 ```
 
-Hopefully you don't have a table like this at your organization,
-but accidents do happen.
+あなたの組織にこのようなテーブルがないことを祈りますが、事故は起こるものです。
 
-This table has 26 columns---too many to model using flat tuples.
-Fortunately, Slick provides an alternative mapping representation
-that scales to arbitrary numbers of columns.
-This representation is called a _heterogeneous list_ or `HList`[^hlist].
+このテーブルには26のカラムがあり、フラットなタプルを使ってモデル化するには多すぎます。
+幸いなことに、Slickは任意の数のカラムに対応する代替マッピング表現を提供しています。
+この表現は、heterogeneous listまたは`HList`[^hlist]と呼ばれます。
 
-[^hlist]: You may have heard of `HList` via other libraries, such as [shapeless][link-shapeless].
-We're talking here about Slick's own implementation of `HList`, not the shapeless one.
-You can use the shapeless `HList` via a library we've provided called [slickless][link-slickless].
 
-An `HList` is a sort of hybrid of a list and a tuple.
-It has an arbitrary length like a `List`,
-but each element can be a different type like a tuple.
-Here are some examples:
+[^hlist]: `HList`については、[shapeless][link-shapeless]など他のライブラリで聞いたことがあるかもしれません。
+ここでは、Slick独自の`HList`の実装について話しているのであって、shapelessの実装について話しているのではありません。
+shapelessの`HList`は[slickless][link-slickless]というライブラリで利用することができます。
+
+`HList`は、リストとタプルのハイブリッドのようなものです。リストのように任意の長さを持つが、タプルのように各要素を異なる型にすることができます。
+以下はその例です。
+
 
 ```scala mdoc:silent
 import slick.collection.heterogeneous.{HList, HCons, HNil}
@@ -431,24 +422,19 @@ val longerHList: Int :: String :: Boolean :: HNil =
   123 :: "abc" :: true :: HNil
 ```
 
+`HList`は`List`と同様に再帰的に構築されるため、任意の大きさの値の集まりをモデル化することができます。
 `HList`s are constructed recursively like `List`s,
 allowing us to model arbitrarily large collections of values:
 
-- an empty `HList` is represented by the singleton object `HNil`;
+- 空の`HList`は，シングルトンオブジェクト`HNil`で表現される
+- より長い`HList`は、`::`演算子を使って値を前置することで形成され、新しい型のリストを作成する
 
-- longer `HList`s are formed by prepending values using the `::`
-  operator, which creates a new list *of a new type*.
+それぞれの`HList`の型と値が互いに影響し合っていることに注意してください。
+`longerHList`は`Int`型、`String`型、`Boolean`型の値からなり、その型は`Int`型、`String`型、`Boolean`型からなります。
+要素の型が保持されているので、それぞれの正確な型を考慮したコードを書くことができます。
 
-Notice the types and values of each `HList` mirror each other:
-the `longerHList` comprises values of types `Int`, `String`, and `Boolean`,
-and its type comprises the types `Int`, `String`, and `Boolean` as well.
-Because the element types are preserved,
-we can write code that takes each precise type into account.
-
-Slick is able to produce `ProvenShapes`
-to map `HList`s of columns to `HList`s of their values.
-For example, the shape for a `Rep[Int] :: Rep[String] :: HNil`
-maps values of type `Int :: String :: HNil`.
+Slickは、カラムの`HList`とその値の`HList`を対応付ける`ProvenShape`を生成することができます。
+例えば、`Rep[Int] :: Rep[String] :: HNil`のシェイプは`Int :: String :: HNil`の型の値をマッピングします。
 
 #### Using HLists Directly
 
