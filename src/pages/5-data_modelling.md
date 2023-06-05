@@ -240,37 +240,37 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 1. 単一の列の定義は、列の値を列の型パラメーターの値にマッピングするシェイプを生成します。例えば、`Rep[String]`の列は、`String`型の値をマッピングします。
 
-    ```scala
-    class MyTable1(tag: Tag) extends Table[String](tag, "mytable") {
-      def column1 = column[String]("column1")
-      def * = column1
-    }
-    ```
-    <!-- If you change this ^^ code update the invisible block above -->
+```scala
+class MyTable1(tag: Tag) extends Table[String](tag, "mytable") {
+  def column1 = column[String]("column1")
+  def * = column1
+}
+```
+<!-- If you change this ^^ code update the invisible block above -->
 
 2. データベースカラムのタプルは、その型パラメーターのタプルをマッピングします。例えば、`(Rep[String], Rep[Int])` は `(String, Int)` にマップされます。
     
-   ```scala
-    class MyTable2(tag: Tag) extends Table[(String, Int)](tag, "mytable") {
-      def column1 = column[String]("column1")
-      def column2 = column[Int]("column2")
-      def * = (column1, column2)
-    }
-    ```
-    <!-- If you change this ^^ code update the invisible block above -->
+```scala
+class MyTable2(tag: Tag) extends Table[(String, Int)](tag, "mytable") {
+  def column1 = column[String]("column1")
+  def column2 = column[Int]("column2")
+  def * = (column1, column2)
+}
+```
+<!-- If you change this ^^ code update the invisible block above -->
 
 3. `ProvenShape[A]`があれば、"projection operator"の`<>`を使って`ProvenShape[B]`に変換することができます。このサンプルでは、`A`を`String`と`Int`のタプルにすると、`ProvenShape[A]`が得られることが分かっています（前の例）。`A`-`B`間の各変換を行う関数を与え、Slickは結果型を構築します。ここでは、`B`は`User`ケースクラスです。
 
-    ```scala
-    case class User(name: String, id: Long)
+```scala
+case class User(name: String, id: Long)
 
-    class UserTable3(tag: Tag) extends Table[User](tag, "user") {
-      def id   = column[Long]("id", O.PrimaryKey, O.AutoInc)
-      def name = column[String]("name")
-      def * = (name, id).<>(User.tupled, User.unapply)
-    }
-    ```
-    <!-- If you change this ^^ code update the invisible block above -->
+class UserTable3(tag: Tag) extends Table[User](tag, "user") {
+  def id   = column[Long]("id", O.PrimaryKey, O.AutoInc)
+  def name = column[String]("name")
+  def * = (name, id).<>(User.tupled, User.unapply)
+}
+```
+<!-- If you change this ^^ code update the invisible block above -->
 
 
 プロジェクションオペレーター `<>`は、さまざまな型のマッピングを可能にする隠し味です。
@@ -423,8 +423,6 @@ val longerHList: Int :: String :: Boolean :: HNil =
 ```
 
 `HList`は`List`と同様に再帰的に構築されるため、任意の大きさの値の集まりをモデル化することができます。
-`HList`s are constructed recursively like `List`s,
-allowing us to model arbitrarily large collections of values:
 
 - 空の`HList`は，シングルトンオブジェクト`HNil`で表現される
 - より長い`HList`は、`::`演算子を使って値を前置することで形成され、新しい型のリストを作成する
@@ -438,8 +436,7 @@ Slickは、カラムの`HList`とその値の`HList`を対応付ける`ProvenSha
 
 #### Using HLists Directly
 
-We can use an `HList` to map the large table in our example above.
-Here's what the default projection looks like:
+上記の例では、`HList` を使って大きなテーブルをマッピングすることができます。デフォルトプロジェクションはこんな感じです
 
 ```scala mdoc:reset:invisible
 import slick.jdbc.H2Profile.api._
@@ -499,9 +496,9 @@ class AttrTable(tag: Tag) extends Table[AttrHList](tag, "attrs") {
 val attributes = TableQuery[AttrTable]
 ```
 
-Writing `HList` types and values is cumbersome and error prone,
-so we've introduced a type alias of `AttrHList`
-to help us.
+`HList`の型や値を書くのは面倒でエラーが出やすいので、`AttrHList`という型のエイリアスを導入して対応しています。
+
+
 
 ```scala mdoc:invisible
 import slick.jdbc.H2Profile.api._
@@ -513,8 +510,7 @@ val db = Database.forConfig("chapter05")
 def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 4.seconds)
 ```
 
-Working with this table involves inserting, updating, selecting, and modifying
-instances of `AttrHList`. For example:
+このテーブルを扱うには、`AttrHList`のインスタンスを挿入、更新、選択、修正する必要があります。例えば、以下のようになります：
 
 ```scala mdoc
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -534,9 +530,8 @@ val program: DBIO[Seq[AttrHList]] = for {
 val myAttrs: AttrHList = exec(program).head
 ```
 
-We can extract values from our query results `HList` using pattern matching
-or a variety of type-preserving methods defined on `HList`,
-including `head`, `apply`, `drop`, and `fold`:
+パターン・マッチや、`HList`上で定義された`head`、`apply`、`drop`、`fold`などの様々な型保存メソッドを用いて、クエリ結果HListから値を抽出することができます。
+
 
 ```scala mdoc
 val id: Long = myAttrs.head
@@ -547,13 +542,12 @@ val value1: Int = myAttrs(3)
 
 #### Using HLists and Case Classes
 
-In practice we'll want to map an HList representation
-to a regular class to make it easier to work with.
-Slick's `<>` operator works with `HList` shapes as well as tuple shapes.
-To use it we'd have to produce our own mapping functions in place of the case class `apply` and `unapply`,
-but otherwise this approach is the same as we've seen for tuples.
+実際には、HList表現を通常のクラスにマッピングして、作業をしやすくしたいものです。
+Slickの`<>`演算子は、タプル型と同様に`HList`型でも動作します。
+これを使うには、ケースクラスの`apply`と`unapply`の代わりに独自のマッピング関数を作る必要がありますが、それ以外はタプルで見たのと同じアプローチです。
 
-However, the `mapTo` macro will generate the mapping between an HList and a case class for us:
+ただし、`mapTo`マクロは、`HList`とケースクラスの間のマッピングを生成してくれます。
+
 
 ```scala mdoc:reset:invisible
 import slick.jdbc.H2Profile.api._
@@ -591,14 +585,14 @@ class AttrTable(tag: Tag) extends Table[Attrs](tag, "attributes") {
 val attributes = TableQuery[AttrTable]
 ```
 
-Notice the pattern is:
+このようなパターンがあることに気づくでしょう。
 
 ```scala
  def * = (some hlist).mapTo[case class with the same fields]
 ```
 
-With this in place our table is defined on a plain Scala case class.
-We can query and modify the data as normal using case classes:
+
+このように、私たちのテーブルは、Scalaのケースクラスで定義されています。ケースクラスを使って、普通にデータを照会したり変更したりすることができます。
 
 ```scala mdoc
 val program: DBIO[Seq[Attrs]] = for {
@@ -611,38 +605,32 @@ exec(program)
 ```
 
 <div class="callout callout-info">
+
 **Code Generation**
 
-Sometimes your code is the definitive description of the schema;
-other times it's the database itself.
-The latter is the case when working with legacy databases,
-or database where the schema is managed independently of your Slick application.
+スキーマの決定的な記述がコードである場合もあれば、データベースそのものである場合もあります。
+後者は、レガシーデータベースや、スキーマがSlickアプリケーションから独立して管理されているデータベースで作業する場合に当てはまります。
 
-When the database is considered the source truth in your organisation,
-the [Slick code generator][link-ref-gen] is an important tool.
-It allows you to connect to a database, generate the table definitions,
-and customize the code produced.
-For tables with wide rows, it produces an HList representation.
+データベースが組織内のソース・トゥルースと見なされる場合、[Slick code generator][link-ref-gen] は重要なツールとなります。
+データベースに接続し、テーブル定義を生成し、生成されたコードをカスタマイズすることができます。行数の多いテーブルの場合、HList表現が生成されます。
 
-Prefer it to manually reverse engineering a schema by hand.
+手作業でスキーマをリバースエンジニアリングするよりも便利です。
+
 </div>
 
 ## Table and Column Representation
 
-Now we know how rows can be represented and mapped,
-let's look in more detail at the representation of the table and the columns it comprises.
-In particular we'll explore nullable columns,
-foreign keys, more about primary keys, composite keys,
-and options you can apply to a table.
+行をどのように表現し、マッピングするかがわかったところで、次はテーブルとそのカラムの表現について詳しく見ていきましょう。
+特に、NULL可能なカラム、外部キー、主キー、複合キーの詳細、テーブルに適用できるオプションについて調べます。
+
 
 ### Nullable Columns {#null-columns}
 
-Columns defined in SQL are nullable by default.
-That is, they can contain `NULL` as a value.
-Slick makes columns non-nullable by default---if
-you want a nullable column you model it naturally in Scala as an `Option[T]`.
+SQLで定義されたカラムは、デフォルトでNULL可能です。
+つまり、値として `NULL` を含むことができます。もしNULL可能なカラムが必要なら、Scalaでは`Option[T]`として自然にモデル化されます。
 
-Let's create a variant of `User` with an optional email address:
+オプションのメールアドレスを持つ`User`を作ってみましょう。
+
 
 ```scala mdoc:reset:invisible
 import slick.jdbc.H2Profile.api._
@@ -668,7 +656,8 @@ lazy val users = TableQuery[UserTable]
 lazy val insertUser = users returning users.map(_.id)
 ```
 
-We can insert users with or without an email address:
+
+メールアドレスの有無にかかわらず、ユーザーを挿入することができます。
 
 ```scala mdoc
 val program = (
@@ -680,15 +669,16 @@ val program = (
 exec(program)
 ```
 
-and retrieve them again with a select query:
+そしてselectクエリで取得できます。
 
 ```scala mdoc
 exec(users.result).foreach(println)
 ```
 
-So far, so ordinary.
-What might be a surprise is how you go about selecting all rows that have no email address.
-You might expect the following to find the one row that has no email address:
+ここまでは普通ですね。
+意外なのは、メールアドレスのない行をすべて選択する方法です。メールアドレスがない1行を見つけるには、次のようにするとよいでしょう。
+
+
 
 ```scala mdoc
 // Don't do this
@@ -696,26 +686,23 @@ val none: Option[String] = None
 val badQuery = exec(users.filter(_.email === none).result)
 ```
 
-Despite the fact that we do have
-one row in the database no email address,
-this query produces no results.
+データベースにはメールアドレスがない行が1つあるにもかかわらず、このクエリでは結果が出ません。
 
-Veterans of database administration will be familiar with this interesting quirk of SQL:
-expressions involving `null` themselves evaluate to `null`.
-For example, the SQL expression `'Dave' = 'HAL'` evaluates to `false`,
-whereas the expression `'Dave' = null` evaluates to `null`.
+データベース管理のベテランなら、SQLの面白い癖をよくご存じでしょう。
+例えば、SQL式 `'Dave' = 'HAL'` は `false` と評価されますが、式 `'Dave' = null` は `null` と評価されます。
 
-Our Slick query above amounts to:
+上記のSlickクエリは次のようになります。
 
 ~~~ sql
 SELECT * FROM "user" WHERE "email" = NULL
 ~~~
 
-The SQL expression `"email" = null` evaluates to `null` for any value of `"email"`.
-SQL's `null` is a falsey value, so this query never returns a value.
+SQL式 `"email" = null`は、`"email"`の任意の値に対して`null`と評価されます。
+SQLの`null`はfalseyな値なので、このクエリが値を返すことはありません。
 
-To resolve this issue, SQL provides two operators: `IS NULL` and `IS NOT NULL`,
-which are provided in Slick by the methods `isEmpty` and `isDefined` on any `Rep[Option[A]]`:
+この問題を解決するために、SQLには`IS NULL` と `IS NOT NULL` という2つの演算子が用意されています。
+Slickでは、任意の`Rep[Option[A]]`に対する`isEmpty`と`isDefined`というメソッドで提供されています。
+
 
 --------------------------------------------------------------------------------------------------------
 Scala Code              Operand Column Types               Result Type        SQL Equivalent
@@ -733,13 +720,13 @@ Scala Code              Operand Column Types               Result Type        SQ
   The `?` method is described in the next section.
 
 
-We can fix our query by replacing our equality check with `isEmpty`:
+等号チェックを`isEmpty`に置き換えることで、このクエリを修正することができます。
 
 ```scala mdoc
 val myUsers = exec(users.filter(_.email.isEmpty).result)
 ```
 
-which translates to the following SQL:
+これは以下のSQLに変換されます。
 
 ~~~ sql
 SELECT * FROM "user" WHERE "email" IS NULL
@@ -748,47 +735,40 @@ SELECT * FROM "user" WHERE "email" IS NULL
 
 ### Primary Keys
 
-We had our first introduction to primary keys in Chapter 1,
-where we started setting up `id` fields using
-the `O.PrimaryKey` and `O.AutoInc` column options:
+第1章では、`O.PrimaryKey`と`O.AutoInc`のカラムオプションを使用して、`id`フィールドを設定することから始まりました。
+
 
 ~~~ scala
 def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 ~~~
 
-These options do two things:
 
-- they modify the SQL generated for DDL statements;
+これらのオプションは、2つのことを行います。
 
-- `O.AutoInc` removes the corresponding column
-  from the SQL generated for `INSERT` statements,
-  allowing the database to insert an auto-incrementing value.
+- DDL文のために生成されたSQLを修正する
 
-In Chapter 1 we combined `O.AutoInc` with
-a case class that has a default ID of `0L`,
-knowing that Slick will skip the value in insert statements:
+- `O.AutoInc`は、INSERT文で生成されるSQLから対応するカラムを削除し、データベースが自動インクリメントする値を挿入できるようにする
+
+第1章では、Slickがinsert文で値をスキップすることを承知で、`O.AutoInc`とデフォルトIDが`0L`であるケースクラスを組み合わせました。
 
 ```scala
 case class User(name: String, id: Long = 0L)
 ```
 
-While we like the simplicity of this style,
-some developers prefer to wrap primary key values in `Options`:
+私たちはこのスタイルのシンプルさを気に入っていますが、開発者の中には、主キー値を`Option`で包むことを好む人もいます。
 
 ```scala
 case class User(name: String, id: Option[Long] = None)
 ```
 
-In this model we use `None` as the primary key of an unsaved record
-and `Some` as the primary key of a saved record.
-This approach has advantages and disadvantages:
 
-- on the positive side it's easier to identify unsaved records;
+このモデルでは、保存されていないレコードの主キーとして`None`を、保存されたレコードの主キーとして`Some`を使用します。
+この方法にはメリットとデメリットがあります。
 
-- on the negative side it's harder to get the value of a primary key for use in a query.
+- メリットとして、保存されていないレコードを特定しやすくなる
+- デメリットとしては、クエリで使用するために主キーの値を取得するのが困難であること
 
-Let's look at the changes we need to make to our `UserTable`
-to make this work:
+この機能を実現するために、`UserTable`に加えるべき変更点を見てみましょう。
 
 ```scala mdoc:reset:invisible
 import slick.jdbc.H2Profile.api._
@@ -813,39 +793,33 @@ lazy val users = TableQuery[UserTable]
 lazy val insertUser = users returning users.map(_.id)
 ```
 
-The key thing to notice here is that
-we *don't* want the primary key to be optional in the database.
-We're using `None` to represent an *unsaved* value---the database
-assigns a primary key for us on insert,
-so we can never retrieve a `None` via a database query.
+ここで重要なのは、主キーをデータベースのオプションにしたくないということです。
+挿入時にデータベースが主キーを割り当てるので、データベースクエリで`None`を取得することはできないのです。
 
-We need to map our non-nullable database column to an optional field value.
-This is handled by the `?` method in the default projection,
-which converts a `Rep[A]` to a `Rep[Option[A]]`.
+NULLでないデータベースのカラムを、オプションのフィールド値にマッピングする必要があります。
+これは、デフォルトのプロジェクションの `?` メソッドで処理され、`Rep[A]` を `Rep[Option[A]]` に変換しています。
 
 
 ### Compound Primary Keys
 
-There is a second way to declare a column as a primary key:
+カラムを主キーとして宣言する2つ目の方法があります。
 
 ~~~ scala
 def id = column[Long]("id", O.AutoInc)
 def pk = primaryKey("pk_id", id)
 ~~~
 
-This separate step doesn't make much of a difference in this case.
-It separates the column definition from the key constraint,
-meaning the schema will include:
+この別個のステップは、この場合、あまり大きな違いはありません。
+これは、カラムの定義をキー制約から分離するもので、スキーマに含まれることを意味します。
 
 ~~~ sql
 ALTER TABLE "user" ADD CONSTRAINT "pk_id" PRIMARY KEY("id")
 ~~~
 
-The `primaryKey` method is more useful for defining *compound* primary keys
-that involve two or more columns.
+`primaryKey`メソッドは、2つ以上のカラムを含む複合プライマリキーを定義する場合に便利です。
 
-Let's look at this by adding the ability for people to chat in rooms.
-First we need a table for storing rooms, which is straightforward:
+ここでは、人々が部屋でチャットする機能を追加して見てみましょう。まず、ルームを保存するためのテーブルが必要ですが、これは簡単です。
+
 
 ```scala mdoc
 // Regular table definition for a chat room:
@@ -861,10 +835,10 @@ lazy val rooms = TableQuery[RoomTable]
 lazy val insertRoom = rooms returning rooms.map(_.id)
 ```
 
-Next we need a table that relates users to rooms.
-We'll call this the *occupant* table.
-Rather than give this table an auto-generated primary key,
-we'll make it a compound of the user and room IDs:
+次に、ユーザーと部屋を関連付けるテーブルが必要です。
+これを入居者テーブル（`OccupantTable`）と呼ぶことにします。このテーブルには自動生成された主キーを与えるのではなく、ユーザーと部屋のIDの複合キーにします。
+
+
 
 ```scala mdoc
 case class Occupant(roomId: Long, userId: Long)
@@ -881,9 +855,8 @@ class OccupantTable(tag: Tag) extends Table[Occupant](tag, "occupant") {
 lazy val occupants = TableQuery[OccupantTable]
 ```
 
-We can define composite primary keys using tuples or `HList`s of columns
-(Slick generates a `ProvenShape` and inspects it to find the list of columns involved).
-The SQL generated for the `occupant` table is:
+タプルまたはカラムのHListを使用して複合主キーを定義することができます（Slickは`ProvenShape`を生成し、それを検査して関連するカラムのリストを見つけます）。
+入居者テーブルに対して生成されたSQLは以下の通りです。
 
 ~~~ sql
 CREATE TABLE "occupant" (
@@ -895,7 +868,7 @@ ALTER TABLE "occupant"
 ADD CONSTRAINT "room_user_pk" PRIMARY KEY("room", "user")
 ~~~
 
-Using the `occupant` table is no different from any other table:
+入居者テーブルの使い方は他のテーブルと変わりません。
 
 ```scala mdoc
 val program: DBIO[Int] = for {
@@ -915,19 +888,14 @@ val assure_o1 = exec(occupants.result)
 assert(assure_o1.length == 1, "Expected 1 occupant")
 ```
 
-Of course, if we try to put Dave in the Air Lock twice,
-the database will complain about duplicate primary keys.
+もちろん、DaveをAir Lockに2回入れようとすれば、データベースは主キーの重複を指摘します。
 
 
 ### Indices
 
-We can use indices to increase the efficiency of database queries
-at the cost of higher disk usage.
-Creating and using indices is the highest form of database sorcery,
-different for every database application,
-and well beyond the scope of this book.
-However, the syntax for defining an index in Slick is simple.
-Here's a table with two calls to `index`:
+インデックスを使用することで、ディスク使用量を増やす代わりに、データベースクエリの効率を上げることができます。
+インデックスの作成と使用は、データベースアプリケーションごとに異なる最高のデータベース魔術であり、この本の範囲をはるかに超えています。
+しかし、Slickでインデックスを定義するための構文は簡単です。ここに、インデックスを2回呼び出すテーブルがあります。
 
 ```scala mdoc
 class IndexExample(tag: Tag) extends Table[(String,Int)](tag, "people") {
@@ -941,15 +909,16 @@ class IndexExample(tag: Tag) extends Table[(String,Int)](tag, "people") {
 }
 ```
 
-The corresponding DDL statement produced due to `nameIndex` will be:
+`nameIndex`により生成される対応するDDL文は、次のようになります。
+
 
 ~~~ sql
 CREATE UNIQUE INDEX "name_idx" ON "people" ("name")
 ~~~
 
-We can create compound indices on multiple columns
-just like we can with primary keys.
-In this case (`compoundIndex`) the corresponding DDL statement will be:
+主キーと同じように、複数のカラムに複合インデックスを作成することができます。
+この場合（`compoundIndex`）、対応するDDL文は次のようになります。
+
 
 ~~~ sql
 CREATE UNIQUE INDEX "c_idx" ON "people" ("name", "age")
@@ -958,22 +927,20 @@ CREATE UNIQUE INDEX "c_idx" ON "people" ("name", "age")
 
 ### Foreign Keys {#fks}
 
-Foreign keys are declared in a similar manner to compound primary keys.
+外部キーは複合主キーと同様の方法で宣言します。
+`foreignKey`メソッドは、4つの必須パラメータを取ります。
 
-The method `foreignKey` takes four required parameters:
 
- * a name;
+ * name
 
- * the column, or columns, that make up the foreign key;
+ * column または columns（外部キーを構成するもの）
 
- * the `TableQuery` that the foreign key belongs to; and
+ * 外部キーが所属する`TableQuery`
 
- * a function on the supplied `TableQuery[T]` taking
-   the supplied column(s) as parameters and returning an instance of `T`.
+ * 与えられた`TableQuery[T]`のカラムをパラメータとして、`T`のインスタンスを返す関数
 
-We'll step through this by using foreign keys to connect a `message` to a `user`.
-We do this by changing the definition of `message` to reference
-the `id` of its sender instead of their name:
+ここでは、外部キーを使って、メッセージとユーザーを結びつける方法を説明します。
+メッセージの定義を変更し、名前の代わりに送信者の ID を参照するようにします。
 
 ```scala mdoc
 case class Message(
@@ -994,12 +961,11 @@ class MessageTable(tag: Tag) extends Table[Message](tag, "message") {
 lazy val messages = TableQuery[MessageTable]
 ```
 
-The column for the sender is now a `Long` instead of a `String`.
-We have also defined a method, `sender`,
-providing the foreign key linking the `senderId` to a `user` `id`.
+`sender`のカラムは、Stringの代わりにLongになりました。
+また、`sender`というメソッドを定義し、`senderId`を`user id`に結びつける外部キーを提供しています。
 
-The `foreignKey` gives us two things.
-First, it adds a constraint to the DDL statement generated by Slick:
+この外部キーによって、2つのことが可能になります。まず、Slickが生成するDDL文に制約が追加されます。
+
 
 ~~~ sql
 ALTER TABLE "message" ADD CONSTRAINT "sender_fk"
@@ -1009,20 +975,16 @@ ALTER TABLE "message" ADD CONSTRAINT "sender_fk"
 ~~~
 
 <div class="callout callout-info">
+
 **On Update and On Delete**
 
-A foreign key makes certain guarantees about the data you store.
-In the case we've looked at there must be a `sender` in the `user` table
-to successfully insert a new `message`.
+外部キーは、保存するデータについて一定の保証をするものです。
+今回取り上げたケースでは、新しいメッセージをうまく挿入するには、user テーブルに送信者がいなければなりません。
 
-So what happens if something changes with the `user` row?
-There are a number of [_referential actions_][link-fkri] that could be triggered.
-The default is for nothing to happen, but you can change that.
+では、user行に何か変更があった場合はどうなるのでしょうか？トリガーされる[参照アクション][link-fkri]はいくつもあります。デフォルトでは何も起こりませんが、これを変更することができます。
 
-Let's look at an example.
-Suppose we delete a user,
-and we want all the messages associated with that user to be removed.
-We could do that in our application, but it's something the database can provide for us:
+例を見てみましょう。あるユーザーを削除し、そのユーザーに関連するすべてのメッセージを削除したいとします。アプリケーションでそれを行うこともできますが、これはデータベースが提供してくれるものです。
+
 
 ```scala mdoc
 class AltMsgTable(tag: Tag) extends Table[Message](tag, "message") {
@@ -1036,42 +998,34 @@ class AltMsgTable(tag: Tag) extends Table[Message](tag, "message") {
 }
 ```
 
-Providing Slick's `schema` command has been run for the table,
-or the SQL `ON DELETE CASCADE` action has been manually applied to the database,
-the following action will remove HAL from the `users` table,
-and all of the messages that HAL sent:
+Slickのスキーマコマンドがテーブルに対して実行されている、またはSQLの`ON DELETE CASCADE`アクションがデータベースに手動で適用されている場合、
+次のアクションはユーザーテーブルからHALを削除し、HALが送信したメッセージもすべて削除します。
+
 
 ```scala mdoc:silent
 users.filter(_.name === "HAL").delete
 ```
-
+Slickは5つのアクションのうち、`onUpdate`と`onDelete`をサポートしています
 Slick supports `onUpdate` and `onDelete` for the five actions:
 
 ------------------------------------------------------------------
 Action          Description
 -----------     --------------------------------------------------
-`NoAction`      The default.
+`NoAction`      デフォルト
 
-`Cascade`       A change in the referenced table triggers a change in the referencing table.
-                In our example, deleting a user will cause their messages to be deleted.
+`Cascade`       参照されるテーブルの変更は、参照するテーブルの変更を誘発する。この例では、ユーザーを削除すると、そのユーザーのメッセージも削除されます
 
-`Restrict`      Changes are restricted, triggered a constraint violation exception.
-                In our example, you would not be allowed to delete a user who had
-                posted a message.
+`Restrict`      変更が制限され、制約違反の例外が発生した。この例では、メッセージを投稿したユーザーを削除することは許可されません。 
 
-`SetNull`       The column referencing the updated value will be set to NULL.
+`SetNull`       更新された値を参照しているカラムはNULLに設定されます。 
 
-`SetDefault`    The default value for the referencing column will be used.
-                Default values are discussion in [Table and Column Modifiers](#schema-modifiers),
-                later in this chapter.
+`SetDefault`    参照するカラムのデフォルト値が使用されます。デフォルト値については、本章で後述する[Table and Column Modifiers](#schema-modifiers)で説明します。 
+                
 -----------     --------------------------------------------------
 
 </div>
 
-
-Second, the foreign key gives us a query that we can use in a join.
-We've dedicated the [next chapter](#joins) to looking at joins in detail,
-but here's a simple join to illustrate the use case:
+第二に、外部キーは結合で使用できるクエリを提供します。[次の章](#joins)で結合の詳細を説明しますが、ここでは使用例を説明するために簡単な結合を示します：
 
 ```scala mdoc
 val q = for {
@@ -1080,7 +1034,7 @@ val q = for {
 } yield (usr.name, msg.content)
 ```
 
-This is equivalent to the query:
+これは、以下クエリと同等です。
 
 ~~~ sql
 SELECT u."name", m."content"
@@ -1088,7 +1042,7 @@ FROM "message" m, "user" u
 WHERE "id" = m."sender"
 ~~~
 
-...and once we have populated the database...
+そして、データベースへの入力が完了したら...
 
 ```scala mdoc
 def findUserId(name: String): DBIO[Option[Long]] =
@@ -1120,7 +1074,7 @@ val setup = for {
 exec(setup)
 ```
 
-...our query produces the following results, showing the sender name (not ID) and corresponding message:
+このクエリでは、送信者名（IDではない）と対応するメッセージを示す、次のような結果が得られました。
 
 ```scala mdoc
 exec(q.result).foreach(println)
