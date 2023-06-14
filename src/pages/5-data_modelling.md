@@ -1097,34 +1097,27 @@ To pull data from across tables, use a query.
 
 
 <div class="callout callout-info">
+
 **Save Your Sanity With Laziness**
 
-Defining foreign keys places constraints
-on the order in which we have to define our database tables.
-In the example above, the foreign key from `MessageTable`
-to `UserTable` requires us to place the latter definition above
-the former in our Scala code.
+外部キーを定義することで、データベースのテーブルを定義する順番に制約が生じます。
+上の例では、`MessageTable`から`UserTable`への外部キーは、Scalaのコードでは後者の定義を前者よりも上に置く必要があります。
 
-Ordering constraints make complex schemas difficult to write.
-Fortunately, we can work around them using `def` and `lazy val`.
+順序制約があると、複雑なスキーマを書くのが難しくなります。幸いなことに、`def`と`lazy val`を使うことで回避することができます。
 
-As a rule, use `lazy val` for `TableQuery`s and `def` foreign keys (for consistency with `column` definitions).
-</div>
+原則として、`TableQuery`と`def`の外部キーには`lazy val`を使用します（カラム定義との整合性をとるため）。
 
 
 ### Column Options {#schema-modifiers}
 
-We'll round off this section by looking at modifiers for columns and tables.
-These allow us to tweak the default values, sizes, and data types for columns
-at the SQL level.
+このセクションの最後に、カラムとテーブルの修飾子について説明します。これらは、SQLレベルでカラムのデフォルト値、サイズ、データ型を調整することができます。
 
-We have already seen two examples of column options,
-namely `O.PrimaryKey` and `O.AutoInc`.
-Column options are defined in [`ColumnOption`][link-slick-column-options],
-and as you have seen are accessed via `O`.
+我々はすでに、`O.PrimaryKey` と `O.AutoInc` という2つのカラム・オプションの例を見てきました。
+カラム・オプションは、[`ColumnOption`][link-slick-column-options] で定義され、これまで見てきたように、`O` を介してアクセスされます。
 
-The following example introduces four new options:
-`O.Length`, `O.SqlType`, `O.Unique`, and `O.Default`.
+次の例では、4つの新しいオプションを導入しています：`O.Length`、`O.SqlType`、`O.Unique`、および `O.Default` です。
+
+
 
 ```scala mdoc
 case class PhotoUser(
@@ -1150,46 +1143,33 @@ class PhotoTable(tag: Tag) extends Table[PhotoUser](tag, "user") {
 }
 ```
 
-In this example we've done four things:
+この例では、4つのことを行っています。
 
-1. We've used `O.Length` to give the `name` column a maximum length.
-   This modifies the type of the column in the DDL statement.
-   The parameters to `O.Length` are an `Int` specifying the maximum length,
-   and a `Boolean` indicating whether the length is variable.
-   Setting the `Boolean` to `true` sets the SQL column type to `VARCHAR`;
-   setting it to `false` sets the type to `CHAR`.
+1. `O.Length`を使用して、`name`カラムに最大長を与えています。
+   これにより、DDL文のカラムの型が変更されます。`O.Length`のパラメータは、最大長を指定する`Int`と、長さを可変とするかどうかを示す`Boolean`です。
+   ブール値を`true`に設定すると、SQLカラムのタイプは`VARCHAR`になり、`false`に設定すると、タイプは`CHAR`になります。
 
-2. We've used `O.Default` to give the `name` column a default value.
-   This adds a `DEFAULT` clause to the column definition in the DDL statement.
+2. `O.Default`を使用して、`name`カラムにデフォルト値を与えています。これにより、DDL文のカラム定義に`DEFAULT`句が追加されます。
 
-3. We added a uniqueness constraint on the `email` column.
+3. `email`カラムに一意性制約を追加しました。
 
-4. We've used `O.SqlType` to control the exact type used by the database.
-   The values allowed here depend on the database we're using.
+4. `O.SqlType`を使用して、データベースが使用する正確な型を制御しています。ここで許可される値は、使用しているデータベースによって異なります。
+
 
 
 ## Custom Column Mappings
 
-We want to work with types that have meaning to our application.
-This means converting data from the simple types the database uses
-to something more developer-friendly.
+私たちは、アプリケーションにとって意味のある型を扱いたいと考えています。
+これは、データベースが使用する単純な型から、より開発者に優しい型にデータを変換することを意味します。
 
-We've already seen Slick's ability to map
-tuples and `HList`s of columns to case classes.
-However, so far the fields of our case classes
-have been restricted to simple types such as
-`Int` and `String`,
+Slickがタプルやカラムの`HList`をケース・クラスにマッピングする機能はすでに見てきました。
+しかし、これまでのところ、ケースクラスのフィールドは`Int`や`String`などの単純な型に限定されていました、
 
-Slick also lets us control how individual columns are mapped to Scala types.
-For example, perhaps we'd like to use
-[Joda Time][link-jodatime]'s `DateTime` class
-for anything date and time related.
-Slick doesn't provide native support for Joda Time[^time],
-but it's painless for us to implement it via Slick's
-`ColumnType` type class:
+Slickでは、個々のカラムをScalaの型にマッピングする方法を制御することも可能です。
+例えば、日付や時間に関連するものには[Joda Time][link-jodatime]の`DateTime`クラスを使用したいとします。SlickはJoda Time[^time]のネイティブサポートを提供しませんが、Slickの`ColumnType`型クラスで簡単に実装できます。
 
-[^time]: However since Slick 3.3.0 there is built-in support for `java.time.Instant`, `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, `OffsetDateTime`, and `ZonedDateTime`.
-You'll very likely want to use these over the older Joda Time library.
+[^time]: しかし、Slick 3.3.0 からは `java.time.Instant`, `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, `OffsetDateTime`, `ZonedDateTime` が内蔵サポートされています。
+古い Joda Time ライブラリよりも、これらのライブラリを使用したい場合が非常に多いでしょう。
 
 ```scala mdoc:reset:invisible
 import slick.jdbc.H2Profile.api._
@@ -1215,16 +1195,16 @@ object CustomColumnTypes {
 }
 ```
 
-What we're providing here is two functions to `MappedColumnType.base`:
+ここで提供するのは、`MappedColumnType.base`に対する2つの関数です。
 
-- one from a `DateTime` to
-  a database-friendly `java.sql.Timestamp`; and
+- 一つは`DateTime`から
+  をデータベースに適した `java.sql.Timestamp` に変換します。
 
-- one that does the reverse, taking a `Timestamp`
-  and converting it to a `DateTime`.
+- もう一つはその逆で、`Timestamp`を`DateTime`に変換するものです。
 
-Once we have declared this custom column type,
-we are free to create columns containing `DateTimes`:
+一度このカスタムカラムの型を宣言したら
+`DateTimes`を含むカラムを自由に作成することができます。
+
 
 ```scala mdoc:silent
 case class Message(
@@ -1290,17 +1270,19 @@ lazy val rooms = TableQuery[RoomTable]
 ```
 
 <div class="callout callout-info">
+
 **Reset Your Database**
 
-If you've been following along in the REPL,
-by now you're going to have a bunch of tables and rows.
-Now is a good time to remove all of that.
+REPLでフォローしていた方、
+今頃はテーブルと行の束になっていることでしょう。
+今こそ、それらをすべて削除する良い機会です。
 
-You can exit the REPL and restart it.
-H2 is holding the data in memory,
-so turning it on and off again is one way to reset your database.
+REPLを終了して、再起動することができます。
+H2はデータをメモリに保持しています、
+H2はメモリ上にデータを保持しているので、これをオン/オフすることは、データベースをリセットする1つの方法です。
 
-Alternatively, you can use an action:
+あるいは、アクションを使うこともできます。
+
 
 ```scala mdoc
 val schemas = (users.schema ++
@@ -1312,10 +1294,10 @@ exec(schemas.drop)
 ```
 </div>
 
+今回修正した `MessageTable` の定義では、`DateTime` のタイムスタンプを含む `Message` を直接扱うことができます。
+`DateTime`のタイムスタンプを含む`Message`を直接扱えるようになりました、
+面倒な型変換をすることなく、直接 `DateTime` のタイムスタンプを扱うことができます。
 
-Our modified definition of `MessageTable` allows
-us to work directly with `Message`s containing `DateTime` timestamps,
-without having to do cumbersome type conversions by hand:
 
 ```scala mdoc
 val program = for {
@@ -1331,16 +1313,15 @@ val program = for {
 val msgId = exec(program)
 ```
 
-Fetching the database row will automatically convert the `timestamp` field into the `DateTime` value we expect:
+データベースの行を取得すると、`timestamp` フィールドが自動的に期待する `DateTime` 値に変換されます。
 
 ```scala mdoc
 exec(messages.filter(_.id === msgId).result)
 ```
 
-This model of working with semantic types is
-immediately appealing to Scala developers.
-We strongly encourage you to use `ColumnType` in your applications,
-to help reduce bugs and let Slick take care of the type conversions.
+セマンティックな型を扱うこのモデルは、Scalaの開発者にとって魅力的なものです。
+あなたのアプリケーションで `ColumnType` を使用することを強くお勧めします、
+
 
 
 ### Value Classes {#value-classes}
