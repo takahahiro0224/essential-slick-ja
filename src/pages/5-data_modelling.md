@@ -1335,34 +1335,34 @@ def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 4.seconds)
 import scala.concurrent.ExecutionContext.Implicits.global
 ```
 
-We are currently using `Long`s to model primary keys.
-Although this is a good choice at a database level,
-it's not great for our application code.
+現在、主キーのモデルとして`Long`を使用しています。
+これはデータベースレベルでは良い選択ですが、アプリケーションのコードではあまり良くありません、
+アプリケーションのコードにとってはあまり良い選択ではありません。
 
-The problem is we can make silly mistakes,
-such as trying to look up a `User` by primary key using the primary key from a `Message`.
-They are both `Long`s, but trying to compare them makes no sense.
-And yet the code would compile, and could possibly return a result.
-But it's likely to be the wrong result.
+問題は、愚かな間違いを犯す可能性があることです、
+例えば、`Message`の主キーを使って `User` を主キーで検索しようとします。
+どちらも`Long`ですが、それを比較しようとすると意味がありません。
+しかし、このコードはコンパイル可能であり、結果を返す可能性もあります。
+しかし、それは間違った結果である可能性が高いでしょう。
 
-We can prevent these kinds of problems using types.
-The essential approach is to model primary keys
-using [value classes][link-scala-value-classes]:
+このような問題は、型を使って防ぐことができます。
+基本的なアプローチは、主キーをモデル化する[value class][link-scala-value-classes]を使うことです
+
 
 ```scala mdoc
 case class MessagePK(value: Long) extends AnyVal
 case class UserPK(value: Long) extends AnyVal
 ```
 
-A value class is a compile-time wrapper around a value.
-At run time, the wrapper goes away,
-leaving no allocation or performance overhead[^vcpoly] in our running code.
+value classは、コンパイル時に値を包むラッパーです。
+実行時には、このラッパーは取り除かれます、
+実行中のコードに割り当てやパフォーマンスのオーバーヘッド[^vcpoly]を残しません。
 
-[^vcpoly]: It's not totally cost free: there [are situations where a value will need allocation][link-scala-value-classes], such as when passed to a polymorphic method.
+[^vcpoly]: これは完全なコストフリーではありません。例えば、ポリモーフィックなメソッドに渡される場合など、[値の割り当てが必要な状況][link-scala-value-classes]があります。
 
-To use a value class we need to provide Slick with `ColumnType`s
-to use these types with our tables.
-This is the same process we used for Joda Time `DateTime`s:
+value classを使用するにはSlickに `ColumnType` を提供し、これらの型をテーブルで使用する必要があります。
+これは、Joda Timeの`DateTime`に使用したのと同じプロセスです。
+
 
 ```scala mdoc
 implicit val messagePKColumnType =
@@ -1372,10 +1372,9 @@ implicit val userPKColumnType =
    MappedColumnType.base[UserPK, Long](_.value, UserPK(_))
 ```
 
-Defining all these type class instances can be time consuming,
-especially if we're defining one for every table in our schema.
-Fortunately, Slick provides a short-hand called `MappedTo`
-to take care of this for us:
+このような型クラスのインスタンスをすべて定義するのは時間がかかるものです。
+特にスキーマの各テーブルに対して定義する場合は、時間がかかります。
+幸いなことに、Slickは `MappedTo` と呼ばれるショートハンドを提供しており、これを利用することができます。
 
 ```scala mdoc:reset-object:invisible
 import slick.jdbc.H2Profile.api._
@@ -1386,19 +1385,19 @@ case class MessagePK(value: Long) extends AnyVal with MappedTo[Long]
 case class UserPK(value: Long) extends AnyVal with MappedTo[Long]
 ```
 
-When we use `MappedTo` we don't need to define a separate `ColumnType`.
-`MappedTo` works with any class that:
 
- - has a method called `value` that
-   returns the underlying database value; and
+`MappedTo` を使用する場合、別途 `ColumnType` を定義する必要はありません。
 
- - has a single-parameter constructor to
-   create the Scala value from the database value.
+`MappedTo` は以下のようなクラスで動作します。
 
-Value classes are a great fit for the `MappedTo` pattern.
+- 基礎となるデータベースの値を返す `value` というメソッドを持つ。
 
-Let's redefine our tables to use our custom primary key types.
-We will convert `User`...
+- データベースの値から Scala の値を生成するためのシングルパラメータなコンストラクタを持つ
+
+value classは `MappedTo` パターンに非常に適しています。
+
+カスタム主キー型を使用するために、テーブルを再定義してみましょう。
+ここでは、`User`... を変換します。
 
 ```scala mdoc:reset-object:invisible
 import slick.jdbc.H2Profile.api._
@@ -1424,7 +1423,7 @@ lazy val users = TableQuery[UserTable]
 lazy val insertUser = users returning users.map(_.id)
 ```
 
-...and `Message`:
+`Message`は以下のようにになります。
 
 ```scala mdoc
 case class Message(
@@ -1452,21 +1451,27 @@ and the `Message.id` is a `MessagePK`.
 
 We can lookup values if we have the right kind of key:
 
+どのように明示できたかに注目してください。
+`User.id` と `Message.senderId` は `UserPK` です。
+そして、`Message.id`は`MessagePK`です。
+
+正しい種類のキーがあれば、値を参照することができます。
+
 ```scala mdoc
 users.filter(_.id === UserPK(0L))
 ```
 
-...but if we accidentally try to mix our primary keys, we'll find we cannot:
+...しかし、誤って主キーを混在させようとすると、失敗することがわかります。
 
 ```scala mdoc:fail
 users.filter(_.id === MessagePK(0L))
 ```
 
-Values classes are a low-cost way to make code safer and more legible.
-The amount of code required is small,
-however for a large database it can still be an overhead.
-We can either use code generation to overcome this,
-or generalise our primary key type by making it generic:
+
+value classは、コードをより安全に、より読みやすくするための低コストな方法です。
+必要なコードの量はわずかです。
+しかし、大規模なデータベースでは、オーバーヘッドになる可能性があります。
+この問題を解決するには、コード生成を利用するか、主キー型を一般化します。
 
 ```scala mdoc:reset-object:invisible
 import slick.jdbc.H2Profile.api._
@@ -1497,14 +1502,12 @@ val exampleQuery =
   users.filter(_.id === PK[UserTable](0L))
 ```
 
-With this approach we achieve type safety
-without the boiler plate of many primary key type definitions.
-Depending on the nature of your application,
-this may be convenient for you.
+このアプローチにより、多くの主キー型定義に煩わされることなく、型安全性を実現
+を実現しますが、多くの主キー型定義のような煩雑な作業は必要ありません。
+アプリケーションの性質によりますが、あなたにとって便利なものになるでしょう。
 
-The general point is that we can use the whole of the Scala type system
-to represent primary keys, foreign keys, rows, and columns from our database.
-This is enormously valuable and should not be overlooked.
+一般的なポイントは、Scala の型システム全体を使ってデータベースの主キー、外部キー、行、カラムを表現できるということです。
+これは非常に価値のあることであり、見過ごすわけにはいきません。
 
 
 ### Modelling Sum Types
@@ -1531,18 +1534,18 @@ class UserTable(tag: Tag) extends Table[User](tag, "user") {
 lazy val users = TableQuery[UserTable]
 ```
 
-We've used case classes extensively for modelling data.
-Using the language of _algebraic data types_,
-case classes are "product types"
-(created from conjunctions of their field types).
-The other common form of algebraic data type is known as a _sum type_,
-formed from a _disjunction_ of other types.
-We'll look at modelling these now.
 
-As an example let's add a flag to our `Message` class
-to model messages as important, offensive, or spam.
-The natural way to do this is establish a sealed trait
-and a set of case objects:
+私たちは、データのモデリングにケースクラスを多用してきました。
+代数的データ型の言語を使ったケースクラスは "product type"です
+(フィールド・タイプの結合から作られる）。
+代数的データ型のもう一つの一般的な形式は、"sum type"と呼ばれるものです。
+これは、他のデータ型の和から作られます。
+ここでは、これらのモデル化について説明します。
+
+例として、`Message` クラスにフラグを追加してみましょう。
+にフラグを追加して、メッセージを重要、不快、スパムとしてモデル化してみましょう。
+これを行うための自然な方法は、密封された特質である
+とケースオブジェクトのセットを作成します：
 
 ```scala mdoc
 sealed trait Flag
@@ -1557,9 +1560,10 @@ case class Message(
   id       : MessagePK = MessagePK(0L))
 ```
 
-There are a number of ways we could represent the flags in the database.
-For the sake of the argument, let's use characters: `!`, `X`, and `$`.
-We need a new custom `ColumnType` to manage the mapping:
+データベースでフラグを表現する方法はいくつもあります。
+ここでは、文字で表現することにします: `!`、`X`、`$` とします。
+マッピングを管理するために、新しい `ColumnType` が必要です。
+
 
 ```scala mdoc
 implicit val flagType =
@@ -1576,15 +1580,13 @@ implicit val flagType =
     })
 ```
 
-We like sum types because the compiler can ensure we've covered all the cases.
-If we add a new flag (`OffTopic` perhaps),
-the compiler will issue warnings
-until we add it to our `Flag => Char` function.
-We can turn these compiler warnings into errors
-by enabling the Scala compiler's `-Xfatal-warnings` option,
-preventing us shipping the application until we've covered all bases.
 
-Using `Flag` is the same as any other custom type:
+コンパイラがすべてのケースをカバーしていることを確認できるため、私たちはsum typeを好みます。
+もし、新しいフラグ（`OffTopic`かもしれません）を追加すると、`Flag => Char` 関数にそれを追加するまでコンパイラは警告を発します。
+Scalaコンパイラの `-Xfatal-warnings` オプションを有効にすることで、このコンパイラの警告をエラーにすることができます。
+このオプションを有効にすることで、全てをカバーするまでアプリケーションを出荷できないようにすることができます。
+
+`Flag`の使い方は、他のカスタム型と同じです。
 
 ```scala mdoc
 class MessageTable(tag: Tag) extends Table[Message](tag, "flagmessage") {
@@ -1603,7 +1605,7 @@ lazy val messages = TableQuery[MessageTable]
 exec(messages.schema.create)
 ```
 
-We can insert a message with a flag easily:
+フラグを使ったメッセージを簡単に挿入することができます。
 
 ```scala mdoc
 val halId = UserPK(1L)
@@ -1617,8 +1619,11 @@ exec(
 )
 ```
 
-We can also query for messages with a particular flag.
-However, we need to give the compiler a little help with the types:
+
+
+
+また、特定のフラグを持つメッセージの問い合わせも可能です。
+しかし、コンパイラに型について少し手助けをしてあげる必要があります。
 
 ```scala mdoc
 exec(
@@ -1626,11 +1631,6 @@ exec(
 )
 ```
 
-The _type annotation_ here is annoying.
-We can work around it in two ways:
-
-First, we can define a "smart constructor" method
-for each flag that returns it pre-cast as a `Flag`:
 
 ```scala mdoc
 object Flags {
@@ -1641,9 +1641,7 @@ object Flags {
   val action = messages.filter(_.flag === Flags.important).result
 }
 ```
-
-Second, we can define some custom syntax to
-build our filter expressions:
+次に、フィルター式を構築するためのカスタム構文を定義することができます。
 
 ```scala mdoc
 implicit class MessageQueryOps(message: MessageTable) {
