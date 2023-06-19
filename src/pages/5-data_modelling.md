@@ -1107,6 +1107,7 @@ To pull data from across tables, use a query.
 
 原則として、`TableQuery`と`def`の外部キーには`lazy val`を使用します（カラム定義との整合性をとるため）。
 
+</div>
 
 ### Column Options {#schema-modifiers}
 
