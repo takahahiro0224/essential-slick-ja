@@ -2,48 +2,42 @@
 
 ## What is Slick? {-}
 
-[Slick][link-slick] is a Scala library for working with relational databases.
-That means it allows you to model a schema, run queries, insert data, and update data.
+[Slick][link-slick]は、関係データベースと連携するためのScalaライブラリです。
+つまり、スキーマのモデリング、クエリの実行、データの挿入、データの更新などが可能です。
 
-Using Slick, you can write queries in Scala, giving you typed-checked database access.
-The style of queries makes working with a database similar to working with regular Scala collections.
+Slickを使用すると、Scalaでクエリを記述することができ、型付きのデータベースアクセスが提供されます。
+クエリのスタイルは、データベースと通常のScalaコレクションを操作するのと似た方法で行います。
 
-We've seen that developers using Slick for the first time often need help getting the most from it.
-For example, you need to know a few key concepts, such as:
+初めてSlickを使用する開発者は、Slickを最大限に活用するために支援が必要な場合が多いことを確認しました。
+例えば、以下のようないくつかのキーコンセプトを把握する必要があります：
 
-- _queries_: which compose using combinators such as `map`, `flatMap`, and `filter`;
+- _クエリ_: `map`、`flatMap`、`filter`などのコンビネータを使用して組み立てる方法；
+- _アクション_: データベースに対して実行できる操作で、それ自体も組み立てることができるもの；および
+- _フューチャー_: アクションの結果であり、一連のコンビネータもサポートしています。
 
-- _actions_: the things you can run against a database, which themselves compose; and
+この「Essential Slick」は、Slickの使用を始めたい人々のためのガイドとして作成されました。
+この資料は、Scalaの初心者から中級者を対象としています。以下のものが必要です：
 
-- _futures_: which are the result of actions, and also support a set of combinators.
+* Scalaの作業知識
+  （[Essential Scala][link-essential-scala]などを推奨します）；
+* 関係データベースの経験
+  （行、列、結合、インデックス、SQLなどの概念に精通していること）；
+* JDK 8以降がインストールされていること、プログラマ向けのテキストエディタまたはIDEが利用可能であること；および
+* [sbt][link-sbt]ビルドツールが利用できること。
 
-We've produced _Essential Slick_ as a guide for those who want to get started using Slick.
-This material is aimed at beginner-to-intermediate Scala developers. You need:
+提示された資料は、Slickのバージョン3.3に焦点を当てています。例では、関係データベースとして[H2][link-h2-home]が使用されています。
 
-* a working knowledge of Scala
-  (we recommend [Essential Scala][link-essential-scala] or an equivalent book);
-
-* experience with relational databases
-  (familiarity with concepts such as rows, columns, joins, indexes, SQL);
-
-* an installed JDK 8 or later, along with a programmer's text editor or IDE; and
-
-* the [sbt][link-sbt] build tool.
-
-The material presented focuses on Slick version 3.3. Examples use [H2][link-h2-home] as the relational database.
 
 ## How to Contact Us {-}
 
-You can provide feedback on this text via:
+このテキストに関するフィードバックは、以下の方法で提供できます：
 
-* [issues][link-book-issues] and [pull requests][link-book-pr] on the [source repository][link-book-repo] for this text;
+* このテキストのソースリポジトリである[issues][link-book-issues]と[pull requests][link-book-pr]を利用する方法
+* [Gitterチャンネル][link-underscore-gitter]への投稿
+* "Essential Slick
 
-* [our Gitter channel][link-underscore-gitter]; or
-
-* email to [hello@underscore.io][link-email-underscore] using the subject line of "Essential Slick".
+"という件名で[hello@underscore.io][link-email-underscore]宛てのメールでご連絡いただく方法
 
 ## Getting help using Slick {-}
 
-If you have questions about using Slick, ask a question on the [Slick Gitter channel][link-slick-gitter] or use the ["slick" tag at Stackoverflow][link-slick-so].
-
-
+Slickの使用に関する質問がある場合は、[SlickのGitterチャンネル][link-slick-gitter]で質問するか、Stackoverflowの["slick"タグ][link-slick-so]を使用して質問してください。

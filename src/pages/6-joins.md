@@ -1,35 +1,32 @@
 # Joins and Aggregates {#joins}
 
-Wrangling data with [joins][link-wikipedia-joins] and aggregates can be painful.
-In this chapter we'll try to ease that pain by exploring:
+結合（joins）と集計（aggregates）によるデータの操作は、しばしば複雑さを伴います。
+この章では、以下の内容を探索することで、その複雑さを緩和しようとします。
 
-* different styles of join (monadic and applicative);
-
-* different ways to join (inner, outer and zip); and
-
-* aggregate functions and grouping.
+* 異なるスタイルの結合（モナディックスタイルとアプリカティブスタイル）
+* 異なる結合方法（内部結合、外部結合、zip結合）
+* 集約関数とグループ化
 
 ## Two Kinds of Join
 
-There are two styles of join in Slick.
-One, called _applicative_, is based on an explicit `join` method.
-It's a lot like the SQL `JOIN` ... `ON` syntax.
+Slickには2つの結合スタイルがあります。
+1つは、明示的な`join`メソッドを基にしたアプリカティブスタイルです。
+これはSQLの`JOIN` ... `ON`構文に非常に似ています。
 
-The second style of join, _monadic_,
-makes use of `flatMap` as a way to join tables.
+2番目の結合スタイルは、モナディックスタイルです。
+これは`flatMap`を結合する方法として使用します。
 
-These two styles of join are not mutually exclusive.
-We can mix and match them in our queries.
-It's often convenient to create an applicative join
-and use it in a monadic join.
+これら2つの結合スタイルは互いに排他的ではありません。
+クエリ内でこれらを組み合わせて使用することができます。
+アプリカティブ結合を作成してモナディック結合で使用することもよくあります。
 
-## Chapter Schema
+## Chapter Schema 
 
-To demonstrate joins we will need at least two tables.
-We will store users in one table, and messages in a separate table,
-and we will join across these tables to find out who sent a message.
+結合を示すために、少なくとも2つのテーブルが必要です。
+1つはユーザーを格納するテーブルで、もう1つは別のテーブルでメッセージを格納します。
+これらのテーブルを横断して結合して、誰がメッセージを送信したかを特定します。
 
-We'll start with `User`...
+まずは`User`を定義します...
 
 ```scala mdoc:silent
 import slick.jdbc.H2Profile.api._
@@ -49,10 +46,10 @@ lazy val users = TableQuery[UserTable]
 lazy val insertUser = users returning users.map(_.id)
 ```
 
-...and add `Message`:
+...そして`Message`を追加します：
 
 ```scala mdoc:silent
-// Note that messages have senders, which are references to users
+// 注意：メッセージには送信者が存在し、これはユーザーへの参照となります
 case class Message(
   senderId : Long,
   content  : String,
@@ -78,7 +75,7 @@ val db = Database.forConfig("chapter06")
 def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 2.seconds)
 ```
 
-We'll populate the database with the usual movie script:
+通常の映画の台本でデータベースを埋めます：
 
 ```scala mdoc
 def freshTestData(daveId: Long, halId: Long) = Seq(
@@ -98,11 +95,11 @@ val setup = for {
 exec(setup)
 ```
 
-Later in this chapter we'll add more tables for more complex joins.
+この章の後半では、より複雑な結合を実現するために、さらにテーブルを追加します。
 
-## Monadic Joins
+## Monadic Joins 
 
-We have seen an example of monadic joins in the previous chapter:
+前の章でモナディック結合の例を見てきました：
 
 ```scala mdoc
 val monadicFor = for {
@@ -111,11 +108,10 @@ val monadicFor = for {
 } yield (usr.name, msg.content)
 ```
 
-Notice how we are using `msg.sender` which is defined as a foreign key in the `MessageTable` definition.
-(See [Foreign Keys](#fks) in Chapter 5 to recap this topic.)
+`msg.sender`を使用していることに注目してください。これは`MessageTable`の定義で外部キーとして定義されています。
+（このトピックの復習として、[Foreign Keys](#fks)をChapter 5で確認してください。）
 
-
-We can express the same query without using a for comprehension:
+同じクエリをfor内包表記を使用せずに表現することもできます：
 
 ```scala mdoc
 val monadicDesugar =
@@ -126,7 +122,7 @@ val monadicDesugar =
   }
 ```
 
-Either way, when we run the query Slick generates something like the following SQL:
+どちらの方法でも、クエリを実行するとSlickが次のようなSQLを生成します：
 
 ```sql
 select
@@ -137,23 +133,24 @@ where
   u."id" = m."sender"
 ```
 
-That's the monadic style of query, using foreign key relationships.
+これが、モナディックスタイルのクエリで、外部キーの関係を使用して結合しています。
 
 <div class="callout callout-info">
-**Run the Code**
 
-You'll find the example queries for this section in the file `joins.sql` over at [the associated GitHub repository][link-example].
+**コードの実行**
 
-From the `chapter-06` folder start SBT and at the SBT `>` prompt run:
+このセクションの例クエリは、関連するGitHubリポジトリの`joins.sql`ファイルにあります。
+
+`chapter-06`フォルダでSBTを起動し、SBTの`>`プロンプトで次のコマンドを実行します：
 
 ~~~
-runMain JoinsExample
+run
+
+Main JoinsExample
 ~~~
 </div>
 
-
-Even if we don't have a foreign key, we can use the same style
-and control the join ourselves:
+外部キーが存在しない場合でも、同じスタイルを使用して結合し、結合を制御することができます：
 
 ```scala mdoc
 val monadicFilter = for {
@@ -162,40 +159,37 @@ val monadicFilter = for {
 } yield (usr.name, msg.content)
 ```
 
-Note how this time we're using `msg.senderId`, not the foreign key `sender`.
-This produces the same query when we joined using `sender`.
+ここでは`msg.senderId`を使用しており、外部キーの`sender`ではないことに注意してください。
+これにより、`sender`を使用した場合と同じクエリが生成されます。
 
-You'll see plenty of examples of this style of join.
-They look straightforward to read, and are natural to write.
-The cost is that Slick has to translate the monadic expression down
-to something that SQL is capable of running.
+このスタイルの結合の例はたくさんあります。
+読みやすく、自然に記述することができます。
+ただし、Slickはモナディックな式をSQLが実行可能な形式に変換する必要があるため、そのコストがかかります。
 
-## Applicative Joins
+## Applicative Joins 
 
-An applicative join is where we explicitly write the join in code.
-In SQL this is via the `JOIN` and `ON` keywords,
-which are mirrored in Slick with the following methods:
+アプリカティブ結合は、結合を明示的にコードで記述する方法です。
+SQLでは、`JOIN`と`ON`キーワードを使用しますが、
+Slickでは次のメソッドを使用してこれらを反映させます。
 
-  * `join`      --- an inner join,
+- `join` --- インナージョイン
 
-  * `joinLeft`  --- a left outer join,
+- `joinLeft` --- 左外部結合
 
-  * `joinRight` --- a right outer join,
+- `joinRight` --- 右外部結合
 
-  * `joinFull`  --- a full outer join.
+- `joinFull` --- フル外部結合
 
-We will work through examples of each of these methods.
-But as a quick taste of the syntax,
-here's how we can join the `messages` table
-to the `users` on the `senderId`:
+それぞれのメソッドの例を紹介しますが、
+まずは`messages`テーブルを`users`テーブルと`senderId`で結合する方法をご紹介します。
 
 ```scala mdoc
 val applicative1: Query[(MessageTable, UserTable), (Message, User), Seq] =
   messages join users on (_.senderId === _.id)
 ```
 
-As you can see, this code produces a query of `(MessageTable, UserTable)`.
-If we want to, we can be more explicit about the values used in the `on` part:
+このコードでは、`(MessageTable, UserTable)`のクエリが生成されます。
+`on`の部分で使用する値をより明示的にすることもできます。
 
 ```scala mdoc
 val applicative2: Query[(MessageTable, UserTable), (Message, User), Seq] =
@@ -204,15 +198,14 @@ val applicative2: Query[(MessageTable, UserTable), (Message, User), Seq] =
    )
 ```
 
-
-We can also write the join condition using pattern matching:
+パターンマッチを使用して結合条件を記述することもできます。
 
 ```scala mdoc
 val applicative3: Query[(MessageTable, UserTable), (Message, User), Seq] =
   messages join users on { case (m, u) =>  m.senderId === u.id }
 ```
 
-Joins like this form queries that we convert to actions the usual way:
+このような結合は、通常の方法でアクションに変換することができます。
 
 ```scala mdoc
 val action: DBIO[Seq[(Message, User)]] = applicative3.result
@@ -220,7 +213,7 @@ val action: DBIO[Seq[(Message, User)]] = applicative3.result
 exec(action)
 ```
 
-The end result of `Seq[(Message, User)]` is each message paired with the corresponding user.
+最終的な結果は、`(Message, User)`のシーケンスで、各メッセージが対応するユーザーとペアになっています。
 
 ### More Tables, Longer Joins
 
@@ -246,8 +239,10 @@ val db = Database.forConfig("chapter06")
 def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 2.seconds)
 ```
 
-In the rest of this section we'll work through a variety of more involved joins.
-You may find it useful to refer to figure 6.1, which sketches the schema we're using in this chapter.
+
+このセクションの残りの部分では、さまざまな結合を詳しく見ていきます。
+この章で使用しているスキーマについては、図6.1を参照すると役立ちます。
+
 
 ![
 The database schema for this chapter.
@@ -256,10 +251,12 @@ A _message_ can have a _sender_, which is a join to the _user_ table.
 Also, a _message_ can be in a _room_, which is a join to the _room_ table.
 ](src/img/Schema.png)
 
-For now we will add one more table.
-This is a `Room` that a `User` can be in, giving us channels for our chat conversations:
+まず、さらに1つのテーブルを追加します。
+これは、`User`が所属できる`Room`で、チャットの会話用のチャネルを提供します。
 
 ```scala mdoc:silent
+
+
 case class Room(title: String, id: Long = 0L)
 
 class RoomTable(tag: Tag) extends Table[Room](tag, "room") {
@@ -272,7 +269,7 @@ lazy val rooms = TableQuery[RoomTable]
 lazy val insertRoom = rooms returning rooms.map(_.id)
 ```
 
-And we'll modify a message so it can optionally be attached to a room:
+そして、メッセージをオプションでルームに関連付けるようにメッセージを変更します。
 
 ```scala mdoc:silent
 case class Message(
@@ -295,7 +292,7 @@ lazy val messages = TableQuery[MessageTable]
 lazy val insertMessages = messages returning messages.map(_.id)
 ```
 
-We'll reset our database and populate it with some messages happening in the "Air Lock" room:
+データベースをリセットし、"Air Lock"ルームで発生するいくつかのメッセージを追加します。
 
 ```scala mdoc
 exec(messages.schema.drop)
@@ -305,28 +302,28 @@ val halId  = 2L
 
 val setup = for {
 
-  // Create the modified and new tables:
+  // 変更されたテーブルと新しいテーブルを作成します。
   _ <- (messages.schema ++ rooms.schema).create
 
-  // Create one room:
+  // 1つのルームを作成します。
   airLockId <- insertRoom += Room("Air Lock")
 
-  // Half the messages will be in the air lock room...
+  // メッセージの半分はAir Lockルームにあります...
   _ <- insertMessages += Message(daveId, "Hello, HAL. Do you read me, HAL?", Some(airLockId))
   _ <- insertMessages += Message(halId, "Affirmative, Dave. I read you.",   Some(airLockId))
 
-  // ...and half will not be in room:
+  // ...そして、半分はルームに含まれていません。
   _ <- insertMessages += Message(daveId, "Open the pod bay doors, HAL.")
   _ <- insertMessages += Message(halId, "I'm sorry, Dave. I'm afraid I can't do that.")
 
-  // See what we end up with:
+  // 最終結果を確認します。
   msgs <- messages.result
 } yield (msgs)
 
 exec(setup).foreach(println)
 ```
 
-Now let's get to work and join across all these tables.
+さて、これらのテーブルを横断して結合してみましょう。
 
 ### Inner Join
 
