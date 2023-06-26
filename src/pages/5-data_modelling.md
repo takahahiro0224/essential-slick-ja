@@ -1296,7 +1296,6 @@ exec(schemas.drop)
 </div>
 
 今回修正した `MessageTable` の定義では、`DateTime` のタイムスタンプを含む `Message` を直接扱うことができます。
-`DateTime`のタイムスタンプを含む`Message`を直接扱えるようになりました、
 面倒な型変換をすることなく、直接 `DateTime` のタイムスタンプを扱うことができます。
 
 
@@ -1337,8 +1336,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 ```
 
 現在、主キーのモデルとして`Long`を使用しています。
-これはデータベースレベルでは良い選択ですが、アプリケーションのコードではあまり良くありません、
-アプリケーションのコードにとってはあまり良い選択ではありません。
+これはデータベースレベルでは良い選択ですが、アプリケーションのコードではあまり良くありません。
+
 
 問題は、愚かな間違いを犯す可能性があることです、
 例えば、`Message`の主キーを使って `User` を主キーで検索しようとします。
@@ -1445,12 +1444,6 @@ class MessageTable(tag: Tag) extends Table[Message](tag, "message") {
 lazy val messages      = TableQuery[MessageTable]
 lazy val insertMessage = messages returning messages.map(_.id)
 ```
-
-Notice how we're able to be explicit:
-the `User.id` and `Message.senderId` are `UserPK`s,
-and the `Message.id` is a `MessagePK`.
-
-We can lookup values if we have the right kind of key:
 
 どのように明示できたかに注目してください。
 `User.id` と `Message.senderId` は `UserPK` です。
@@ -1657,58 +1650,51 @@ messages.filter(_.isImportant).result.statements.head
 
 ## Take Home Points
 
-In this Chapter we covered a lot of Slick's features
-for defining database schemas.
-We went into detail about defining tables and columns,
-mapping them to convenient Scala types,
-adding primary keys, foreign keys, and indices,
-and customising Slick's DDL SQL.
-We also discussed writing generic code
-that works with multiple database back-ends,
-and how to structure the database layer of your application
-using traits and self-types.
+この章では、データベーススキーマを定義するためのSlickの機能について多くの内容をカバーしました。
+テーブルや列の定義、便利なScalaの型へのマッピング、
+プライマリキーや外部キー、インデックスの追加、
+そしてSlickのDDL SQLのカスタマイズについて詳しく説明しました。
+また、複数のデータベースバックエンドで動作する汎用コードの書き方や、
+トレイトと自己型を使用してアプリケーションのデータベースレイヤーを構造化する方法についても議論しました。
 
-The most important points are:
+最も重要なポイントは次のとおりです：
 
-- We can separate the specific profile for our database (H2, Postgres, etc) from our tables.
-  We assemble a database layer from a number of traits,
-  leaving the profile as an abstract field
-  that can be implemented at runtime.
+- データベース（H2、Postgresなど）に特定のプロファイルを分離できます。
+  複数のトレイトからデータベースレイヤーを組み立て、
+  プロファイルを抽象フィールドとして残し、実行時に実装できます。
 
-- We can represent rows in a variety of ways: tuples, `HList`s,
-  and arbitrary classes and case classes via the `mapTo` macro.
+- 行をさまざまな方法で表現できます：タプル、`HList`、
+  および`mapTo`マクロを介した任意のクラスやケースクラス。
 
-- If we need more control over a mapping from columns to other data structures, the `<>` method is available.
+- 列から他のデータ構造へのマッピングをより制御する必要がある場合、`<>`メソッドを使用できます。
 
-- We can represent individual values in columns
-  using arbitrary Scala data types
-  by providing `ColumnType`s to manage the mappings.
-  We've seen numerous examples supporting
-  typed primary keys such as `UserPK`,
-  sealed traits such as `Flag`, and
-  third party classes such as `DateTime`.
+- 列の個々の値を任意のScalaデータ型を使用して表現できます。
+  マッピングを管理するために`ColumnType`を提供します。
+  `UserPK`などの型付きプライマリキー、
+  `Flag`などのシールドトレイト、
+  `DateTime`などのサードパーティクラスをサポートする数多くの例を見てきました。
 
-- Nullable values are typically represented as `Option`s in Scala.
-  We can either define columns to store `Option`s directly,
-  or use the `?` method to map non-nullable columns to optional ones.
+- Null可能な値は、Scalaでは通常`Option`として表現されます。
+  `Option`を直接保存するように列を定義するか、
+  `?`メソッドを使用して非null列をオプショナルな列にマッピングすることができます。
 
-- We can define simple primary keys using `O.PrimaryKey`
-  and compound keys using the `primaryKey` method.
+- `O.PrimaryKey`を使用して単純なプライマリキーを定義できます。
+  `primaryKey`メソッドを使用して複合キーを定義できます。
 
-- We can define `foreignKeys`,
-  which gives us a simple way of linking tables in a join.
-  More on this next chapter.
+- `foreignKeys`を定義することで、
+  結合におけるテーブルのリンクを簡単に作成できます。
+  次の章で詳しく説明します。
 
-Slick's philosophy is to keep models simple.
-We model rows as flat case classes, ignoring joins with other tables.
-While this may seem inflexible at first,
-it more than pays for itself in terms of simplicity and transparency.
-Database queries are explicit and type-safe,
-and return values of convenient types.
+Slickの哲学は、モデルをシンプルに保つことです。
+他のテーブルとの結合を無視し、行をフラットなケースクラスとしてモデル化します。
+最初は柔軟性に欠けるように見えるかもしれませんが、
+これによりシンプルさと透明性が向上します。
+データベースクエリは明示的で型安全であり、
+便利な型の戻り値を返します。
 
-In the next chapter we will build on the foundations of
-primary and foreign keys and look at writing more
-complex queries involving joins and aggregate functions.
+次の章では、プライマリキーと外部キーの基礎を構築し、
+結合や集計関数を含むより複雑なクエリの書き方について見ていきます。
+
 
 
 
@@ -1717,14 +1703,13 @@ complex queries involving joins and aggregate functions.
 
 ### Filtering Optional Columns
 
-Imagine a reporting tool on a web site.
-Sometimes you want to look at all the users in the database, and sometimes you want to only see rows matching a particular value.
+ウェブサイト上のレポートツールを想像してください。
+データベース内のすべてのユーザーを表示したい場合もありますが、特定の値に一致する行のみを表示したい場合もあります。
 
-Working with the optional email address for a user,
-write a method that will take an optional value,
-and list rows matching that value.
+ユーザーのオプションのメールアドレスを扱うために、
+オプションの値を受け取り、その値に一致する行をリストするメソッドを作成してください。
 
-The method signature is:
+メソッドのシグネチャは以下の通りです：
 
 ```scala
 def filterByEmail(email: Option[String]) = ???
@@ -1739,7 +1724,7 @@ def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 4.seconds)
 import scala.concurrent.ExecutionContext.Implicits.global
 ```
 
-Assume we only have two user records, one with an email address and one with no email address:
+仮定として、メールアドレスがあるユーザーレコードとメールアドレスがないユーザーレコードの2つだけ存在するとします。
 
 ```scala mdoc:silent
 case class User(name: String, email: Option[String], id: Long = 0)
@@ -1763,13 +1748,12 @@ val setup = DBIO.seq(
 exec(setup)
 ```
 
-We want `filterByEmail(Some("dave@example.org"))` to produce one row,
-and `filterByEmail(None)` to produce two rows:
+`filterByEmail(Some("dave@example.org"))` は1つの行を生成し、`filterByEmail(None)` は2つの行を生成するようにしたいですね。
 
-Tip: it's OK to use multiple queries.
+ヒント：複数のクエリを使用しても構いません。
 
 <div class="solution">
-We can decide on the query to run in the two cases from inside our application:
+アプリケーション内から実行するクエリを2つのケースごとに決定できます：
 
 ```scala mdoc
 def filterByEmail(email: Option[String]) =
@@ -1779,7 +1763,7 @@ def filterByEmail(email: Option[String]) =
   }
 ```
 
-You don't always have to do everything at the SQL level.
+すべてをSQLのレベルで行う必要はありません。
 
 ```scala mdoc
 exec(
@@ -1792,6 +1776,8 @@ exec(
 ```
 
 </div>
+
+
 
 
 ### Matching or Undecided
@@ -1825,10 +1811,10 @@ val setup = DBIO.seq(
 exec(setup)
 ```
 
-Not everyone has an email address, so perhaps when filtering it would be safer to exclude rows that don't match our filter criteria.
-That is, keep `NULL` addresses in the results.
+メールアドレスを持っていない人もいるため、フィルタリングする際にはフィルタ条件に一致しない行を除外する方が安全かもしれません。
+つまり、結果には`NULL`のアドレスを含めます。
 
-Add Elena to the database...
+データベースにElenaを追加します...
 
 ```scala mdoc
 exec(
@@ -1836,28 +1822,27 @@ exec(
 )
 ```
 
-...and modify `filterByEmail` so when we search for `Some("elena@example.org")` we only
-exclude Dave, as he definitely doesn't match that address.
+...そして、`filterByEmail`を修正し、`Some("elena@example.org")`を検索する場合はDaveのみを除外し、彼は確実にそのアドレスに一致しないからです。
 
-This time you can do this in one query.
+今回は1つのクエリでこれを行うことができます。
 
-Hint: if you get stuck thinking about this in terms of SQL,
-think about it in terms of Scala collections.  E.g.,
+ヒント：SQLの観点で考え込んでいる場合は、Scalaのコレクションの観点で考えてみてください。例えば、
 
 ```scala
 List(Some("dave"), Some("elena"), None).filter( ??? ) == List(Some("elena", None))
 ```
 
 <div class="solution">
-This problem we can represent in SQL, so we can do it with one query:
+
+この問題はSQLで表現できるため、1つのクエリで行うことができます：
 
 ```scala mdoc
 def filterByEmail(email: Option[String]) =
   users.filter(u => u.email.isEmpty || u.email === email)
 ```
 
-In this implementation we've decided that if you search for email addresses matching `None`, we only return `NULL` email address.
-But you could switch on the value of `email` and do something different, as we did in previous exercises.
+この実装では、`email`が`None`に一致するメールアドレスを検索する場合、`NULL`のメールアドレスのみを返すことにしました。
+しかし、以前の演習で行ったように、`email`の値に応じて切り替えて異なる処理を行うこともできます。
 
 ```scala mdoc:invisible
 {
@@ -1867,7 +1852,7 @@ But you could switch on the value of `email` and do something different, as we d
 
 {
   val result = exec(filterByEmail(None).result)
-  assert(result.length == 1, s"Expected 1 results, not $result")
+  assert(result.length == 1, s"Expected 1 result, not $result")
 }
 ```
 </div>
@@ -1916,19 +1901,20 @@ lazy val messages = TableQuery[MessageTable]
 exec(messages.schema.create)
 ```
 
-What happens if you try adding a message for a user ID of `3000`?
+ユーザーIDが `3000` のメッセージを追加しようとするとどうなるかを試してみましょう。
 
-For example:
+例えば：
 
 ```scala
 messages += Message(UserPK(3000L), "Hello HAL!")
 ```
 
-Note that there is no user in our example with an ID of 3000.
+ここで、例ではIDが `3000` のユーザーは存在しないことに注意してください。
 
 <div class="solution">
-We get a runtime exception as we have violated referential integrity.
-There is no row in the `user` table with a primary id of `3000`.
+
+参照整合性が破られるため、実行時エラーが発生します。
+`user` テーブルには `3000` の主キーを持つ行が存在しません。
 
 ```scala mdoc
 val action = messages += Message(UserPK(3000L), "Hello HAL!")
@@ -1944,11 +1930,15 @@ exec(action.asTry)
 </div>
 
 
+
+
+
+
 ### Mapping Enumerations
 
-We can use the same trick that we've seen for `DateTime` and value classes to map enumerations.
+`DateTime`や値クラスで見たのと同じテクニックを使用して、列挙型をマッピングすることができます。
 
-Here's a Scala Enumeration for a user's role:
+以下は、ユーザーの役割を表すScalaの列挙型です：
 
 ```scala mdoc
 object UserRole extends Enumeration {
@@ -1958,8 +1948,8 @@ object UserRole extends Enumeration {
 }
 ```
 
-Modify the `user` table to include a `UserRole`.
-In the database store the role as a single character.
+`user` テーブルに `UserRole` を含めるように変更しましょう。
+データベースでは役割を単一の文字として格納します。
 
 <div class="solution">
 
@@ -1973,7 +1963,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class UserPK(value: Long) extends AnyVal with MappedTo[Long]
 ```
 
-The first step is to supply an implicit to and from the database values:
+まず、データベースの値との間で暗黙の型変換を提供する必要があります：
 
 ```scala mdoc
 object UserRole extends Enumeration {
@@ -1987,7 +1977,7 @@ implicit val userRoleMapper =
   MappedColumnType.base[UserRole, String](_.toString, UserRole.withName(_))
 ```
 
-Then we can use the `UserRole` in the table definition:
+その後、`UserRole` をテーブル定義で使用できます：
 
 ```scala mdoc
 case class User(
@@ -2007,7 +1997,7 @@ class UserTable(tag: Tag) extends Table[User](tag, "user_with_role") {
 lazy val users = TableQuery[UserTable]
 ```
 
-We've made the `role` column exactly 1 character in size.
+`role` 列をサイズ1の文字列として定義しました。
 </div>
 
 
@@ -2029,12 +2019,13 @@ def exec[T](action: DBIO[T]): T = Await.result(db.run(action), 4.seconds)
 import scala.concurrent.ExecutionContext.Implicits.global
 ```
 
-Modify your solution to the previous exercise to store the value in the database as an integer.
+前の演習の解決策を修正し、データベースに値を整数として保存するように変更します。
 
-If you see an unrecognized user role value, default it to a `UserRole.Regular`.
+認識されないユーザーの役割値が見つかった場合は、デフォルトで `UserRole.Regular` に設定します。
 
 <div class="solution">
-The only change to make is to the mapper, to go from a `UserRole` and `String`, to a `UserRole` and `Int`:
+
+行う必要がある変更は、マッパーの部分です。`UserRole` と `String` から `UserRole` と `Int` に変更します。
 
 ```scala mdoc
 implicit val userRoleIntMapper =
@@ -2045,22 +2036,21 @@ implicit val userRoleIntMapper =
 ```
 </div>
 
-
 ### Custom Boolean
 
-Messages can be high priority or low priority.
+メッセージは高優先度または低優先度になる可能性があります。
 
-The database is a bit of a mess:
+データベースは少し混乱しています：
 
-- The database value for high priority messages will be: `y`, `Y`, `+`, or `high`.
+- 高優先度メッセージのデータベースの値は、`y`、`Y`、`+`、または `high` になります。
 
-- For low priority messages the value will be: `n`, `N`, `-`, `lo`, or `low`.
+- 低優先度メッセージの値は、`n`、`N`、`-`、`lo`、または `low` になります。
 
-Go ahead and model this with a sum type.
+これを和集合型でモデル化してください。
 
 <div class="solution">
-This is similar to the `Flag` example above,
-except we need to handle multiple values from the database.
+
+これは前述の `Flag` の例と似ていますが、データベースからの複数の値を扱う必要があります。
 
 ```scala mdoc
 sealed trait Priority
@@ -2079,19 +2069,18 @@ implicit val priorityType =
   })
 ```
 
-The table definition would need a `column[Priority]`.
+テーブル定義には `column[Priority]` が必要です。
 </div>
 
 ### Turning a Row into Many Case Classes
 
-Our `HList` example mapped a table with many columns.
-It's not the only way to deal with lots of columns.
+`HList`の例では、多くの列を持つテーブルをマップしましたが、それ以外の方法もあります。
 
-Use custom functions with `<>` and map `UserTable` into a tree of case classes.
-To do this you will need to define the schema, define a `User`, insert data, and query the data.
+`<>`と`map`を使用してカスタム関数を作成し、`UserTable`をケースクラスのツリーにマップします。
+これを行うためには、スキーマを定義し、`User`を定義し、データを挿入し、データをクエリする必要があります。
 
-To make this easier, we're just going to map six of the columns.
-Here are the case classes to use:
+作業を簡単にするために、6つの列だけをマップします。
+以下は使用するケースクラスの定義です：
 
 ```scala mdoc:silent
 case class EmailContact(name: String, email: String)
@@ -2099,11 +2088,11 @@ case class Address(street: String, city: String, country: String)
 case class User(contact: EmailContact, address: Address, id: Long = 0L)
 ```
 
-You'll find a definition of `UserTable` that you can copy and paste in the example code in the file _chapter-05/src/main/scala/nested_case_class.scala_.
+_chapter-05/src/main/scala/nested_case_class.scala_ ファイルの例コードにコピーして貼り付けできる `UserTable` の定義があります。
 
 <div class="solution">
 
-In our huge legacy table we will use custom functions with `<>`...
+巨大なレガシーテーブルでは、`<>`を使用したカスタム関数を使用します...
 
 ```scala mdoc
 class LegacyUserTable(tag: Tag) extends Table[User](tag, "legacy") {
@@ -2149,14 +2138,15 @@ class LegacyUserTable(tag: Tag) extends Table[User](tag, "legacy") {
      user.address.city, user.address.country, user.id)
   )
 
+
+
   def * = (name, email, street, city, country, id).<>(pack, unpack)
 }
 
 lazy val legacyUsers = TableQuery[LegacyUserTable]
 ```
 
-We can insert and query as normal:
-
+通常通りに挿入とクエリを行うことができます：
 
 ```scala mdoc
 exec(legacyUsers.schema.create)
@@ -2169,23 +2159,22 @@ exec(
 )
 ```
 
-And we can fetch results:
+結果を取得することもできます：
 
 ```scala mdoc
 exec(legacyUsers.result)
 ```
 
-You can continue to select just some fields:
+特定のフィールドのみを選択することもできます：
 
 ```scala mdoc
 exec(legacyUsers.map(_.email).result)
 ```
 
-However, notice that if you used `legacyUsers.schema.create`, only the columns defined in the default projection were created in the H2 database:
+ただし、`legacyUsers.schema.create`を使用した場合、H2データベースにはデフォルトのプロジェクションで定義された列のみが作成されていることに注意してください：
 
 ```scala mdoc
 legacyUsers.schema.createStatements.foreach(println)
 ```
 </div>
-
 
