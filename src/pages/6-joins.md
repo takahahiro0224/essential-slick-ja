@@ -327,11 +327,11 @@ exec(setup).foreach(println)
 
 ### Inner Join
 
-An inner join selects data from multiple tables, where the rows in each table match up in some way.
-Typically, the matching up is done by comparing primary keys.
-If there are rows that don't match up, they won't appear in the join results.
+インナージョインは、複数のテーブルからデータを選択し、各テーブルの行がある方法で一致する場合に使用されます。
+通常、一致は主キーを比較することで行われます。
+一致しない行がある場合、結合結果には表示されません。
 
-Let's look up messages that have a sender in the user table, and a room in the rooms table:
+ユーザーテーブルに送信者があり、ルームテーブルにルームがあるメッセージを検索してみましょう。
 
 ```scala mdoc
 val usersAndRooms =
@@ -340,15 +340,13 @@ val usersAndRooms =
   join(rooms).on{ case ((msg,user), room) => msg.roomId === room.id }
 ```
 
-We're joining `messages` to `users`, and `messages` to `rooms`.
-We use a binary function on the first call to `on`
-and a pattern matching function on our second call, to illustrate two styles.
+`messages`テーブルと`users`テーブル、そして`messages`テーブルと`rooms`テーブルを結合します。
+最初の`on`の呼び出しでは2項関数を使用し、2番目の呼び出しではパターンマッチング関数を使用して、2つのスタイルを説明します。
 
-Because each join results in a query of a tuple,
-successive joins result in nested tuples.
-Pattern matching is our preferred syntax for unpacking these tuples
-because it explicitly clarifies the structure of the query.
-However, you may see this more concisely expressed as a binary function for both joins:
+各結合はタプルのクエリを生成するため、連続した結合ではネストされたタプルが生成されます。
+タプルを展開するための私たちの推奨される構文は、パターンマッチングです。
+これにより、クエリの構造が明示的に明確になります。
+ただし、このようなスタイルは、両方の結合に対して2項関数としてより簡潔に表現される場合もあります。
 
 ```scala mdoc
 val usersAndRoomsBinaryFunction =
@@ -357,24 +355,20 @@ val usersAndRoomsBinaryFunction =
   join(rooms).on(_._1.roomId === _.id)
 ```
 
-The result is the same either way.
+結果はどちらの方法でも同じです。
 
 #### Mapping Joins
 
-We can turn this query into an action as it stands:
+このクエリを以下のようにしてアクションにすることができます。
 
 ```scala mdoc
 val usersAndRoomQuery: DBIO[Seq[((Message, User), Room)]] =
   usersAndRooms.result
 ```
 
-...but our results will contain nested tuples.
-That's OK, if that's what you want.
-But typically we want to `map` over the query to flatten the results and
-select the columns we want.
+結果にはネストされたタプルが含まれますが、通常はクエリを `map` して結果をフラットにし、必要な列を選択します。
 
-Rather than returning the table classes, we can pick out just the information we want.
-Perhaps the message, the name of the sender, and the title of the room:
+テーブルのクラスではなく、メッセージ、送信者の名前、およびルームのタイトルなどの情報を取り出すことができます。
 
 ```scala mdoc
 val usersAndRoomTitles =
@@ -390,17 +384,12 @@ exec(action).foreach(println)
 
 #### Filter with Joins
 
-As joins are queries, we can transform them
-using the combinators we learned in previous chapters.
-We've already seen an example of the `map` combinator.
-Another example would be the `filter` method.
+結合はクエリなので、以前の章で学んだコンビネータを使用して変換することができます。すでに `map` コンビネータの例を見ました。別の例として `filter` メソッドがあります。
 
-As an example, we can use our `usersAndRooms` query and
-modify it to focus on a particular room.
-Perhaps we want to use our join for the Air Lock room:
+例えば、`usersAndRooms` クエリを使用して特定のルームに焦点を当てることができます。たとえば、Air Lock ルームでの結合を使用したい場合です。
 
 ```scala
-// The query we've already seen...
+// すでに見たクエリ...
 val usersAndRooms =
   messages.
   join(users).on(_.senderId === _.id).
@@ -408,14 +397,13 @@ val usersAndRooms =
 ```
 
 ```scala mdoc
-// ...modified to focus on one room:
+// ...修正して特定のルームに焦点を当てる
 val airLockMsgs =
   usersAndRooms.
   filter { case (_, room) => room.title === "Air Lock" }
 ```
 
-As with other queries, the filter becomes a `WHERE` clause in SQL.
-Something like this:
+他のクエリと同様に、`filter` は SQL の `WHERE` 句となります。以下のような形式になります。
 
 ~~~ SQL
 SELECT
@@ -430,37 +418,28 @@ WHERE
 
 ### Left Join
 
-A left join (a.k.a. left outer join), adds an extra twist.
-Now we are selecting _all_ the records from a table,
-and matching records from another table _if they exist_.
-If we find no matching record on the left,
-we will end up with `NULL` values in our results.
+左結合（または左外部結合）は、さらに少し複雑です。
+ここでは、1つのテーブルのすべてのレコードを選択し、もう1つのテーブルのレコードとのマッチングを行いますが、マッチングするレコードが存在する場合のみです。
+左側にマッチングするレコードが見つからない場合、結果には `NULL` の値が含まれます。
 
-For an example from our chat schema,
-observe that messages can optionally be in a room.
-Let's suppose we want a list of all the messages and the room they are sent to.
-Visually the left outer join is as shown below:
+チャットのスキーマを例にすると、メッセージはオプションでルームに属している場合があります。
+すべてのメッセージとそれらが送信されたルームのリストを取得したいとしましょう。視覚的には、左外部結合は以下のようになります。
 
 ![
 A visualization of the left outer join example. Selecting messages and associated rooms. For similar diagrams, see [A Visual Explanation of SQL Joins][link-visual-joins], _Coding Horror_, 11 Oct 2007.
 ](src/img/left-outer.png)
 
-That is, we are going to select all the data from the messages table,
-plus data from the rooms table for those messages that are in a room.
+つまり、メッセージテーブルのすべてのデータを選択し、ルームに属しているメッセージの場合にはルームテーブルからのデータも取得します。
 
-The join would be:
+結合は次のようになります。
 
 ```scala mdoc
 val left = messages.joinLeft(rooms).on(_.roomId === _.id)
 ```
 
-This query, `left`, is going to fetch messages
-and look up their corresponding room from the room table.
-Not all messages are in a room, so in that case the `roomId` column will be `NULL`.
+このクエリ `left` は、メッセージを取得し、対応するルームをルームテーブルから参照します。すべてのメッセージがルームに属しているわけではないため、その場合は `roomId` 列は `NULL` になります。
 
-Slick will lift those possibly null values into
-something more comfortable: `Option`.
-The full type of `left` is:
+Slick は、可能性のある `NULL` の値をより扱いやすい `Option` に変換します。`left` の完全な型は次のようになります。
 
 ```scala
 Query[
@@ -469,11 +448,9 @@ Query[
   Seq]
 ```
 
-The results of this query are of type `(Message, Option[Room])`---Slick
-has made the `Room` side optional for us automatically.
+このクエリの結果の型は `(Message, Option[Room])` であり、Slick が自動的に `Room` の側をオプショナルにしました。
 
-If we want to just pick out the message content and the room title,
-we can `map` over the query:
+もしメッセージの内容とルームのタイトルだけを抽出したい場合は、クエリに対して `map` を使用します。
 
 ```scala mdoc
 val leftMapped =
@@ -482,11 +459,9 @@ val leftMapped =
   map { case (msg, room) => (msg.content, room.map(_.title)) }
 ```
 
-Because the `room` element is optional,
-we naturally extract the `title` element using `Option.map`:
-`room.map(_.title)`.
+`room` 要素がオプションであるため、`Option.map` を使用して自然に `title` 要素を抽出します：`room.map(_.title)`。
 
-The type of this query then becomes:
+このクエリの型は次のようになります。
 
 ```scala
 Query[
@@ -495,8 +470,7 @@ Query[
   Seq]
 ```
 
-The types `String` and `Option[String]` correspond to
-the message content and room title:
+`String` と `Option[String]` の型は、メッセージの内容とルームのタイトルに対応しています。
 
 ```scala mdoc
 exec(leftMapped.result).foreach(println)
@@ -504,17 +478,13 @@ exec(leftMapped.result).foreach(println)
 
 ### Right Join
 
-In the previous section, we saw that a left join selects
-all the records from the left hand side of the join,
-with possibly `NULL` values from the right.
+前のセクションで、左結合は結合の左側からすべてのレコードを選択し、右側からは可能性のある `NULL` の値を持っています。
 
-Right joins (or right outer joins) reverse the situation,
-selecting all records from the right side of the join,
-with possibly `NULL` values from the left.
+右結合（または右外部結合）はその逆の状況で、結合の右側からすべてのレコードを選択し、左側からは可能性のある `NULL` の値を持っています。
 
-We can demonstrate this by reversing our left join example.
-We'll ask for all rooms together with private messages have they received.
-We'll use for comprehension syntax this time for variety:
+これを示すために、左結合の例を逆にしてみましょう。
+すべてのルームと、それらが受信したプライベートメッセージを取得します。
+バリエーションとして、今回は for 内包表記の構文を使用します。
 
 ```scala mdoc
 val right = for {
@@ -522,7 +492,7 @@ val right = for {
 } yield (room.title, msg.map(_.content))
 ```
 
-Let's create another room and see how the query works out:
+別のルームを作成して、クエリの結果を確認してみましょう。
 
 ```scala mdoc
 exec(rooms += Room("Pod Bay"))
@@ -530,14 +500,12 @@ exec(rooms += Room("Pod Bay"))
 exec(right.result).foreach(println)
 ```
 
-
 ### Full Outer Join {#fullouterjoin}
 
-Full outer joins mean either side can be `NULL`.
+完全外部結合（full outer join）では、どちらの側も `NULL` になる可能性があります。
 
-From our schema an example would be the title of all rooms and messages in those rooms.
-Either side could be `NULL` because messages don't have to be in rooms,
-and rooms don't have to have any messages.
+スキーマからの例として、すべてのルームのタイトルとそのルーム内のメッセージが挙げられます。
+メッセージはルームに属さなくてもよいし、ルームにメッセージがなくてもよいので、どちらの側も `NULL` になる可能性があります。
 
 ```scala mdoc
 val outer = for {
@@ -545,7 +513,7 @@ val outer = for {
 } yield (room.map(_.title), msg.map(_.content))
 ```
 
-The type of this query has options on either side:
+このクエリの型は両側にオプションを持っています。
 
 ```scala
 Query[
@@ -554,74 +522,66 @@ Query[
   Seq]
 ```
 
-As you can see from the results...
+結果からわかるように...
 
 ```scala mdoc
 exec(outer.result).foreach(println)
 ```
-...some rooms have many messages, some none, some messages have rooms, and some do not.
+
+...一部のルームには多くのメッセージがあり、一部にはメッセージがありません。
+また、一部のメッセージにはルームがあり、一部にはありません。
 
 <div class="callout callout-info">
-At the time of writing H2 does not support full outer joins.
-Whereas earlier versions of Slick would throw a runtime exception,
-Slick 3 compiles the query into something that will run,
-emulating a full outer join.
+
+執筆時点では、H2は完全外部結合をサポートしていません。
+Slickの以前のバージョンではランタイムエクセプションが発生しましたが、Slick 3ではクエリを実行可能な形式にコンパイルし、完全外部結合をエミュレーションして実行します。
+
 </div>
+
 
 ### Cross Joins
 
-In the examples above, whenever we've used `join`
-we've also used an `on` to constrain the join.
-This is optional.
+上記の例では、`join` を使用する場合には常に `on` 条件も使用してきましたが、これはオプションです。
 
-If we omit the `on` condition for any `join`, `joinLeft`, or `joinRight`,
-we end up with a *cross join*.
+もし、いずれかの `join`、`joinLeft`、`joinRight` の `on` 条件を省略すると、*クロスジョイン* が行われます。
 
-Cross joins include every row from the left table
-with every row from the right table.
-If we have 10 rows in the first table and 5 in the second,
-the cross join produces 50 rows.
+クロスジョインは、左側のテーブルのすべての行を右側のテーブルのすべての行と結合します。
+もし、最初のテーブルに10行、2番目のテーブルに5行あれば、クロスジョインは50行を生成します。
 
-An example:
+例:
 
 ```scala mdoc
 val cross = messages joinLeft users
 ```
 
-
 ## Zip Joins
 
-Zip joins are equivalent to `zip` on a Scala collection.
-Recall that the `zip` in the collections library operates on two lists and
-returns a list of pairs:
+Zipジョインは、Scalaのコレクションにおける`zip`操作と同等です。
+コレクションライブラリの`zip`は、2つのリストを操作し、ペアのリストを返します。
 
 ```scala mdoc
 val xs = List(1, 2, 3)
-
 xs zip xs.drop(1)
 ```
 
-Slick provides the equivalent `zip` method for queries, plus two variations.
-Let's say we want to pair up adjacent messages into what we'll call a "conversation":
+Slickでは、クエリに対して同等の`zip`メソッドと2つのバリエーションを提供しています。
+隣接するメッセージをペアにするための例を見てみましょう。これを「会話」と呼びましょう。
 
 ```scala mdoc
-// Select message content, ordered by id:
+// idでソートされたメッセージのコンテンツを選択します
 val msgs = messages.sortBy(_.id.asc).map(_.content)
 
-// Pair up adjacent messages:
+// 隣接するメッセージをペアにします
 val conversations = msgs zip msgs.drop(1)
 ```
 
-This will turn into an inner join, producing output like:
+これはインナージョインに変換され、次のような出力を生成します。
 
 ```scala mdoc
 exec(conversations.result).foreach(println)
 ```
 
-A second variation, `zipWith`, lets us
-provide a mapping function along with the join.
-We can provide a function to upper-case the first part of a conversation,
-and lower-case the second part:
+2番目のバリエーションである`zipWith`では、ジョインとともにマッピング関数を提供することができます。ペアになった要素に対して変換を適用することができます。
 
 ```scala mdoc
 def combiner(c1: Rep[String], c2: Rep[String]) =
@@ -632,9 +592,7 @@ val query = msgs.zipWith(msgs.drop(1), combiner)
 exec(query.result).foreach(println)
 ```
 
-The final variant is `zipWithIndex`,
-which is as per the Scala collections method of the same name.
-Let's number each message:
+最後のバリエーションである`zipWithIndex`は、Scalaコレクションの同名のメソッドと同様です。メッセージに番号を付けましょう。
 
 ```scala mdoc
 val withIndexQuery = messages.map(_.content).zipWithIndex
@@ -643,26 +601,23 @@ val withIndexAction: DBIO[Seq[(String, Long)]] =
   withIndexQuery.result
 ```
 
-For H2 the SQL `ROWNUM()` function is used to generate a number.
-The data from this query will be:
+H2では、SQLの`ROWNUM()`関数が番号を生成するために使用されます。このクエリの結果は次のようになります。
 
 ```scala mdoc
 exec(withIndexAction).foreach(println)
 ```
 
-Not all databases support zip joins.
-Check for the `relational.zip` capability in the `capabilities` field
-of your chosen database profile:
+すべてのデータベースがzipジョインをサポートしているわけではありません。選択したデータベースプロファイルの`capabilities`フィールドで、`relational.zip`のサポートを確認してください。
 
 ```scala mdoc
-// H2 supports zip
+// H2はzipをサポートしています
 slick.jdbc.H2Profile.capabilities.
   map(_.toString).
   contains("relational.zip")
 ```
-  
+
 ```scala mdoc
-// SQLite does not support zip
+// SQLiteはzipをサポートしていません
 slick.jdbc.SQLiteProfile.capabilities.
   map(_.toString).
   contains("relational.zip")
