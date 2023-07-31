@@ -909,28 +909,29 @@ Slickによって生成されるSQLは、自分で書くSQLとは異なる場合
 
 ## Exercises
 
-Because these exercises are all about multiple tables, take a moment to remind yourself of the schema.
-You'll find this in the example code, `chatper-06`, in the source file `chat_schema.scala`.
+これらの演習はすべて複数のテーブルに関するものですので、スキーマを確認するために少し時間を割いてください。
+スキーマは、サンプルコードの `chatper-06` ディレクトリ内の `chat_schema.scala` というソースファイルにあります。
 
 ### Name of the Sender
 
-Each message is sent by someone.
-That is, the `messages.senderId` will have a matching row via `users.id`.
+各メッセージは誰かによって送信されます。
+つまり、`messages.senderId`は`users.id`を介して対応する行を持っています。
 
-Please...
+以下のクエリを実装してみましょう。
 
-- Write a monadic join to return all `Message` rows and the associated `User` record for each of them.
+- モナディックなジョインを使用して、すべての `Message` レコードとそれに関連する送信者の `User` レコードを返すクエリを書いてください。
 
-- Change your answer to return only the content of a message and the name of the sender.
+- 回答を変更して、メッセージの内容と送信者の名前だけを返すようにしてください。
 
-- Modify the query to return the results in name order.
+- クエリを修正して、結果を名前順に返すようにしてください。
 
-- Re-write the query as an applicative join.
+- クエリをアプリカティブなジョインに書き直してください。
 
-These exercises will get your fingers familiar with writing joins.
+これらの演習は、ジョインの書き方に慣れるために役立ちます。
 
 <div class="solution">
-These queries are all items we've covered in the text:
+
+これらのクエリは、テキストでカバーしたすべての内容です：
 
 ```scala mdoc
 val ex1 = for {
@@ -945,27 +946,29 @@ val ex2 = for {
   if u.id === m.senderId
 } yield (m.content, u.name)
 
-val ex3 = ex2.sortBy{ case (content, name) => name }
+val ex3 = ex2.sortBy { case (content, name) => name }
 
 val ex4 =
   messages.
    join(users).on(_.senderId === _.id).
    map    { case (msg, usr)     => (msg.content, usr.name) }.
-   sortBy { case (content,name) => name }
+   sortBy { case (content, name) => name }
 ```
 </div>
 
+
 ### Messages of the Sender
 
-Write a method to fetch all the message sent by a particular user.
-The signature is:
+指定されたユーザーが送信したすべてのメッセージを取得するメソッドを作成します。
+シグネチャは次のようになります：
 
 ```scala
 def findByName(name: String): Query[Rep[Message], Message, Seq] = ???
 ```
 
 <div class="solution">
-This is a filter, a join, and a map:
+
+これはフィルター、ジョイン、およびマップです：
 
 ```scala mdoc
 def findByNameMonadic(name: String): Query[Rep[Message], Message, Seq] = for {
@@ -974,7 +977,7 @@ def findByNameMonadic(name: String): Query[Rep[Message], Message, Seq] = for {
 } yield m
 ```
 
-...or...
+...または...
 
 ```scala mdoc
 def findByNameApplicative(name: String): Query[Rep[Message], Message, Seq] =
@@ -984,10 +987,9 @@ def findByNameApplicative(name: String): Query[Rep[Message], Message, Seq] =
 ```
 </div>
 
-
 ### Having Many Messages
 
-Modify the `msgsPerUser` query...
+`msgsPerUser` クエリを変更して、2つ以上のメッセージを持つユーザーの数を返すようにしましょう。
 
 ```scala
 val msgsPerUser =
@@ -996,10 +998,10 @@ val msgsPerUser =
    map     { case (name, group) => name -> group.length }
 ```
 
-...to return the counts for just those users with more than 2 messages.
 
 <div class="solution">
-SQL distinguishes between `WHERE` and `HAVING`. In Slick you use `filter` for both:
+
+SQLでは `WHERE` と `HAVING` を区別しますが、Slickでは両方に `filter` を使用します：
 
 ```scala mdoc
 val modifiedMsgsPerUser =
@@ -1009,14 +1011,14 @@ val modifiedMsgsPerUser =
    filter  { case (name, count) => count > 2 }
 ```
 
-At this point in the book, only Frank has more than two messages:
+この時点では、フランクだけが2つ以上のメッセージを持っているという結果になるはずです：
 
 ```scala mdoc
 exec(modifiedMsgsPerUser.result)
 ```
 
 ```scala mdoc
-// Let's check:
+// チェックしてみましょう：
 val frankMsgs = 
   messages.join(users).on {
     case (msg,user) => msg.senderId === user.id && user.name === "Frank" 
@@ -1025,13 +1027,13 @@ val frankMsgs =
 exec(frankMsgs.result).foreach(println)
 ```
 
-...although if you've been experimenting with the database, your results could be different.
+...ただし、データベースで実験をしている場合は、結果が異なる可能性があります。
 </div>
 
 ### Collecting Results
 
-A join on messages and senders will produce a row for every message.
-Each row will be a tuple of the user and message:
+`messages` テーブルと `users` テーブルの結合は、各メッセージごとに1つの行を生成します。
+それぞれの行は、ユーザーとメッセージのタプルになります：
 
 ```scala
 users.join(messages).on(_.id === _.senderId)
@@ -1041,11 +1043,9 @@ users.join(messages).on(_.id === _.senderId)
 //  Seq] = Rep(Join Inner)
 ```
 
-The return type is effectively `Seq[(User, Message)]`.
+戻り値の型は実際には `Seq[(User, Message)]` となります。
 
-Sometimes you'll really want something like a `Map[User, Seq[Message]]`.
-
-There's no built-in way to do that in Slick, but you can do it in Scala using the collections `groupBy` method.
+時には `Map[User, Seq[Message]]` のようなデータ構造が欲しいことがありますが、Slickにはこれを直接得る方法はありません。ただし、Scalaのコレクションの `groupBy` メソッドを使用して、このようなデータ構造を作成できます。
 
 ```scala mdoc
 val almost = Seq(
@@ -1055,8 +1055,7 @@ val almost = Seq(
   ).groupBy{ case (name, message) => name }
 ```
 
-That's close, but the values in the map are still a tuple of the name and the message.
-We can go further and reduce this to:
+これは近いですが、マップの値はまだ名前とメッセージのタプルです。次に、これをさらに変換して以下のようにします：
 
 ```scala mdoc:silent
 val correct = almost.view.mapValues { values =>
@@ -1067,17 +1066,17 @@ val correct = almost.view.mapValues { values =>
 correct.foreach(println)
 ```
 
-The `.view` call is required in Scala 2.13 to convert the lazy evaluated map into a strict map.
-A future version of Scala will remove the need for the `.view` call.
+Scala 2.13では、`.view` の呼び出しが必要です。これにより、遅延評価されたマップが厳密なマップに変換されます。将来のバージョンのScalaでは、`.view` の呼び出しは不要になる予定です。
 
-Go ahead and write a method to encapsulate this for a join:
+さあ、結合のためのこの処理をカプセル化するメソッドを書いてみましょう：
 
 ```scala
 def userMessages: DBIO[Map[User, Seq[Message]]] = ???
 ```
 
 <div class="solution">
-You need all the code in the question and also what you know about action combinators:
+
+この問題で示されているコード全体と、アクションコンビネータについて知っていることが必要です：
 
 ```scala mdoc
 def userMessages: DBIO[Map[User,Seq[Message]]] =
@@ -1092,9 +1091,6 @@ def userMessages: DBIO[Map[User,Seq[Message]]] =
 exec(userMessages).foreach(println)
 ```
 
-You may have been tripped up on the call to `toMap` at the end.
-We didn't need this in the examples in the text because we were not being explicit that we wanted a `Map[User,Seq[Message]]`.
-However, `userMessages` does define the result type, and as such we need to explicitly covert the sequence of tuples into a `Map`.
+`toMap` の呼び出しにつまずいたかもしれません。テキストの例では `Map[User,Seq[Message]]` という型を明示的に指定していなかったため、これは必要ありませんでした。しかし、`userMessages` は結果の型を明示的に定義しているため、タプルのシーケンスを `Map` に明示的に変換する必要があります。
 
 </div>
-
