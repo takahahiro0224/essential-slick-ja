@@ -1,37 +1,35 @@
 # Using Different Database Products {#altdbs}
+本書では、導入で述べたように、例題には主にH2が使用されています。しかし、Slickは他にもPostgreSQL、MySQL、Derby、SQLite、Oracle、およびMicrosoft Accessをサポートしています。
 
-As mentioned during the introduction, H2 is used throughout the book for examples.
-However Slick also supports PostgreSQL, MySQL, Derby, SQLite, Oracle, and Microsoft Access.
+かつては、Oracle、SQL Server、またはDB2と一緒にSlickを本番環境で使用するにはLightbendから商用ライセンスが必要でした。
+しかし、この制約は2016年初頭に取り除かれました[^slick-blog-open]。
+ただし、自由でオープンなプロファイルを構築するための取り組みもあり、それによりFreeSlickプロジェクトが生まれました。
+これらのプロファイルは引き続き利用可能で、詳細については[FreeSlickのGitHubページ](https://github.com/smootoo/freeslick)で確認できます。
 
-There was a time when you needed a commercial license from Lightbend to use Slick in production with Oracle, SQL Server, or DB2.
-This restriction was removed in early 2016[^slick-blog-open].
-However, there was an effort to build free and open profiles, resulting in the FreeSlick project.
-These profiles continue to be available, and you can find out more about this from the [FreeSlick GitHub page](https://github.com/smootoo/freeslick).
-
-[^slick-blog-open]: [https://scala-slick.org/news/2016/02/01/slick-extensions-licensing-change.html](https://scala-slick.org/news/2016/02/01/slick-extensions-licensing-change.html).
+[^slick-blog-open]: [https://scala-slick.org/news/2016/02/01/slick-extensions-licensing-change.html](https://scala-slick.org/news/2016/02/01/slick-extensions-licensing-change.html)。
 
 ## Changes
 
-If you want to use a different database for the exercises in the book,
-you will need to make changes detailed below.
+もしご自身の環境で本書の演習に別のデータベースを使用したい場合は、以下の詳細な手順に従う必要があります。
 
-In summary you will need to ensure that:
+要約すると、以下の点を確認する必要があります：
 
- * you have installed the database (details beyond the scope of this book);
- * a database is available with the correct name;
- * the `build.sbt` file has the correct dependency;
- * the correct JDBC driver is referenced in the code; and
- * the correct Slick profile is used.
+- データベースがインストールされていること（この本の範囲を超える詳細は含まれていません）。
+- 正しい名前のデータベースが利用可能であること。
+- `build.sbt` ファイルに正しい依存関係が設定されていること。
+- コード内で正しい JDBC ドライバが参照されていること。
+- 正しい Slick プロファイルが使用されていること。
 
-Each chapter uses its own database---so these steps will need to be applied for each chapter.
+各章はそれぞれ独自のデータベースを使用していますので、これらの手順は各章ごとに適用する必要があります。
 
-We've given detailed instructions for two populated databases below.
+以下に2つのデータベースを用いた詳細な手順を示します。
 
 ## PostgreSQL
 
 ### Create a Database
 
-Create a database named `chapter-01` with user `essential`. This will be used for all examples and can be created with the following:
+以下の手順に従って、`essential` ユーザーで `chapter-01` という名前のデータベースを作成します。このデータベースはすべての例に使用され、以下のコマンドで作成できます。
+
 
 ~~~ sql
 CREATE DATABASE "chapter-01" WITH ENCODING 'UTF8';
@@ -39,7 +37,7 @@ CREATE USER "essential" WITH PASSWORD 'trustno1';
 GRANT ALL ON DATABASE "chapter-01" TO essential;
 ~~~
 
-Confirm the database has been created and can be accessed:
+データベースが作成され、アクセス可能であることを確認します。
 
 ~~~ bash
 $ psql -d chapter-01 essential
@@ -47,24 +45,24 @@ $ psql -d chapter-01 essential
 
 ### Update `build.sbt` Dependencies
 
-Replace
+次の行を
 
 ~~~ scala
 "com.h2database" % "h2" % "1.4.185"
 ~~~
 
-with
+次の行で置き換えます
 
 ~~~ scala
 "org.postgresql" % "postgresql" % "9.3-1100-jdbc41"
 ~~~
 
-If you are already in SBT, type `reload` to load this changed build file.
-If you are using an IDE, don't forget to regenerate any IDE project files.
+すでに SBT で作業している場合は、変更されたビルドファイルを読み込むために `reload` を入力してください。IDE を使用している場合は、IDE プロジェクトファイルを再生成することを忘れないでください。
+
 
 ### Update JDBC References
 
-Replace `application.conf` parameters with:
+`application.conf` のパラメータを以下のように置き換えます：
 
 ~~~ json
 chapter01 = {
@@ -79,7 +77,7 @@ chapter01 = {
 
 ### Update Slick Profile
 
-Change the import from
+インポートを以下のように変更します：
 
 ```scala
 slick.jdbc.H2Profile.api._
@@ -96,7 +94,8 @@ slick.jdbc.PostgresProfile.api._
 
 ### Create a Database
 
-Create a database named `chapter-01` with user `essential`. This will be used for all examples and can be created with the following:
+以下の手順に従って、`essential` ユーザーで `chapter-01` という名前のデータベースを作成します。このデータベースはすべての例に使用され、以下のコマンドで作成できます。
+
 
 ~~~ sql
 CREATE USER 'essential'@'localhost' IDENTIFIED BY 'trustno1';
@@ -105,7 +104,7 @@ GRANT ALL ON `chapter-01`.* TO 'essential'@'localhost';
 FLUSH PRIVILEGES;
 ~~~
 
-Confirm the database has been created and can be accessed:
+データベースが作成され、アクセス可能であることを確認します。
 
 ~~~ bash
 $ mysql -u essential chapter-01 -p
@@ -113,24 +112,24 @@ $ mysql -u essential chapter-01 -p
 
 ### Update `build.sbt` Dependencies
 
-Replace
+次の行を
 
 ~~~ scala
 "com.h2database" % "h2" % "1.4.185"
 ~~~
 
-with
+次の行で置き換えます
 
 ~~~ scala
 "mysql" % "mysql-connector-java" % "5.1.34"
 ~~~
 
-If you are already in SBT, type `reload` to load this changed build file.
-If you are using an IDE, don't forget to regenerate any IDE project files.
+すでに SBT で作業している場合は、変更されたビルドファイルを読み込むために `reload` を入力してください。IDE を使用している場合は、IDE プロジェクトファイルを再生成することを忘れないでください。
+.
 
 ### Update JDBC References
 
-Replace `Database.forURL` parameters with:
+`Database.forURL` のパラメータを以下のように置き換えます：
 
 ~~~ json
 chapter01 = {
@@ -146,13 +145,13 @@ chapter01 = {
 }
 ~~~
 
-Note that we've formatted the `connectionPool` line to make it legible.
-In reality all those `&` parameters will be on the same line.
+`connectionPool` 行を見やすくフォーマットしましたが、実際にはすべての `&` パラメータは同じ行になります。
+
 
 
 ### Update Slick DriverProfile
 
-Change the import from 
+インポートを以下のように変更します：
 
 ```scala
 slick.jdbc.H2Profile.api._

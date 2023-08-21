@@ -328,19 +328,21 @@ could not find implicit SetParameter[DateTime]
 
 ## Typed Checked Plain SQL
 
-We've mentioned the risks of Plain SQL, which can be summarized as not discovering a problem with your query until runtime.  The `tsql` interpolator removes some of this risk, but at the cost of requiring a connection to a database at compile time.
+リスクについて述べた通り、Plain SQLのリスクはクエリの問題がランタイムまでわからないということです。`tsql`インターポレータは、このリスクの一部を取り除きますが、コンパイル時にデータベースへの接続が必要です。
 
 <div class="callout callout-info">
-**Run the Code**
 
-These examples won't run in the REPL.
-To try these out, use the `tsql.scala` file inside the `chapter-07` folder.
-This is all in the [example code base on GitHub][link-example].
+**コードの実行**
+
+これらの例はREPLで実行することはできません。
+これらを試すには、`chapter-07`フォルダ内の`tsql.scala`ファイルを使用してください。
+これはすべて、[GitHub上のサンプルコードベース][link-example]にあります。
 </div>
+
 
 ### Compile Time Database Connections
 
-To get started with `tsql` we provide a database configuration information on a class:
+`tsql`を始めるには、クラスにデータベース設定情報を提供します：
 
 ```scala
 import slick.backend.StaticDatabaseConfig
@@ -351,7 +353,8 @@ object TsqlExample {
 }
 ```
 
-The `@StaticDatabaseConfig` syntax is called an _annotation_. This particular `StaticDatabaseConfig` annotation is telling Slick to use the connection called "tsql" in our configuration file.  That entry will look like this:
+`@StaticDatabaseConfig`構文はアノテーションと呼ばれます。この特定の`StaticDatabaseConfig`アノテーションは、Slickに対して設定ファイル内の「tsql」という名前の接続を使用するように指示しています。そのエントリは次のようになります：
+
 
 ```scala
 tsql {
@@ -366,14 +369,14 @@ tsql {
 }
 ```
 
-Note the `$` in the profile class name is not a typo. The class name is being passed to Java's `Class.forName`, but of course Java doesn't have a singleton as such. The Slick configuration does the right thing to load `$MODULE` when it sees `$`. This interoperability with Java is described in [Chapter 29 of _Programming in Scala_][link-pins-interop].
+プロファイルクラス名内の`$`はタイポではありません。クラス名はJavaの`Class.forName`に渡されますが、もちろんJavaにはそのようなシングルトンは存在しません。クラス名が`$`を見ると、Slickの設定は`$`を見ると`$MODULE`をロードする適切な方法を取ります。このJavaとの互換性は[「Programming in Scala」の第29章][link-pins-interop]で説明されています。
 
-You won't have seen this when we introduced the database configuration in Chapter 1. That's because this `tsql` configuration has a different format, and combines the Slick profile (`slick.jdbc.H2Profile`) and the JDBC driver (`org.h2.Drvier`) in one entry.
+これはChapter 1でデータベース設定を紹介したときに見たことはありません。これは「tsql」設定が異なる形式を持っており、Slickプロファイル（`slick.jdbc.H2Profile`）とJDBCドライバ（`org.h2.Driver`）を1つのエントリで組み合わせています。
 
-A consequence of supplying a `@StaticDatabaseConfig` is that you can define one databases configuration for your application and a different one for the compiler to use. That is, perhaps you are running an application, or test suite, against an in-memory database, but validating the queries at compile time against a full-populated production-like integration database.
+`@StaticDatabaseConfig`を提供することの結果として、アプリケーション用の1つのデータベース設定と、コンパイラが使用する別のデータベース設定を定義できます。つまり、おそらくアプリケーションまたはテストスイートを、インメモリデータベースで実行するかもしれませんが、コンパイル時にはフルにポピュレートされたプロダクションのような統合データベースに対してクエリを検証するかもしれません。
 
-In the example above, and the accompanying example code, we use an in-memory database to make Slick easy to get started with.  However, an in-memory database is empty by default, and that would be no use for checking queries against. To work around that we provide an `INIT` script to populate the in-memory database.
-For our purposes, the `integration-schema.sql` file only needs to contain one line:
+上記の例と関連するサンプルコードでは、Slickを使い始めやすくするためにインメモリデータベースを使用しています。ただし、インメモリデータベースはデフォルトでは空であり、クエリをチェックするのには役立ちません。そのため、インメモリデータベースをポピュレートするために`INIT`スクリプトを提供しています。
+この場合、`integration-schema.sql`ファイルには1行だけ含まれていれば十分です：
 
 ```sql
 create table "message" (
@@ -385,23 +388,25 @@ create table "message" (
 
 ### Type Checked Plain SQL
 
-With the `@StaticDatabaseConfig` in place we can use `tsql`:
+`@StaticDatabaseConfig`があるため、`tsql`を使用できます：
 
 ```scala
 val action: DBIO[Seq[String]] = tsql""" select "content" from "message" """
 ```
 
-You can run that query as you would `sql` or `sqlu` query.
-You can also use custom types via `SetParameter` type class. However, `GetResult` type classes are not supported for `tsql`.
+このクエリを、`sql`や`sqlu`クエリと同様に実行できます。
+`SetParameter`型クラスを介してカスタム型も使用できます。ただし、`tsql`では`GetResult`型クラスは
 
-Let's get the query wrong and see what happens:
+サポートされていません。
+
+クエリを誤って記述してみましょう：
 
 ```scala
 val action: DBIO[Seq[String]] =
   tsql"""select "content", "id" from "message""""
 ```
 
-Do you see what's wrong? If not, don't worry because the compiler will find the problem:
+何が間違っているかわかりますか？わからない場合は心配しないでください。なぜなら、コンパイラが問題を見つけてくれるからです：
 
 ```scala
 type mismatch;
@@ -411,22 +416,22 @@ type mismatch;
 [error]  required : DBIO[Seq[String]]
 ```
 
-The compiler wants a `String` for each row, because that's what we've declared the result to be.
-However it has found, via the database, that the query will return `(String,Int)` rows.
+コンパイラは、各行に対して`String`が必要であると判断しています。なぜなら、結果が`String`であると宣言したからです。
+ただし、データベースを通じて、クエリが`(String,Int)`行を返すことがわかっています。
 
-If we had omitted the type declaration, the action would have the inferred type of `DBIO[Seq[(String,Int)]]`.
-So if you want to catch these kinds of mismatches, it's good practice to declare the type you expect when using `tsql`.
+もし型宣言を省略した場合、アクションは`DBIO[Seq[(String,Int)]]`と推論されるでしょう。
+このようなミスマッチをキャッチしたい場合は、`tsql`を使用する際に期待される型を宣言するのが良い習慣です。
 
-Let's see other kinds of errors the compiler will find.
+コンパイラが検出する他の種類のエラーを見てみましょう。
 
-How about if the SQL is just wrong:
+たとえば、SQL自体が間違っている場合：
 
 ```scala
 val action: DBIO[Seq[String]] =
   tsql"""select "content" from "message" where"""
 ```
 
-This is incomplete SQL, and the compiler tells us:
+これは不完全なSQLであり、コンパイラは次のように教えてくれます：
 
 ```scala
 exception during macro expansion: ERROR: syntax error at end of input
@@ -435,14 +440,12 @@ exception during macro expansion: ERROR: syntax error at end of input
 [error]     ^
 ```
 
-And if we get a column name wrong...
+列名を間違えた場合も同様にコンパイルエラーです：
 
 ```scala
 val action: DBIO[Seq[String]] =
   tsql"""select "text" from "message" where"""
 ```
-
-...that's also a compile error too:
 
 ```scala
 Exception during macro expansion: ERROR: column "text" does not exist
@@ -451,7 +454,7 @@ Exception during macro expansion: ERROR: column "text" does not exist
 [error]     ^
 ```
 
-Of course, in addition to selecting rows, you can insert:
+もちろん、行を選択するだけでなく、挿入もできます：
 
 ```scala
 val greeting = "Hello"
@@ -459,30 +462,31 @@ val action: DBIO[Seq[Int]] =
   tsql"""insert into "message" ("content") values ($greeting)"""
 ```
 
-Note that at run time, when we execute the query, a new row will be inserted.
-At compile time, Slick uses a facility in JDBC to compile the query and retrieve the meta data without having to run the query. 
-In other words, at compile time the database is not mutated.
+注意すべきは、実行時にクエリを実行すると新しい行が挿入されることです。
+コンパイル時には、SlickはJDBC内の機能を使用してクエリをコンパイルし、クエリを実行せずにメタデータを取得します。
+つまり、コンパイル時にデータベースは変更されません。
+
 
 
 ## Take Home Points
 
-Plain SQL allows you a way out of any limitations you find with Slick's lifted embedded style of querying.
 
-Two main string interpolators for SQL are provided: `sql` and `sqlu`:
+Plain SQLは、Slickのリフト埋め込みスタイルの制限から抜け出すための方法を提供します。
 
-- Values can be safely substituted into Plain SQL queries using `${expression}`.
+SQLには、2つの主要な文字列インターポレータが提供されています: `sql` と `sqlu`：
 
-- Custom types can be used with the interpolators providing an implicit `GetResult` (select) or `SetParameter` (update) is in scope for the type.
+- `${expression}` を使用して値を安全にPlain SQLクエリに挿入できます。
 
-- Raw values can be spliced into a query with `#$`. Use this with care: end-user supplied information should never be spliced into a query.
+- カスタム型を使用できます。その際、型に対する暗黙の`GetResult`（select）または`SetParameter`（update）がスコープ内に存在する必要があります。
 
-The `tsql` interpolator will check Plain SQL queries against a database at compile time.  The database connection is used to validate the query syntax, and also discover the types of the columns being selected. To make best use of this, always declare the type of the query you expect from `tsql`.
+- 生の値を`#$`でクエリに挿入できます。注意して使用してください：エンドユーザーが提供する情報は、クエリに挿入してはいけません。
 
+`tsql`インターポレータは、コンパイル時にデータベースでPlain SQLクエリをチェックします。データベース接続はクエリの構文を検証するために使用され、選択されている列の型も発見されます。これを最大限に活用するためには、常に`tsql`から期待するクエリの型を宣言してください。
 
 ## Exercises
 
-For these exercises we will use a  combination of messages and users.
-We'll set this up using the lifted embedded style:
+これらの演習では、メッセージとユーザーの組み合わせを使用します。
+これをリフト埋め込みスタイルを使用してセットアップします。
 
 ```scala mdoc:reset:invisible
 import slick.jdbc.H2Profile.api._
@@ -540,26 +544,25 @@ exec(setup)
 
 ### Plain Selects
 
-Let's get warmed up with some simple exercises.
+以下の4つのクエリをPlain SQLクエリとして記述します：
 
-Write the following four queries as Plain SQL queries:
+- メッセージテーブルの行数をカウントする。
 
-- Count the number of rows in the message table.
+- メッセージテーブルからコンテンツを選択する。
 
-- Select the content from the messages table.
+- メッセージテーブルの各メッセージ（"content"）の長さを選択する。
 
-- Select the length of each message ("content") in the messages table.
+- メッセージのコンテンツと長さを選択する。
 
-- Select the content and length of each message.
+ヒント：
 
-Tips:
+- SQLでは、テーブル名やカラム名をダブルクォートで囲む必要があります。
 
-- Remember that you need to use double quotes around table and column names in the SQL.
-
-- We gave the database tables names which are singular: `message`, `user`, etc.
+- データベースのテーブルは単数形の名前を使用しています：`message`、`user` など。
 
 <div class="solution">
-The SQL statements are relatively simple. You need to take care to make the `as[T]` align to the result of the query.
+
+SQL文は比較的単純です。ただし、`as[T]`をクエリの結果に合わせることに注意が必要です。
 
 ```scala mdoc
 val q1 = sql""" select count(*) from "message" """.as[Int]
@@ -585,31 +588,33 @@ assert(a4.length == 4, s"Expected 4 results for a4, not $a4")
 ```
 </div>
 
+
 ### Conversion
 
-Convert the following lifted embedded query to a Plain SQL query.
+以下は、リフテッド埋め込みスタイルのクエリをプレーンなSQLクエリに変換した例です。
 
-```scala mdoc
-val whoSaidThat =
-  messages.join(users).on(_.senderId === _.id).
-  filter{ case (message,user) =>
-    message.content === "Open the pod bay doors, HAL."}.
-  map{ case (message,user) => user.name }
+```scala
+val whoSaidThatSQL =
+  sql"""SELECT u."name" 
+        FROM "message" m 
+        JOIN "user" u ON m."sender_id" = u."id" 
+        WHERE m."content" = 'Open the pod bay doors, HAL.'""".as[String]
 
-exec(whoSaidThat.result)
+exec(whoSaidThatSQL)
 ```
 
-Tips:
+クエリの生成結果を確認するために、上記に示した `whoSaidThat` に関するステートメントを参照してみてください。
 
-- If you're not familiar with SQL syntax, peak at the statement generated for `whoSaidThat` given above.
+ポイント：
 
-- Remember that strings in SQL are wrapped in single quotes, not double quotes.
+- SQLでは、文字列は二重引用符ではなく、シングルクォートで囲まれています。
 
-- In the database, the sender's ID is `sender_id`.
+- データベース内では、送信者のIDは `sender_id` です。
 
 
 <div class="solution">
-There are various ways to implement this query in SQL.  Here's one of them...
+
+SQLを実装する方法はさまざまあります。ここに一つの例を示します。
 
 ```scala mdoc
 val whoSaidThatPlain = sql"""
@@ -628,7 +633,8 @@ exec(whoSaidThatPlain)
 
 ### Substitution
 
-Complete the implementation of this method using a Plain SQL query:
+指定されたコンテンツを言った人を返すためのメソッド `whoSaid` をプレーンなSQLクエリを使用して実装しましょう。
+
 
 ```scala
 def whoSaid(content: String): DBIO[Seq[String]] =
@@ -639,8 +645,13 @@ Running `whoSaid("Open the pod bay doors, HAL.")` should return a list of the pe
 
 This should be a small change to your solution to the last exercise.
 
+この `whoSaid("Open the pod bay doors, HAL.")` を実行すると、"Open the pod bay doors, HAL." というコンテンツを言った人のリストが返されるはずです。この場合はDaveが該当します。
+
+前の演習の解決策を小さな変更で利用しています。
+
 <div class="solution">
-The solution requires the use of a `$` substitution:
+
+この解決策には `$` の置換を使用する必要があります。
 
 ```scala mdoc
 def whoSaid(content: String): DBIO[Seq[String]] =
@@ -662,7 +673,7 @@ exec(whoSaid("Affirmative, Dave. I read you."))
 
 ### First and Last
 
-This H2 query returns the alphabetically first and last messages:
+このH2クエリは、アルファベット順で最初と最後のメッセージを返します。
 
 ```scala mdoc
 exec(sql"""
@@ -671,21 +682,23 @@ exec(sql"""
 )
 ```
 
-In this exercise we want you to write a `GetResult` type class instance so that the result of the query is one of these:
+この演習では、クエリの結果が次のような形式になるように`GetResult`型クラスのインスタンスを実装しましょう。
 
 ```scala mdoc:silent
 case class FirstAndLast(first: String, last: String)
 ```
 
-The steps are:
+手順は以下の通りです。
 
-1. Remember to `import slick.jdbc.GetResult`.
+1. `import slick.jdbc.GetResult`を記憶してください。
 
-2. Provide an implicit value for `GetResult[FirstAndLast]`
+2. `GetResult[FirstAndLast]`の暗黙の値を提供します。
 
-3. Make the query use `as[FirstAndLast]`
+3. クエリを`as[FirstAndLast]`を使用するように変更します。
+
 
 <div class="solution">
+
 ```scala mdoc
 import slick.jdbc.GetResult
 
@@ -703,14 +716,13 @@ exec(query)
 
 ### Plain Change
 
-We can use Plain SQL to modify the database.
-That means inserting rows, updating rows, deleting rows, and also modifying the schema.
+私たちは、プレーンなSQLを使用してデータベースを変更することができます。
+これは行の挿入、行の更新、行の削除、スキーマの変更も含みます。
 
-Go ahead and create a new table, using Plain SQL, to store the crew's jukebox playlist.
-Just store a song title. Insert a row into the table.
+さあ、クルーのジュークボックスのプレイリストを格納するための新しいテーブルを、プレーンなSQLを使用して作成しましょう。
 
 <div class="solution">
-For modifications we use `sqlu`, not `sql`:
+変更のために`sql`ではなく`sqlu`を使用します。
 
 ```scala mdoc
 exec(sqlu""" create table "jukebox" ("title" text) """)
@@ -725,9 +737,9 @@ exec(sql""" select "title" from "jukebox" """.as[String])
 
 ### Robert Tables
 
-We're building a web site that allows searching for users by their email address:
+私たちは、電子メールアドレスでユーザーを検索できるウェブサイトを構築しています。
 
-```scala mdoc
+```scala
 def lookup(email: String) =
   sql"""select "id" from "user" where "email" = '#${email}'"""
 
@@ -735,38 +747,39 @@ def lookup(email: String) =
 exec(lookup("dave@example.org").as[Long].headOption)
 ```
 
-What the problem with this code?
+このコードの問題は何ですか？
 
 <div class="solution">
-If you are familiar with [xkcd's Little Bobby Tables](http://xkcd.com/327/),
-the title of the exercise has probably tipped you off:  `#$` does not escape input.
 
-This means a user could use a carefully crafted email address to do evil:
+もし[xkcdの「Little Bobby Tables」](http://xkcd.com/327/)についてご存知であれば、このエクササイズのタイトルがおそらくお気づきかもしれません：`#$` は入力をエスケープしません。
 
-```scala mdoc
+これは、ユーザーが注意深く作成した電子メールアドレスを使用して悪意のある操作を行う可能性があることを意味します。
+
+```scala
 val evilAction = lookup("""';DROP TABLE "user";--- """).as[Long]
 exec(evilAction)
 ```
 
-This "email address" turns into two queries:
+この「電子メールアドレス」は、次の2つのクエリに変換されます：
 
 ~~~ sql
 SELECT * FROM "user" WHERE "email" = '';
 ~~~
 
-and
+そして
 
 ~~~ sql
 DROP TABLE "user";
 ~~~
 
-Trying to access the users table after this will produce:
+これによって、この後のユーザーテーブルへのアクセスは以下のようなエラーになります：
 
-```scala mdoc
+```scala
 exec(users.result.asTry)
 ```
 
-Yes, the table was dropped by the query.
+はい、テーブルはクエリによって削除されました。
 
-Never use `#$` with user supplied input.
+絶対にユーザー提供の入力に `#$` を使用しないでください。
+
 </div>
